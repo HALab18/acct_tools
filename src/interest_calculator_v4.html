@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法人版 利子所得税計算シート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #f0f4f8;
+    --surface:  #ffffff;
+    --surface2: #f7f9fc;
+    --border:   #dde3ed;
+    --border2:  #c8d1e0;
+    --accent:   #2563eb;
+    --accent2:  #0891b2;
+    --green:    #059669;
+    --amber:    #d97706;
+    --red:      #dc2626;
+    --text:     #1e293b;
+    --text2:    #475569;
+    --text3:    #94a3b8;
+    --shadow:   0 1px 4px rgba(30,41,59,0.08), 0 4px 16px rgba(30,41,59,0.06);
+    --shadow-sm: 0 1px 3px rgba(30,41,59,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+
+  /* ===== 印刷 ===== */
+  .card-desc-print {
+    display: none; font-size: 12px; color: var(--text2); font-weight: 600;
+  }
+
+  @media print {
+    body { background: #fff; padding: 10px; }
+    .bg-deco, .entry-actions, .copy-area, .no-print, .btn-del, .btn-clr,
+    .mode-toggle-bar { display: none !important; }
+    .card-desc-input { display: none !important; }
+    .card-desc-print { display: inline !important; }
+    .wrapper { max-width: 100%; }
+    .entry-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom: 10px; }
+    .card-header { background: #f5f5f5; }
+    .result-mini { border: 1px solid #ccc; background: #fafafa; }
+    .summary { box-shadow: none; border: 1px solid #bbb; }
+    .summary-card { box-shadow: none; border: 1px solid #ccc; }
+    .mismatch-warn.show { display: block !important; }
+    .print-footer { display: block !important; }
+  }
+
+  .print-footer {
+    display: none; text-align: center; font-size: 10px; color: #999;
+    margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;
+  }
+
+  /* ===== 背景装飾 ===== */
+  .bg-deco {
+    position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  .bg-deco::before {
+    content: '';
+    position: absolute; top: -200px; right: -200px;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
+  }
+  .bg-deco::after {
+    content: '';
+    position: absolute; bottom: -150px; left: -150px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(8,145,178,0.06) 0%, transparent 70%);
+  }
+
+  .wrapper { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* ===== Header ===== */
+  header { text-align: center; margin-bottom: 36px; animation: fadeDown 0.5s ease both; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2);
+    color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    padding: 4px 14px; border-radius: 100px; margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(22px, 4vw, 30px); font-weight: 700;
+    color: var(--text); letter-spacing: -0.02em; line-height: 1.25;
+  }
+  .subtitle { color: var(--text3); font-size: 13px; margin-top: 8px; font-weight: 400; }
+
+  /* ===== 税率バー ===== */
+  .tax-info-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    border-radius: 12px; padding: 13px 20px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 22px; font-size: 12px; color: var(--text2);
+    animation: fadeDown 0.5s 0.08s ease both;
+  }
+  .tax-info-bar .dot {
+    width: 8px; height: 8px; background: var(--amber);
+    border-radius: 50%; flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.18);
+  }
+  .tax-info-bar strong { color: var(--amber); font-weight: 600; }
+
+  /* ===== モード切替 ===== */
+  .mode-toggle-bar {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+    animation: fadeDown 0.5s 0.12s ease both;
+  }
+  .mode-toggle-label { font-size: 12px; color: var(--text3); white-space: nowrap; font-weight: 500; }
+  .mode-toggle {
+    display: flex; background: var(--border); border-radius: 10px;
+    padding: 3px; gap: 2px; flex-shrink: 0;
+  }
+  .mode-btn {
+    padding: 6px 15px; font-size: 12px; font-weight: 500;
+    font-family: 'Noto Sans JP', sans-serif;
+    border: none; background: transparent; color: var(--text3);
+    cursor: pointer; border-radius: 7px; transition: all 0.18s; white-space: nowrap;
+  }
+  .mode-btn.active {
+    background: #fff; color: var(--accent);
+    box-shadow: 0 1px 4px rgba(30,41,59,0.12);
+  }
+  .mode-hint { font-size: 11px; color: var(--text3); }
+
+  /* ===== Entry cards ===== */
+  .entries { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+  .entry-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.35s ease both;
+  }
+  .entry-card:hover { border-color: rgba(37,99,235,0.3); }
+  .entry-card.has-value { border-color: rgba(37,99,235,0.28); }
+  .entry-card.warn { border-color: rgba(217,119,6,0.45) !important; }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    padding: 12px 18px; background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+
+  .card-label { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text2); }
+  .num-badge {
+    width: 26px; height: 26px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; font-family: 'DM Mono', monospace;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  }
+
+  .card-meta { display: flex; align-items: center; gap: 8px; }
+
+  .card-desc-input {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif; padding: 5px 10px;
+    width: 200px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card-desc-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .card-desc-input::placeholder { color: var(--text3); }
+
+  .btn-del {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: rgba(220,38,38,0.07); border: 1px solid rgba(220,38,38,0.2);
+    color: var(--red); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s; flex-shrink: 0;
+  }
+  .btn-del:hover { background: rgba(220,38,38,0.15); transform: scale(1.05); }
+
+  .btn-clr {
+    height: 28px; padding: 0 10px; border-radius: 7px;
+    background: rgba(100,116,139,0.08); border: 1px solid rgba(100,116,139,0.22);
+    color: var(--text3); font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex; align-items: center;
+    transition: all 0.18s; flex-shrink: 0;
+  }
+  .btn-clr:hover { background: rgba(100,116,139,0.16); color: var(--text2); }
+
+  .card-body {
+    padding: 20px; display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px; align-items: start;
+  }
+
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-label { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase; }
+
+  .input-wrap {
+    display: flex; align-items: center; background: #fff;
+    border: 1.5px solid var(--border2); border-radius: 10px;
+    overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+
+  .input-prefix {
+    padding: 0 12px; font-size: 16px; color: var(--text3);
+    font-family: 'DM Mono', monospace; border-right: 1.5px solid var(--border);
+    height: 46px; display: flex; align-items: center; background: var(--surface2);
+  }
+  .amount-input {
+    background: transparent; border: none; outline: none; color: var(--text);
+    font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace;
+    padding: 10px 14px; width: 100%; text-align: right;
+  }
+  .amount-input::placeholder { color: var(--text3); font-size: 15px; font-weight: 400; }
+  .input-suffix { padding: 0 14px; font-size: 13px; color: var(--text3); white-space: nowrap; font-weight: 500; }
+
+  /* ===== 結果パネル ===== */
+  .result-mini {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px; min-width: 230px;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+
+  .result-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .result-row .label { color: var(--text3); font-weight: 500; }
+  .result-row .value { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text2); }
+  .result-row.highlight .value { color: var(--green); font-size: 16px; font-weight: 700; }
+  .result-row.tax-row .value { color: var(--red); }
+  .result-row.mismatch .value { color: var(--amber); }
+
+  .divider { height: 1px; background: var(--border); margin: 1px 0; }
+  .empty-state { color: var(--text3); font-size: 12px; text-align: center; padding: 8px 0; }
+
+  /* ===== 不整合警告 ===== */
+  .mismatch-warn {
+    display: none; font-size: 11px; color: var(--amber);
+    margin-top: 4px; padding: 6px 10px;
+    background: rgba(217,119,6,0.07);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-radius: 6px; line-height: 1.5;
+  }
+  .mismatch-warn.show { display: block; }
+
+  /* ===== 追加ボタン ===== */
+  .entry-actions { display: flex; justify-content: center; margin-bottom: 28px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer; border: none; transition: all 0.18s;
+  }
+  .btn-add {
+    background: rgba(37,99,235,0.1); color: var(--accent);
+    border: 1.5px solid rgba(37,99,235,0.25);
+  }
+  .btn-add:hover:not(:disabled) {
+    background: rgba(37,99,235,0.18); transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+  }
+  .btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== Summary ===== */
+  .summary {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px;
+    box-shadow: var(--shadow);
+    animation: fadeUp 0.45s 0.1s ease both;
+  }
+  .summary-title {
+    font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: 0.06em;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+  }
+  .summary-title::before {
+    content: ''; display: block; width: 4px; height: 16px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2)); border-radius: 2px;
+  }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .summary-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px; text-align: center;
+    transition: transform 0.18s, box-shadow 0.18s;
+    box-shadow: var(--shadow-sm);
+  }
+  .summary-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,41,59,0.1); }
+  .summary-card.main {
+    border-color: rgba(5,150,105,0.25);
+    background: rgba(5,150,105,0.05);
+  }
+  .summary-card-label { font-size: 11px; color: var(--text3); letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+  .summary-card-value { font-family: 'DM Mono', monospace; font-size: clamp(16px, 2.4vw, 22px); font-weight: 700; line-height: 1; }
+  .summary-card:nth-child(1) .summary-card-value { color: var(--text); }
+  .summary-card:nth-child(2) .summary-card-value { color: var(--red); }
+  .summary-card.main .summary-card-value { color: var(--green); }
+  .summary-card-sub { font-size: 10px; color: var(--text3); margin-top: 5px; }
+
+  .copy-area {
+    margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-copy {
+    background: var(--surface2); color: var(--text2);
+    border: 1.5px solid var(--border2); font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-copy:hover { background: var(--border); }
+
+  .btn-print {
+    background: rgba(8,145,178,0.09); color: var(--accent2);
+    border: 1.5px solid rgba(8,145,178,0.25); font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-print:hover { background: rgba(8,145,178,0.18); }
+
+  .btn-reset {
+    background: rgba(220,38,38,0.07); color: var(--red);
+    border: 1.5px solid rgba(220,38,38,0.2); font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-reset:hover { background: rgba(220,38,38,0.14); }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--green); color: #fff; padding: 10px 22px;
+    border-radius: 10px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(5,150,105,0.35);
+    transition: transform 0.3s ease; z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== 確認ダイアログ ===== */
+  .confirm-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,0.45); backdrop-filter: blur(2px);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 32px 36px; max-width: 360px; width: 90%;
+    text-align: center; box-shadow: 0 8px 40px rgba(15,23,42,0.18);
+  }
+  .confirm-box p { font-size: 14px; color: var(--text2); margin-bottom: 22px; line-height: 1.7; }
+  .confirm-box strong { color: var(--red); }
+  .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+  .confirm-btns .btn-yes {
+    background: var(--red); color: #fff; border: none;
+    padding: 9px 26px; border-radius: 9px; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 600;
+    transition: background 0.18s;
+  }
+  .confirm-btns .btn-yes:hover { background: #b91c1c; }
+  .confirm-btns .btn-no {
+    background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+    padding: 9px 26px; border-radius: 9px; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+    transition: background 0.18s;
+  }
+  .confirm-btns .btn-no:hover { background: var(--border); }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp   { from { opacity: 0; transform: translateY(10px);  } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 620px) {
+    .card-body { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .card-desc-input { width: 150px; }
+    .result-mini { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="badge">⚖️ TAX CALCULATOR</div>
+    <h1>法人版 利子所得税計算シート</h1>
+    <p class="subtitle">入金利息から税引前利息・所得税額・差引入金額を自動算定します</p>
+  </header>
+
+  <div class="tax-info-bar">
+    <div class="dot"></div>
+    <span>適用税率：所得税 <strong>15.315%</strong>（所得税 15% ＋ 復興特別所得税 0.315%）／ 法人口座の利子所得に対する源泉徴収率</span>
+  </div>
+
+  <div class="mode-toggle-bar">
+    <span class="mode-toggle-label">入力モード：</span>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeNetBtn" onclick="requestModeChange('net')">差引入金額から逆算</button>
+      <button class="mode-btn" id="modeGrossBtn" onclick="requestModeChange('gross')">税引前利息から計算</button>
+    </div>
+    <span class="mode-hint" id="modeHint">実際に口座へ入金された金額を入力します</span>
+  </div>
+
+  <div class="entries" id="entries"></div>
+
+  <div class="entry-actions">
+    <button class="btn btn-add" id="btnAdd" onclick="addEntry()">＋ 明細を追加</button>
+  </div>
+
+  <div class="summary">
+    <div class="summary-title">合計サマリー</div>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-card-label">税引前利息合計</div>
+        <div class="summary-card-value" id="totalGross">—</div>
+        <div class="summary-card-sub">円</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">所得税合計</div>
+        <div class="summary-card-value" id="totalTax">—</div>
+        <div class="summary-card-sub">円（源泉徴収額）</div>
+      </div>
+      <div class="summary-card main">
+        <div class="summary-card-label">差引入金額合計</div>
+        <div class="summary-card-value" id="totalNet">—</div>
+        <div class="summary-card-sub">円（税引後）</div>
+      </div>
+    </div>
+    <div class="mismatch-warn" id="summaryMismatchWarn" style="margin-top:14px;">
+      ⚠ 一部の明細で端数不整合が検出されています。合計値は参考値としてご確認ください。
+    </div>
+    <div class="copy-area">
+      <button class="btn btn-copy" onclick="copyResults()">📋 結果をコピー</button>
+      <button class="btn btn-print" onclick="printResults()">🖨️ 印刷 / PDF保存</button>
+      <button class="btn btn-reset" onclick="confirmReset()">リセット</button>
+    </div>
+  </div>
+
+  <div class="print-footer" id="printFooter">
+    出力日時：<span id="printDate"></span>　／　適用税率：15.315%（所得税15%＋復興特別所得税0.315%）
+  </div>
+
+</div>
+
+<div class="confirm-overlay" id="modeConfirmOverlay">
+  <div class="confirm-box">
+    <p>入力モードを切り替えると、<strong>現在の入力値がすべてリセット</strong>されます。<br>よろしいですか？</p>
+    <div class="confirm-btns">
+      <button class="btn-yes" onclick="confirmModeChange()">切り替える</button>
+      <button class="btn-no" onclick="cancelModeChange()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>入力内容をすべて<strong>リセット</strong>します。<br>よろしいですか？</p>
+    <div class="confirm-btns">
+      <button class="btn-yes" onclick="doReset()">リセットする</button>
+      <button class="btn-no" onclick="closeConfirm()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">クリップボードにコピーしました</div>
+
+<script>
+  const TAX_RATE = 0.15315;
+  const NET_RATE = 1 - TAX_RATE;
+
+  let mode = 'net';
+  let entries = [
+    { id: 1, desc: '', rawInput: 0, displayInput: '' },
+    { id: 2, desc: '', rawInput: 0, displayInput: '' },
+    { id: 3, desc: '', rawInput: 0, displayInput: '' },
+  ];
+  let idCounter = 4;
+
+  // =============================================
+  // 計算ロジック
+  // =============================================
+  function calcFromNet(netAmount) {
+    if (!netAmount || isNaN(netAmount) || netAmount <= 0) return null;
+    const net = Math.floor(netAmount); // 小数切り捨て（円未満は存在しない）
+    const grossRaw = net / NET_RATE;
+    let gross = Math.floor(grossRaw);
+    // 探索範囲を -5〜+6 に拡大し、銀行ごとの端数処理の差異に対応
+    for (let delta = -5; delta <= 6; delta++) {
+      const g = gross + delta;
+      if (g <= 0) continue;
+      const tax = Math.floor(g * TAX_RATE);
+      if (g - tax === net) return { gross: g, tax, net: g - tax, mismatch: false };
+    }
+    const tax = Math.floor(gross * TAX_RATE);
+    return { gross, tax, net: gross - tax, mismatch: true, inputNet: net };
+  }
+
+  function calcFromGross(grossAmount) {
+    if (!grossAmount || isNaN(grossAmount) || grossAmount <= 0) return null;
+    const gross = Math.floor(grossAmount);
+    const tax = Math.floor(gross * TAX_RATE);
+    return { gross, tax, net: gross - tax, mismatch: false };
+  }
+
+  function calc(rawInput) {
+    return mode === 'net' ? calcFromNet(rawInput) : calcFromGross(rawInput);
+  }
+
+  // =============================================
+  // ユーティリティ
+  // =============================================
+  function fmt(n) {
+    if (n == null) return '—';
+    return Math.floor(n).toLocaleString('ja-JP');
+  }
+
+  function formatWithCommas(raw) {
+    const clean = raw.replace(/[^0-9]/g, '');
+    if (clean === '') return '';
+    return parseInt(clean, 10).toLocaleString('ja-JP');
+  }
+
+  function applyCommaFormat(input) {
+    const raw = input.value.replace(/,/g, '');
+    const cursor = input.selectionStart;
+    const commasBefore = (input.value.slice(0, cursor).match(/,/g) || []).length;
+    const formatted = formatWithCommas(input.value);
+    input.value = formatted;
+    const digitsBeforeCursor = raw.slice(0, cursor - commasBefore).replace(/[^0-9]/g, '').length;
+    let newPos = 0, count = 0;
+    for (let i = 0; i < formatted.length; i++) {
+      if (formatted[i] !== ',') count++;
+      if (count === digitsBeforeCursor) { newPos = i + 1; break; }
+    }
+    if (digitsBeforeCursor === 0) newPos = 0;
+    input.setSelectionRange(newPos, newPos);
+  }
+
+  // =============================================
+  // モード切替（確認付き）
+  // =============================================
+  function requestModeChange(m) {
+    if (m === mode) return;
+    const hasInput = entries.some(e => e.rawInput > 0);
+    if (hasInput) {
+      pendingMode = m;
+      document.getElementById('modeConfirmOverlay').classList.add('show');
+    } else {
+      setMode(m);
+    }
+  }
+  let pendingMode = null;
+  function confirmModeChange() {
+    document.getElementById('modeConfirmOverlay').classList.remove('show');
+    if (pendingMode) { setMode(pendingMode); pendingMode = null; }
+  }
+  function cancelModeChange() {
+    document.getElementById('modeConfirmOverlay').classList.remove('show');
+    pendingMode = null;
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('modeNetBtn').classList.toggle('active', m === 'net');
+    document.getElementById('modeGrossBtn').classList.toggle('active', m === 'gross');
+    document.getElementById('modeHint').textContent =
+      m === 'net'
+        ? '実際に口座へ入金された金額を入力します'
+        : '税引前の利息金額（所得税を差し引く前）を入力します';
+    entries = entries.map(e => ({ ...e, rawInput: 0, displayInput: '' }));
+    renderEntries();
+  }
+
+  // =============================================
+  // 描画
+  // =============================================
+  function renderEntries() {
+    const container = document.getElementById('entries');
+    container.innerHTML = '';
+
+    const inputLabelText = mode === 'net'
+      ? '差引入金額（税引後・実際に入金された金額）'
+      : '税引前利息（所得税を差し引く前の金額）';
+
+    entries.forEach((entry, idx) => {
+      const rawNum = parseFloat(entry.rawInput || '0');
+      const result = calc(rawNum);
+      const hasValue = result !== null;
+      const hasWarn  = hasValue && result.mismatch;
+
+      const card = document.createElement('div');
+      card.className = `entry-card${hasValue ? ' has-value' : ''}${hasWarn ? ' warn' : ''}`;
+      card.style.animationDelay = `${idx * 0.04}s`;
+      card.dataset.id = entry.id;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-label">
+            <div class="num-badge">${idx + 1}</div>
+            明細 ${idx + 1}
+          </div>
+          <div class="card-meta">
+            <input class="card-desc-input" type="text" placeholder="摘要（例：普通預金利息）"
+              value="${entry.desc}" data-desc-id="${entry.id}"/>
+            <span class="card-desc-print">${entry.desc || '（摘要なし）'}</span>
+            ${entries.length > 1
+              ? `<button class="btn-del no-print" title="この明細を削除" data-del-id="${entry.id}">×</button>`
+              : `<button class="btn-clr no-print" title="入力値をクリア" data-clr-id="${entry.id}">クリア</button>`}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="input-group">
+            <div class="input-label">${inputLabelText}</div>
+            <div class="input-wrap">
+              <span class="input-prefix">¥</span>
+              <input class="amount-input" type="text" inputmode="numeric"
+                placeholder="0" value="${entry.displayInput || ''}"
+                data-net-id="${entry.id}"
+                onkeydown="if(['.','-','e','E'].includes(event.key)) return false;"/>
+              <span class="input-suffix">円</span>
+            </div>
+            <div class="mismatch-warn${hasWarn ? ' show' : ''}" data-warn-id="${entry.id}">
+              ⚠ 入力値に対応する税引前利息が特定できません。銀行の処理と端数が異なる可能性があります。
+            </div>
+          </div>
+          <div class="result-mini" data-result-id="${entry.id}">
+            ${hasValue ? resultHTML(result) : '<div class="empty-state">金額を入力してください</div>'}
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+
+      const netInput = card.querySelector(`[data-net-id="${entry.id}"]`);
+      netInput.addEventListener('input', function() {
+        applyCommaFormat(this);
+        const raw = parseFloat(this.value.replace(/,/g, ''));
+        const e = entries.find(x => x.id === entry.id);
+        if (e) {
+          e.rawInput = isNaN(raw) ? 0 : raw;
+          e.displayInput = this.value;
+          updateResultPanel(entry.id);
+          updateSummary();
+          const r = calc(e.rawInput);
+          card.className = `entry-card${r ? ' has-value' : ''}${r && r.mismatch ? ' warn' : ''}`;
+          const warn = card.querySelector(`[data-warn-id="${entry.id}"]`);
+          if (warn) warn.classList.toggle('show', !!(r && r.mismatch));
+        }
+      });
+
+      const descInput = card.querySelector(`[data-desc-id="${entry.id}"]`);
+      descInput.addEventListener('input', function() {
+        const e = entries.find(x => x.id === entry.id);
+        if (e) {
+          e.desc = this.value;
+          // 印刷用spanも同期
+          const printSpan = card.querySelector('.card-desc-print');
+          if (printSpan) printSpan.textContent = this.value || '（摘要なし）';
+        }
+      });
+
+      const delBtn = card.querySelector(`[data-del-id="${entry.id}"]`);
+      if (delBtn) {
+        delBtn.addEventListener('click', function() {
+          entries = entries.filter(x => x.id !== entry.id);
+          renderEntries();
+        });
+      }
+
+      const clrBtn = card.querySelector(`[data-clr-id="${entry.id}"]`);
+      if (clrBtn) {
+        clrBtn.addEventListener('click', function() {
+          const e = entries.find(x => x.id === entry.id);
+          if (e) { e.rawInput = 0; e.displayInput = ''; e.desc = ''; }
+          renderEntries();
+        });
+      }
+    });
+
+    updateSummary();
+    document.getElementById('btnAdd').disabled = entries.length >= 10;
+  }
+
+  function resultHTML(result) {
+    return `
+      <div class="result-row">
+        <span class="label">税引前利息</span>
+        <span class="value">¥${fmt(result.gross)}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="result-row tax-row">
+        <span class="label">所得税額（15.315%）</span>
+        <span class="value">−¥${fmt(result.tax)}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="result-row highlight${result.mismatch ? ' mismatch' : ''}">
+        <span class="label">差引入金額${result.mismatch ? ' ⚠' : ''}</span>
+        <span class="value">¥${fmt(result.net)}</span>
+      </div>
+    `;
+  }
+
+  function updateResultPanel(id) {
+    const panel = document.querySelector(`[data-result-id="${id}"]`);
+    if (!panel) return;
+    const entry = entries.find(e => e.id === id);
+    const result = calc(entry ? entry.rawInput : 0);
+    panel.innerHTML = result ? resultHTML(result) : '<div class="empty-state">金額を入力してください</div>';
+  }
+
+  function updateSummary() {
+    let totalGross = 0, totalTax = 0, totalNet = 0, hasAny = false, hasMismatch = false;
+    entries.forEach(e => {
+      const r = calc(e.rawInput || 0);
+      if (r) {
+        hasAny = true;
+        totalGross += r.gross;
+        totalTax += r.tax;
+        totalNet += r.net;
+        if (r.mismatch) hasMismatch = true;
+      }
+    });
+    document.getElementById('totalGross').textContent = hasAny ? `¥${fmt(totalGross)}` : '—';
+    document.getElementById('totalTax').textContent   = hasAny ? `¥${fmt(totalTax)}`   : '—';
+    document.getElementById('totalNet').textContent   = hasAny ? `¥${fmt(totalNet)}`   : '—';
+    const summaryWarn = document.getElementById('summaryMismatchWarn');
+    if (summaryWarn) summaryWarn.classList.toggle('show', hasAny && hasMismatch);
+  }
+
+  // =============================================
+  // 追加・リセット
+  // =============================================
+  function addEntry() {
+    if (entries.length >= 10) return;
+    entries.push({ id: idCounter++, desc: '', rawInput: 0, displayInput: '' });
+    renderEntries();
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.entry-card');
+      if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+
+  function confirmReset() { document.getElementById('confirmOverlay').classList.add('show'); }
+  function closeConfirm()  { document.getElementById('confirmOverlay').classList.remove('show'); }
+  function doReset() {
+    entries = entries.map(e => ({ ...e, rawInput: 0, displayInput: '', desc: '' }));
+    closeConfirm();
+    renderEntries();
+  }
+
+  // =============================================
+  // コピー・印刷
+  // =============================================
+  function copyResults() {
+    const modeLabel = mode === 'net' ? '差引入金額入力モード' : '税引前利息入力モード';
+    let lines = ['法人版 利子所得税計算シート',
+      `適用税率：15.315%（所得税15%＋復興特別所得税0.315%）　${modeLabel}`, ''];
+    let totalGross = 0, totalTax = 0, totalNet = 0, hasMismatch = false;
+    entries.forEach((entry, idx) => {
+      const r = calc(entry.rawInput || 0);
+      if (r) {
+        const label = entry.desc || `明細${idx + 1}`;
+        lines.push(`【${label}】`);
+        lines.push(`  税引前利息：¥${fmt(r.gross)}`);
+        lines.push(`  所得税額　：¥${fmt(r.tax)}`);
+        lines.push(`  差引入金額：¥${fmt(r.net)}${r.mismatch ? ' ※端数注意' : ''}`);
+        lines.push('');
+        totalGross += r.gross; totalTax += r.tax; totalNet += r.net;
+        if (r.mismatch) hasMismatch = true;
+      }
+    });
+    if (totalNet > 0) {
+      lines.push('─────────────────');
+      lines.push(`合計 税引前利息：¥${fmt(totalGross)}`);
+      lines.push(`合計 所得税額　：¥${fmt(totalTax)}`);
+      lines.push(`合計 差引入金額：¥${fmt(totalNet)}${hasMismatch ? ' ※一部端数不整合あり（参考値）' : ''}`);
+    }
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    });
+  }
+
+  function printResults() {
+    const now = new Date();
+    const y  = now.getFullYear(),
+          mo = String(now.getMonth()+1).padStart(2,'0'),
+          d  = String(now.getDate()).padStart(2,'0'),
+          h  = String(now.getHours()).padStart(2,'0'),
+          mi = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('printDate').textContent = `${y}年${mo}月${d}日 ${h}:${mi}`;
+    window.print();
+  }
+
+  renderEntries();
+</script>
+</body>
+</html>

@@ -128,19 +128,29 @@ body{
 
 /* ── Dep grid ── */
 .dep-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0}
+@media(max-width:480px){.dep-grid{grid-template-columns:1fr}}
 .dep-card{
   display:flex;align-items:center;justify-content:space-between;
   background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;
-  transition:border-color .15s;
+  transition:border-color .15s;gap:8px;
 }
 .dep-card:hover{border-color:var(--border2)}
 .dep-card.full-width{grid-column:1/-1}
+/* 配偶者カード：狭い画面で縦積み */
+.dep-card.spouse-card{flex-wrap:wrap;align-items:flex-start}
+.dep-card.spouse-card .spouse-info{flex:1;min-width:0}
+.dep-card.spouse-card .spouse-sel-wrap{width:100%;min-width:0;margin-top:8px}
+@media(min-width:481px){
+  .dep-card.spouse-card{flex-wrap:nowrap;align-items:center}
+  .dep-card.spouse-card .spouse-sel-wrap{width:auto;flex:1;min-width:0;margin-top:0;margin-left:10px}
+}
+.dep-card.spouse-card select{width:100%}
 .dep-name{font-size:12px;font-weight:500;color:var(--text2)}
 .dep-sub{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.4}
 .dep-tag{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.04em;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle}
 .dep-tag.special{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
 .dep-tag.new{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
-.step-ctrl{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px}
+.step-ctrl{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .step-btn{all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--muted2);font-size:15px;font-weight:700;transition:all .15s;border:1px solid var(--border2)}
 .step-btn:hover{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
 .step-val{font-size:15px;font-weight:700;color:var(--text);min-width:22px;text-align:center}
@@ -152,9 +162,10 @@ body{
   display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;
   background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;
 }
+@media(max-width:380px){.tokutei-row{grid-template-columns:1fr;gap:4px}}
 .tokutei-row-label{font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap}
 .tokutei-row select{
-  background:#fff;border:1.5px solid var(--border2);border-radius:6px;
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:6px;
   color:var(--text);padding:6px 28px 6px 10px;font-size:12px;font-family:inherit;
   outline:none;cursor:pointer;transition:border-color .15s;
   -webkit-appearance:none;appearance:none;
@@ -163,13 +174,13 @@ body{
 }
 .tokutei-row select:focus{border-color:var(--accent2)}
 .tokutei-add-row{
-  display:flex;align-items:center;gap:8px;margin-top:4px;
+  display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;
 }
 .tokutei-count-label{font-size:11px;color:var(--muted2)}
 .btn-tokutei-add,.btn-tokutei-del{
   all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;
   font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;
-  border:1.5px solid;transition:all .15s;
+  border:1.5px solid;transition:all .15s;white-space:nowrap;
 }
 .btn-tokutei-add{color:var(--accent);border-color:#93c5fd;background:var(--accent-l)}
 .btn-tokutei-add:hover{background:#dbeafe}
@@ -430,31 +441,29 @@ body{
       <div class="dep-grid">
 
         <!-- 配偶者控除 / 特別控除 -->
-        <div class="dep-card full-width">
-          <div style="flex:1;min-width:0">
+        <div class="dep-card spouse-card full-width">
+          <div class="spouse-info">
             <div class="dep-name">配偶者控除 / 配偶者特別控除</div>
             <div class="dep-sub">配偶者の収入に応じて控除額が変わります（R8年度）</div>
           </div>
-          <div style="flex-shrink:0;margin-left:10px;min-width:200px">
-            <div class="sel-field">
-              <select id="spouse_sel" onchange="onSalaryChange()">
-                <option value="0">配偶者なし / 対象外</option>
-                <optgroup label="── 配偶者控除（収入123万円以下）──">
-                  <option value="spouse_full">配偶者控除 適用　所得税38万／住民税33万</option>
-                </optgroup>
-                <optgroup label="── 配偶者特別控除（収入123万超〜201.6万円以下）──">
-                  <option value="tokubetsu_38_33">収入123万超〜150万円　所得税38万／住民税33万</option>
-                  <option value="tokubetsu_26_22">収入150万超〜155万円　所得税26万／住民税22万</option>
-                  <option value="tokubetsu_21_18">収入155万超〜160万円　所得税21万／住民税18万</option>
-                  <option value="tokubetsu_16_14">収入160万超〜167万円　所得税16万／住民税14万</option>
-                  <option value="tokubetsu_11_11">収入167万超〜175万円　所得税11万／住民税11万</option>
-                  <option value="tokubetsu_6_6">収入175万超〜183万円　所得税6万／住民税6万</option>
-                  <option value="tokubetsu_3_3">収入183万超〜188万円　所得税3万／住民税3万</option>
-                  <option value="tokubetsu_2_2">収入188万超〜196万円　所得税2万／住民税2万</option>
-                  <option value="tokubetsu_1_1">収入196万超〜201.6万円　所得税1万／住民税1万</option>
-                </optgroup>
-              </select>
-            </div>
+          <div class="spouse-sel-wrap">
+            <select id="spouse_sel" onchange="onSalaryChange()">
+              <option value="0">配偶者なし / 対象外</option>
+              <optgroup label="── 配偶者控除（収入123万円以下）──">
+                <option value="spouse_full">配偶者控除 適用　所得税38万／住民税33万</option>
+              </optgroup>
+              <optgroup label="── 配偶者特別控除（収入123万超〜201.6万円以下）──">
+                <option value="tokubetsu_38_33">収入123万超〜150万円　所得税38万／住民税33万</option>
+                <option value="tokubetsu_26_22">収入150万超〜155万円　所得税26万／住民税22万</option>
+                <option value="tokubetsu_21_18">収入155万超〜160万円　所得税21万／住民税18万</option>
+                <option value="tokubetsu_16_14">収入160万超〜167万円　所得税16万／住民税14万</option>
+                <option value="tokubetsu_11_11">収入167万超〜175万円　所得税11万／住民税11万</option>
+                <option value="tokubetsu_6_6">収入175万超〜183万円　所得税6万／住民税6万</option>
+                <option value="tokubetsu_3_3">収入183万超〜188万円　所得税3万／住民税3万</option>
+                <option value="tokubetsu_2_2">収入188万超〜196万円　所得税2万／住民税2万</option>
+                <option value="tokubetsu_1_1">収入196万超〜201.6万円　所得税1万／住民税1万</option>
+              </optgroup>
+            </select>
           </div>
         </div>
 
@@ -501,8 +510,8 @@ body{
 
       <!-- 特定親族特別控除（令和8年新設）-->
       <div style="margin-top:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          特定親族特別控除<span class="dep-tag new">令和8年新設</span>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap">
+          <span style="white-space:nowrap">特定親族特別控除<span class="dep-tag new">令和8年新設</span></span>
           <span style="font-size:10px;color:var(--muted);font-weight:400">19〜22歳の親族で収入123万超〜188万円以下の方（最大4人）</span>
         </div>
         <div class="tokutei-rows" id="tokutei-rows"></div>

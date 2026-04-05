@@ -9,7 +9,7 @@
 
 | ファイル | ツール名 | 概要 |
 |---|---|---|
-| [`src/Furusto_Rimit_tax.html`](src/Furusto_Rimit_tax.html) | ふるさと納税 寄付上限額 算定ツール v2 | 給与収入または住民税額からふるさと納税の上限額を算出 |
+| [`src/Furusto_Rimit_tax.html`](src/Furusto_Rimit_Tax.html) | ふるさと納税 寄付上限額 算定ツール v2 | 給与収入または住民税額からふるさと納税の上限額を算出 |
 | [`src/interest_calculator_v4.html`](src/interest_calculator_v4.html) | 法人版 利子所得税 計算シート v4 | 差引入金額 ↔ 税引前利息の相互変換（税率 15.315%） |
 | [`src/tedori_gyaku_v3.html`](src/tedori_gyaku_v3.html) | 手取り逆算ツール \| 給与計算 v3 | 総支給額 → 手取り、または希望手取り → 必要総支給額の逆算 |
 

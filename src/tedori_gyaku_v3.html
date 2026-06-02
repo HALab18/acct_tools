@@ -1023,7 +1023,7 @@ function getHyojunHoshuKosei(kyuyo) {
   for (const row of HYOJUN_TABLE_KOSEI) {
     if (kyuyo >= row[2] && kyuyo < row[3]) return row[1];
   }
-  return HYOJUN_TABLE_KOSEI[HYOJUN_TABLE_KOSEI.length - 1][1];
+  return HYOJUN_TABLE_KOSEI[0][1];
 }
 
 // 後方互換用（既存コードがgetHyojunHoshuを呼んでいる箇所向け）

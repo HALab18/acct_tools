@@ -914,7 +914,7 @@ const KOYO_EMPLOYER_RATE = 0.0085;
 
 // ===== 標準報酬月額等級テーブル =====
 // 健康保険用：50等級（上限139万円）
-// 厚生年金用：35等級（上限65万円）※等級1〜4は健保のみ（下限58,000円）
+// 厚生年金用：32等級（上限65万円）※健保の等級1〜4相当は厚年では等級1（下限88,000円）に集約
 // [等級, 標準報酬, 月額報酬下限, 月額報酬上限]
 
 // 健康保険用テーブル（全50等級）
@@ -1703,7 +1703,7 @@ function calculate() {
     '協会けんぽ料率（令和8年度・2026年3月分〜）を使用しています。',
     `都道府県：${PREF_NAMES[pref]}。`,
     '介護保険料率1.62%（令和8年度）。子ども・子育て支援金0.23%は令和8年4月分から。',
-    '所得税は令和8年分・源泉徴収税額表（月額表・甲欄）による計算です。500,000円超の高額給与は電算機計算特例で補完しています。',
+    '所得税は令和8年分・源泉徴収税額表（月額表・甲欄）による計算です。社会保険料控除後の給与が740,000円以上の場合は電算機計算の特例で補完しています。',
     '標準報酬月額は総支給額（交通費含む）をもとに判定しています。',
     '実際の給与計算では端数処理等により数百円の誤差が生じることがあります。',
   ];
@@ -2021,6 +2021,11 @@ function resetForm() {
   btn.style.fontWeight = '';
   btn.style.boxShadow = '';
   document.getElementById('manual-grade-group').style.display = 'none';
+  document.getElementById('manual-kenpo-grade').selectedIndex = 0;
+  document.getElementById('manual-kosei-grade').selectedIndex = 0;
+  document.getElementById('manual-kenpo-hint').textContent = '標準報酬月額：―';
+  document.getElementById('manual-kosei-hint').textContent = '標準報酬月額：―';
+  document.getElementById('manual-kosei-group').style.display = '';
 
   // 社会保険の連動UIを加入状態に戻す
   ['pref-group', 'age-group', 'manual-grade-toggle-group'].forEach(id => {

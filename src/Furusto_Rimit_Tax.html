@@ -472,16 +472,16 @@ body{
               <optgroup label="── 配偶者控除（収入123万円以下）──">
                 <option value="spouse_full">配偶者控除 適用　所得税38万／住民税33万</option>
               </optgroup>
-              <optgroup label="── 配偶者特別控除（収入123万超〜201.6万円以下）──">
-                <option value="tokubetsu_38_33">収入123万超〜150万円　所得税38万／住民税33万</option>
-                <option value="tokubetsu_26_22">収入150万超〜155万円　所得税26万／住民税22万</option>
-                <option value="tokubetsu_21_18">収入155万超〜160万円　所得税21万／住民税18万</option>
-                <option value="tokubetsu_16_14">収入160万超〜167万円　所得税16万／住民税14万</option>
-                <option value="tokubetsu_11_11">収入167万超〜175万円　所得税11万／住民税11万</option>
-                <option value="tokubetsu_6_6">収入175万超〜183万円　所得税6万／住民税6万</option>
-                <option value="tokubetsu_3_3">収入183万超〜188万円　所得税3万／住民税3万</option>
-                <option value="tokubetsu_2_2">収入188万超〜196万円　所得税2万／住民税2万</option>
-                <option value="tokubetsu_1_1">収入196万超〜201.6万円　所得税1万／住民税1万</option>
+              <optgroup label="── 配偶者特別控除（収入123万超〜201.6万円未満）──">
+                <option value="tokubetsu_38_33">収入123万超〜160万円　所得税38万／住民税33万</option>
+                <option value="tokubetsu_36_33">収入160万超〜165万円　所得税36万／住民税33万</option>
+                <option value="tokubetsu_31_31">収入165万超〜170万円　所得税31万／住民税31万</option>
+                <option value="tokubetsu_26_26">収入170万超〜175万円　所得税26万／住民税26万</option>
+                <option value="tokubetsu_21_21">収入175万超〜180万円　所得税21万／住民税21万</option>
+                <option value="tokubetsu_16_16">収入180万超〜185万円　所得税16万／住民税16万</option>
+                <option value="tokubetsu_11_11">収入185万超〜190.4万円　所得税11万／住民税11万</option>
+                <option value="tokubetsu_6_6">収入190.4万超〜197.2万円　所得税6万／住民税6万</option>
+                <option value="tokubetsu_3_3">収入197.2万超〜201.6万円　所得税3万／住民税3万</option>
               </optgroup>
             </select>
           </div>
@@ -627,33 +627,32 @@ const SELF_BURDEN        = 2000;
 const JUMINZEI_KISO      = 430000; // 住民税基礎控除（令和8年度改正なし）
 const SHOTOKUZEI_KISO    = 580000; // 所得税基礎控除（簡易・一律58万）
 
-// 配偶者控除/特別控除テーブル
+// 配偶者控除/特別控除テーブル（令和7年改正後：配偶者収入123万円の壁対応）
 const SPOUSE_TABLE = {
   '0':              { shotoku: 0,      juminzei: 0 },
   'spouse_full':    { shotoku: 380000, juminzei: 330000 },
   'tokubetsu_38_33':{ shotoku: 380000, juminzei: 330000 },
-  'tokubetsu_26_22':{ shotoku: 260000, juminzei: 220000 },
-  'tokubetsu_21_18':{ shotoku: 210000, juminzei: 180000 },
-  'tokubetsu_16_14':{ shotoku: 160000, juminzei: 140000 },
+  'tokubetsu_36_33':{ shotoku: 360000, juminzei: 330000 },
+  'tokubetsu_31_31':{ shotoku: 310000, juminzei: 310000 },
+  'tokubetsu_26_26':{ shotoku: 260000, juminzei: 260000 },
+  'tokubetsu_21_21':{ shotoku: 210000, juminzei: 210000 },
+  'tokubetsu_16_16':{ shotoku: 160000, juminzei: 160000 },
   'tokubetsu_11_11':{ shotoku: 110000, juminzei: 110000 },
   'tokubetsu_6_6':  { shotoku:  60000, juminzei:  60000 },
   'tokubetsu_3_3':  { shotoku:  30000, juminzei:  30000 },
-  'tokubetsu_2_2':  { shotoku:  20000, juminzei:  20000 },
-  'tokubetsu_1_1':  { shotoku:  10000, juminzei:  10000 },
 };
 
-// 特定親族特別控除（住民税）：収入帯 → 控除額
+// 特定親族特別控除：収入帯 → 控除額（所得税＝令和7年分〜／住民税＝令和8年度〜）
 const TOKUTEI_TABLE = [
-  { label:'収入123万超〜143万円以下',  juminzei: 450000 },
-  { label:'収入143万超〜148万円以下',  juminzei: 380000 },
-  { label:'収入148万超〜153万円以下',  juminzei: 310000 },
-  { label:'収入153万超〜158万円以下',  juminzei: 240000 },
-  { label:'収入158万超〜163万円以下',  juminzei: 190000 },
-  { label:'収入163万超〜168万円以下',  juminzei: 150000 },
-  { label:'収入168万超〜173万円以下',  juminzei: 110000 },
-  { label:'収入173万超〜178万円以下',  juminzei:  70000 },
-  { label:'収入178万超〜183万円以下',  juminzei:  40000 },
-  { label:'収入183万超〜188万円以下',  juminzei:  20000 },
+  { label:'収入123万超〜150万円以下',  shotoku: 630000, juminzei: 450000 },
+  { label:'収入150万超〜155万円以下',  shotoku: 610000, juminzei: 450000 },
+  { label:'収入155万超〜160万円以下',  shotoku: 510000, juminzei: 450000 },
+  { label:'収入160万超〜165万円以下',  shotoku: 410000, juminzei: 410000 },
+  { label:'収入165万超〜170万円以下',  shotoku: 310000, juminzei: 310000 },
+  { label:'収入170万超〜175万円以下',  shotoku: 210000, juminzei: 210000 },
+  { label:'収入175万超〜180万円以下',  shotoku: 110000, juminzei: 110000 },
+  { label:'収入180万超〜185万円以下',  shotoku:  60000, juminzei:  60000 },
+  { label:'収入185万超〜188万円以下',  shotoku:  30000, juminzei:  30000 },
 ];
 
 // ━━━ 給与所得控除（令和8年度 住民税） ━━━
@@ -664,9 +663,9 @@ function kyuyoKoujoJuminzei(s) {
   if (s <= 8500000) return s * 0.10 + 1100000;
   return 1950000;
 }
+// 令和7年分以降：最低保障65万円（収入190万円以下）に引き上げ済み・住民税と同一
 function kyuyoKoujoShotoku(s) {
-  if (s <= 1625000) return 550000;
-  if (s <= 1800000) return s * 0.40 - 100000;
+  if (s <= 1900000) return 650000;
   if (s <= 3600000) return s * 0.30 + 80000;
   if (s <= 6600000) return s * 0.20 + 440000;
   if (s <= 8500000) return s * 0.10 + 1100000;
@@ -695,14 +694,15 @@ function getSpouseDeduction() {
   return SPOUSE_TABLE[key] || { shotoku: 0, juminzei: 0 };
 }
 function getTokuteiTotal() {
-  let total = 0;
+  let shotoku = 0, juminzei = 0;
   document.querySelectorAll('.tokutei-sel').forEach(sel => {
     const idx = parseInt(sel.value);
     if (!isNaN(idx) && idx >= 0 && idx < TOKUTEI_TABLE.length) {
-      total += TOKUTEI_TABLE[idx].juminzei;
+      shotoku  += TOKUTEI_TABLE[idx].shotoku;
+      juminzei += TOKUTEI_TABLE[idx].juminzei;
     }
   });
-  return total;
+  return { shotoku, juminzei };
 }
 
 function salaryToJuminzeiTaxable(salary, options = {}) {
@@ -726,6 +726,7 @@ function salaryToShotokuTaxable(salary, options = {}) {
     - (options.spouseS || 0)
     - (options.dep1 || 0) * 380000
     - (options.dep2 || 0) * 630000
+    - (options.tokuteiShotoku || 0)
   );
 }
 function salaryToJuminzei(salary, options = {}) {
@@ -747,7 +748,7 @@ let tokuteiCount = 0;
 // ━━━ 特定親族特別控除 行操作 ━━━
 function buildTokuteiOptions() {
   return TOKUTEI_TABLE.map((t, i) =>
-    `<option value="${i}">${t.label}（住民税控除 ${(t.juminzei/10000).toFixed(0)}万円）</option>`
+    `<option value="${i}">${t.label}（所得税${(t.shotoku/10000).toFixed(0)}万／住民税${(t.juminzei/10000).toFixed(0)}万）</option>`
   ).join('');
 }
 function addTokutei() {
@@ -838,15 +839,17 @@ function fmtN(n) { return Math.floor(n).toLocaleString('ja-JP'); }
 
 // ━━━ getOptions ━━━
 function getOptions() {
-  const spouse = getSpouseDeduction();
+  const spouse  = getSpouseDeduction();
+  const tokutei = getTokuteiTotal();
   return {
-    spouseS:      spouse.shotoku,
-    spouseJ:      spouse.juminzei,
-    dep1:         getCount('dep1'),
-    dep2:         getCount('dep2'),
-    tokuteiTotal: getTokuteiTotal(),
-    otherIncome:  isNaN(numVal('other_income'))  ? 0 : numVal('other_income'),
-    shakaiHoken:  isNaN(numVal('shakai_hoken'))  ? 0 : numVal('shakai_hoken'),
+    spouseS:        spouse.shotoku,
+    spouseJ:        spouse.juminzei,
+    dep1:           getCount('dep1'),
+    dep2:           getCount('dep2'),
+    tokuteiTotal:   tokutei.juminzei,
+    tokuteiShotoku: tokutei.shotoku,
+    otherIncome:    isNaN(numVal('other_income'))  ? 0 : numVal('other_income'),
+    shakaiHoken:    isNaN(numVal('shakai_hoken'))  ? 0 : numVal('shakai_hoken'),
   };
 }
 
@@ -943,7 +946,7 @@ function updatePrintSummary(juminzei, rate, limit) {
   document.querySelectorAll('.tokutei-sel').forEach((sel, i) => {
     const idx = parseInt(sel.value);
     if (!isNaN(idx) && idx >= 0 && idx < TOKUTEI_TABLE.length) {
-      tokuteiParts.push(`第${i+1}人: ${TOKUTEI_TABLE[idx].label.replace('収入','')} (${(TOKUTEI_TABLE[idx].juminzei/10000).toFixed(0)}万)`);
+      tokuteiParts.push(`第${i+1}人: ${TOKUTEI_TABLE[idx].label.replace('収入','')} (住民税${(TOKUTEI_TABLE[idx].juminzei/10000).toFixed(0)}万)`);
     }
   });
 

@@ -770,12 +770,20 @@
         if (r.mismatch) hasMismatch = true;
       }
     });
-    if (totalNet > 0) {
-      lines.push('─────────────────');
-      lines.push(`合計 税引前利息：¥${fmt(totalGross)}`);
-      lines.push(`合計 所得税額　：¥${fmt(totalTax)}`);
-      lines.push(`合計 差引入金額：¥${fmt(totalNet)}${hasMismatch ? ' ※一部端数不整合あり（参考値）' : ''}`);
+    if (totalNet <= 0) {
+      const toast = document.getElementById('toast');
+      toast.textContent = 'コピーする明細がありません';
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+        toast.textContent = 'クリップボードにコピーしました';
+      }, 2500);
+      return;
     }
+    lines.push('─────────────────');
+    lines.push(`合計 税引前利息：¥${fmt(totalGross)}`);
+    lines.push(`合計 所得税額　：¥${fmt(totalTax)}`);
+    lines.push(`合計 差引入金額：¥${fmt(totalNet)}${hasMismatch ? ' ※一部端数不整合あり（参考値）' : ''}`);
     navigator.clipboard.writeText(lines.join('\n')).then(() => {
       const toast = document.getElementById('toast');
       toast.classList.add('show');

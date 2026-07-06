@@ -456,14 +456,17 @@ const TAX_YEARS = {
     kousai: { teigaku: 8000000, inshoku: 0.50 },
     kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
     kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
-    jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
-                 hattenMult: 1.05, hattenShotokuLimit: 40000000 },
+    // brackets: [上限, 標準税率(B), 超過税率(A・みやぎ発展税)]
+    // 超過税率 = 現行標準税率 + 引下げ前標準税率(5.0/7.3/9.6%)×5% → 3.75% / 5.665% / 7.48%
+    // 出典: 宮城県 法人事業税税率表 https://www.pref.miyagi.jp/documents/28552/2022zigyozei.pdf
+    jigyouzei: { brackets: [ [4000000, 0.035, 0.0375], [8000000, 0.053, 0.05665], [Infinity, 0.070, 0.0748] ],
+                 hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
     bouei: null, // 防衛特別法人税は令和8年4月1日以後開始事業年度から
     notes: [
       '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
       '防衛特別法人税は対象外（令和8年4月1日以後開始事業年度から適用）',
-      'みやぎ発展税（事業税×1.05）は令和10年2月29日までの期間内に終了する事業年度に適用',
+      'みやぎ発展税（事業税 超過税率3.75%・5.665%・7.48%）は令和10年2月29日までの期間内に終了する事業年度に適用',
     ],
   },
   R8: {
@@ -474,8 +477,11 @@ const TAX_YEARS = {
     kousai: { teigaku: 8000000, inshoku: 0.50 },
     kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
     kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
-    jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
-                 hattenMult: 1.05, hattenShotokuLimit: 40000000 },
+    // brackets: [上限, 標準税率(B), 超過税率(A・みやぎ発展税)]
+    // 超過税率 = 現行標準税率 + 引下げ前標準税率(5.0/7.3/9.6%)×5% → 3.75% / 5.665% / 7.48%
+    // 出典: 宮城県 法人事業税税率表 https://www.pref.miyagi.jp/documents/28552/2022zigyozei.pdf
+    jigyouzei: { brackets: [ [4000000, 0.035, 0.0375], [8000000, 0.053, 0.05665], [Infinity, 0.070, 0.0748] ],
+                 hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
     // 防衛特別法人税（令和7年度税制改正で創設）: (基準法人税額 − 基礎控除500万円) × 4%
     bouei: { rate: 0.04, kiso: 5000000 },
@@ -581,15 +587,15 @@ function calcAll(inp) {
   const J = Y.jigyouzei;
   // みやぎ発展税: 資本金1億円以下かつ所得4,000万円以下は標準税率（不均一課税）
   const hattenTekiyo = !(isChusho && kazeiShotoku <= J.hattenShotokuLimit);
-  const mult = hattenTekiyo ? J.hattenMult : 1;
   let jigyouRaw = 0, jigyouStdRaw = 0, prev = 0;
   const jigyouDetail = [];
-  for (const [max, rate] of J.brackets) {
+  for (const [max, std, over] of J.brackets) {
     const part = Math.max(0, Math.min(kazeiShotoku, max) - prev);
     if (part > 0) {
-      jigyouRaw    += part * rate * mult;
-      jigyouStdRaw += part * rate;
-      jigyouDetail.push({ part, rate: rate * mult });
+      const rate = hattenTekiyo ? over : std;
+      jigyouRaw    += part * rate;
+      jigyouStdRaw += part * std;
+      jigyouDetail.push({ part, rate });
     }
     prev = max;
     if (kazeiShotoku <= max) break;
@@ -927,7 +933,7 @@ function renderResult() {
           ${r.bouei ? `防衛特別法人税: （法人税額 − 基礎控除500万円）× <em>${fmtPct(r.bouei.rate)}</em><br>` : `防衛特別法人税: <em>対象外</em>（令和8年4月1日以後開始事業年度から適用）<br>`}
           法人県民税 法人税割: <em>${fmtPct(r.kenwari.rate)}</em>${r.kenwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）'}<br>
           法人市民税 法人税割: <em>${fmtPct(r.shiwari.rate)}</em>${C.overThreshold !== undefined ? (r.shiwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）') : ''}<br>
-          法人事業税: ${r.jigyouzei.hatten ? `標準税率×1.05 <em>（みやぎ発展税）</em>` : `標準税率 <em>（所得4,000万円以下のため発展税対象外）</em>`}<br>
+          法人事業税: ${r.jigyouzei.hatten ? `超過税率 <em>3.75%／5.665%／7.48%</em>（みやぎ発展税・所得4,000万円超）` : `標準税率 <em>3.5%／5.3%／7.0%</em>（所得4,000万円以下のため発展税対象外）`}<br>
           特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em><br>
           均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${fmtN(r.shiKinto)}円</em><br><br>
           <strong>【交際費】</strong> ${inp.kousaihi > 0 ? `支出額 ${fmtN(inp.kousaihi)}円 − 損金算入限度 ${fmtN(r.kousai.gendo)}円（${r.kousai.houhou}）＝ 加算 <em>${fmtN(r.kousai.kasan)}円</em>` : '入力なし'}<br>

@@ -284,7 +284,7 @@ body{
     <p>中小企業（資本金1億円以下）の所得金額から、法人税・地方法人税・住民税・事業税の概算年税額を算出します</p>
     <div class="year-banner" id="year-banner">
       📅 令和7年4月1日以後開始事業年度 対応
-      <span>｜ 中小軽減税率15%（〜令和9年3月31日開始年度）｜ 宮城県・県内5市の税率収録</span>
+      <span>｜ 中小軽減税率15%（〜令和9年3月31日開始年度）｜ 宮城県・県内6市の税率収録</span>
     </div>
   </div>
 
@@ -297,23 +297,47 @@ body{
         <label>事業年度</label>
         <select id="year_sel" onchange="onInput()"></select>
       </div>
-      <div class="sel-field">
-        <label>本店所在地（市町村）</label>
-        <select id="city_sel" onchange="onInput()"></select>
-      </div>
-    </div>
-    <div class="field-row">
       <div class="field">
         <label>資本金の額（円）</label>
         <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
         <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
       </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">事業所の所在地・従業者数<span class="section-note">同一県内 最大3か所（本店含む）。2以上の市町村がある場合、市民税法人税割は従業者数で按分</span></div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>本店（市町村）</label>
+        <select id="city_sel1" onchange="onInput()"></select>
+      </div>
       <div class="field">
-        <label>従業員数（人）</label>
-        <input type="text" id="juugyoin" placeholder="例：12" inputmode="numeric" oninput="onCommaInput(this, onInput)">
-        <div class="auto-hint" id="juugyoin-hint"></div>
+        <label>本店の従業者数（人）</label>
+        <input type="text" id="juugyoin1" placeholder="例：12" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>事業所2（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <select id="city_sel2" onchange="onInput()"></select>
+      </div>
+      <div class="field">
+        <label>事業所2の従業者数（人）</label>
+        <input type="text" id="juugyoin2" placeholder="例：5" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>事業所3（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <select id="city_sel3" onchange="onInput()"></select>
+      </div>
+      <div class="field">
+        <label>事業所3の従業者数（人）</label>
+        <input type="text" id="juugyoin3" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      </div>
+    </div>
+    <div class="auto-hint" id="offices-hint"></div>
 
     <div class="divider"></div>
 
@@ -446,6 +470,7 @@ body{
    - 多賀城市: https://www.city.tagajo.miyagi.jp/shize/kurashi/zekin/hojin.html （8.4% 一律）
    - 岩沼市: https://www.city.iwanuma.miyagi.jp/kurashi/zei/hojin-juminzei/hojin-juminzei.html （6.0%）
    - 富谷市: https://www.tomiya-city.miyagi.jp/kurashi/zeikin/shiminzei/houjinsiminn.html （6.0%）
+   - 東松島市: https://www.city.higashimatsushima.miyagi.jp/kurashi/tetsuduki-sodan/zeikin/hojinshiminzei/hojinshiminzei.html （6.0%）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const TAX_YEARS = {
   R7: {
@@ -501,6 +526,7 @@ const CITIES = {
   tomiya:  { label: '富谷市',   std: 0.060, over: 0.060 },
   iwanuma: { label: '岩沼市',   std: 0.060, over: 0.060 },
   tagajo:  { label: '多賀城市', std: 0.084, over: 0.084 },
+  higashimatsushima: { label: '東松島市', std: 0.060, over: 0.060 },
   other:   { label: 'その他市町村（標準税率）', std: 0.060, over: 0.060 },
 };
 
@@ -521,7 +547,6 @@ function floor100(n)  { return Math.floor(n / 100) * 100; }   // 税額: 百円�
 /* ━━━ 計算エンジン（純関数・DOM非依存） ━━━ */
 function calcAll(inp) {
   const Y = TAX_YEARS[inp.yearKey];
-  const C = CITIES[inp.cityKey];
   const isChusho = inp.shihonkin <= 100000000;
 
   // ── 交際費の損金不算入額 ──
@@ -571,17 +596,44 @@ function calcAll(inp) {
   const kenOver = !isChusho || houjinzei > Y.kenminzei.overThreshold;
   const kenRate = kenOver ? Y.kenminzei.over : Y.kenminzei.std;
   const kenwari = floor100(juminBase * kenRate);
-  // 市: 仙台市は県と同基準で8.4%、名取・多賀城は一律8.4%
-  const cityOver = C.overThreshold !== undefined
-    ? (!isChusho || houjinzei > C.overThreshold)
-    : false;
-  const cityRate = cityOver ? C.over : C.std;
-  const shiwari  = floor100(juminBase * cityRate);
+
+  // ── 市民税 法人税割（複数事業所対応・同一市町村は従業者数を合算） ──
+  const officeMap = new Map();
+  for (const o of inp.offices) {
+    if (!officeMap.has(o.cityKey)) officeMap.set(o.cityKey, { key: o.cityKey, label: CITIES[o.cityKey].label, juugyoin: 0 });
+    officeMap.get(o.cityKey).juugyoin += o.juugyoin;
+  }
+  const offices = [...officeMap.values()];
+  const totalJuugyoin = offices.reduce((s, o) => s + o.juugyoin, 0);
+  const bunkatsu = offices.length > 1; // 分割法人（2以上の市町村に事務所等）
+
+  // 分割法人: 課税標準の総額（分割前の法人税額）÷ 従業者総数 = 1人当たり額
+  // 商は従業者総数の桁数+1桁の小数点以下まで算出し、それ未満は切捨て（地方税法321条の13）
+  let perCapita = 0;
+  if (bunkatsu && totalJuugyoin > 0) {
+    const f = Math.pow(10, String(totalJuugyoin).length + 1);
+    perCapita = Math.floor(houjinzei / totalJuugyoin * f) / f;
+  }
+
+  const shiwariList = offices.map(o => {
+    const C = CITIES[o.key];
+    // 超過税率の判定は分割前の法人税額の総額で行う（仙台市方式）
+    const over = C.overThreshold !== undefined ? (!isChusho || houjinzei > C.overThreshold) : false;
+    const rate = over ? C.over : C.std;
+    const base = bunkatsu ? floor1000(perCapita * o.juugyoin) : juminBase;
+    return { key: o.key, label: C.label, juugyoin: o.juugyoin, base, rate, over, amount: floor100(base * rate) };
+  });
+  const shiwariTotal = shiwariList.reduce((s, x) => s + x.amount, 0);
 
   // ── 均等割（12か月決算前提） ──
   const kenKinto = Y.kenKinto.find(r => inp.shihonkin <= r[0])[1];
   const cityKintoRow = CITY_KINTO.find(r => inp.shihonkin <= r[0]);
-  const shiKinto = inp.juugyoin > 50 ? cityKintoRow[2] : cityKintoRow[1];
+  // 市均等割は事務所等のある市町村ごとに課税（50人超の判定は各市町村内の従業者数）
+  const shiKintoList = offices.map(o => ({
+    key: o.key, label: o.label, juugyoin: o.juugyoin,
+    amount: o.juugyoin > 50 ? cityKintoRow[2] : cityKintoRow[1],
+  }));
+  const shiKintoTotal = shiKintoList.reduce((s, x) => s + x.amount, 0);
 
   // ── 法人事業税（所得割） ──
   const J = Y.jigyouzei;
@@ -608,7 +660,7 @@ function calcAll(inp) {
   // ── 集計 ──
   const kokuzei   = houjinzei + chihouHoujinzei + (bouei ? bouei.amount : 0);
   const kenzei    = kenwari + kenKinto;
-  const shizei    = shiwari + shiKinto;
+  const shizei    = shiwariTotal + shiKintoTotal;
   const jigyoukei = jigyouzei + tokubetsu;
   const chihouzei = kenzei + shizei + jigyoukei;
   const total     = kokuzei + chihouzei;
@@ -629,8 +681,9 @@ function calcAll(inp) {
     chihouHoujinzei: { amount: chihouHoujinzei, base: chihouBase, rate: Y.chihouHoujinzei },
     bouei,
     kenwari:  { amount: kenwari, base: juminBase, rate: kenRate, over: kenOver },
-    shiwari:  { amount: shiwari, base: juminBase, rate: cityRate, over: cityOver },
-    kenKinto, shiKinto,
+    shiwari:  { amount: shiwariTotal, list: shiwariList, bunkatsu, totalJuugyoin, perCapita },
+    kenKinto,
+    shiKinto: { amount: shiKintoTotal, list: shiKintoList },
     jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, detail: jigyouDetail },
     tokubetsu: { amount: tokubetsu, base: kijunShotokuwari, rate: Y.tokubetsu },
     kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
@@ -672,21 +725,33 @@ function buildSelects() {
     opt.value = k; opt.textContent = y.label;
     ySel.appendChild(opt);
   });
-  const cSel = document.getElementById('city_sel');
-  Object.entries(CITIES).forEach(([k, c]) => {
-    const opt = document.createElement('option');
-    opt.value = k; opt.textContent = c.label;
-    cSel.appendChild(opt);
-  });
+  for (let i = 1; i <= 3; i++) {
+    const cSel = document.getElementById('city_sel' + i);
+    if (i > 1) {
+      const none = document.createElement('option');
+      none.value = 'none'; none.textContent = '— なし —';
+      cSel.appendChild(none);
+    }
+    Object.entries(CITIES).forEach(([k, c]) => {
+      const opt = document.createElement('option');
+      opt.value = k; opt.textContent = c.label;
+      cSel.appendChild(opt);
+    });
+  }
 }
 
 /* ━━━ 入力の収集 ━━━ */
 function getInputs() {
+  const offices = [];
+  for (let i = 1; i <= 3; i++) {
+    const key = document.getElementById('city_sel' + i).value;
+    if (key === 'none') continue;
+    offices.push({ cityKey: key, juugyoin: numOr0('juugyoin' + i) });
+  }
   return {
     yearKey:   document.getElementById('year_sel').value,
-    cityKey:   document.getElementById('city_sel').value,
+    offices,
     shihonkin: numOr0('shihonkin'),
-    juugyoin:  numOr0('juugyoin'),
     rieki:     numOr0('rieki'),
     kousaihi:  numOr0('kousaihi'),
     inshokuhi: numOr0('inshokuhi'),
@@ -709,11 +774,18 @@ function onInput() {
   document.getElementById('year-banner').innerHTML =
     '📅 ' + Y.label + ' 対応<span>｜ ' + Y.notes[0] + '</span>';
 
-  // 従業員数ヒント
-  const jh = document.getElementById('juugyoin-hint');
-  if (inp.juugyoin > 0) {
-    jh.textContent = '✦ 均等割区分: 従業者数 ' + (inp.juugyoin > 50 ? '50人超' : '50人以下');
-  } else { jh.textContent = ''; }
+  // 事業所・従業者数ヒント
+  const oh = document.getElementById('offices-hint');
+  const totalJ = inp.offices.reduce((s, o) => s + o.juugyoin, 0);
+  const cityCount = new Set(inp.offices.map(o => o.cityKey)).size;
+  if (totalJ > 0) {
+    if (cityCount > 1) {
+      oh.textContent = '✦ 従業者数 合計 ' + totalJ + '人（分割法人：市民税法人税割を従業者数で按分 ' +
+        inp.offices.map(o => CITIES[o.cityKey].label + ' ' + o.juugyoin + '人').join('・') + '）';
+    } else {
+      oh.textContent = '✦ 従業者数 合計 ' + totalJ + '人（均等割区分: ' + (totalJ > 50 ? '50人超' : '50人以下') + '）';
+    }
+  } else { oh.textContent = ''; }
 
   // 交際費ヒント
   const kh = document.getElementById('kousaihi-hint');
@@ -730,10 +802,18 @@ function onInput() {
 }
 
 /* ━━━ 内訳テーブル行の生成（画面・印刷共用） ━━━ */
-function buildRows(r, C) {
+function buildRows(r) {
   const boueiRows = r.bouei
     ? [{ name: '防衛特別法人税（国税）', base: fmtN(r.bouei.base), rate: fmtPct(r.bouei.rate), amount: r.bouei.amount }]
     : [];
+  const shiwariRows = r.shiwari.list.map(s => ({
+    name: '法人市民税 法人税割（' + s.label + (r.shiwari.bunkatsu ? '・従業者' + s.juugyoin + '人' : '') + '）' + (s.over ? '（超過税率）' : ''),
+    base: fmtN(s.base), rate: fmtPct(s.rate), amount: s.amount,
+  }));
+  const shiKintoRows = r.shiKinto.list.map(s => ({
+    name: '法人市民税 均等割' + (r.shiKinto.list.length > 1 ? '（' + s.label + '）' : ''),
+    base: '—', rate: '年額', amount: s.amount,
+  }));
   return [
     { name: '法人税', base: fmtN(r.houjinzei.base), rate: r.isChusho ? fmtPct(r.houjinzei.lowRate) + ' / ' + fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high) : fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high), amount: r.houjinzei.amount },
     { name: '地方法人税（国税）', base: fmtN(r.chihouHoujinzei.base), rate: fmtPct(r.chihouHoujinzei.rate), amount: r.chihouHoujinzei.amount },
@@ -741,8 +821,8 @@ function buildRows(r, C) {
     { name: '国税 小計', amount: r.kokuzei, cls: 'subtotal' },
     { name: '法人県民税 法人税割' + (r.kenwari.over ? '（超過税率）' : ''), base: fmtN(r.kenwari.base), rate: fmtPct(r.kenwari.rate), amount: r.kenwari.amount },
     { name: '法人県民税 均等割', base: '—', rate: '年額', amount: r.kenKinto },
-    { name: '法人市民税 法人税割（' + C.label + '）' + (r.shiwari.over ? '（超過税率）' : ''), base: fmtN(r.shiwari.base), rate: fmtPct(r.shiwari.rate), amount: r.shiwari.amount },
-    { name: '法人市民税 均等割', base: '—', rate: '年額', amount: r.shiKinto },
+    ...shiwariRows,
+    ...shiKintoRows,
     { name: '法人事業税 所得割' + (r.jigyouzei.hatten ? '（みやぎ発展税適用）' : ''), base: fmtN(r.jigyouzei.base), rate: r.jigyouzei.detail.map(d => fmtPct(d.rate)).join(' / ') || '—', amount: r.jigyouzei.amount },
     { name: '特別法人事業税', base: fmtN(r.tokubetsu.base), rate: fmtPct(r.tokubetsu.rate), amount: r.tokubetsu.amount },
     { name: '地方税 小計', amount: r.chihouzei, cls: 'subtotal' },
@@ -782,13 +862,13 @@ function buildShotokuRows(inp, r) {
 /* ━━━ 印刷シート更新 ━━━ */
 function updatePrintSheet(inp, r) {
   const Y = TAX_YEARS[inp.yearKey];
-  const C = CITIES[inp.cityKey];
+  const officeStr = r.shiwari.list.map(s => s.label + (s.juugyoin > 0 ? ' ' + s.juugyoin + '人' : '')).join('・');
 
   const params = [
     { k: '事業年度',   v: Y.short },
-    { k: '本店所在地', v: '宮城県 ' + C.label },
+    { k: '事業所所在地', v: '宮城県 ' + officeStr },
     { k: '資本金',     v: inp.shihonkin > 0 ? fmt(inp.shihonkin) : '—' },
-    { k: '従業員数',   v: inp.juugyoin > 0 ? inp.juugyoin + '人（' + (inp.juugyoin > 50 ? '50人超' : '50人以下') + '）' : '—' },
+    { k: '従業者数 合計', v: r.shiwari.totalJuugyoin > 0 ? r.shiwari.totalJuugyoin + '人' + (r.shiwari.bunkatsu ? '（分割法人）' : '（' + (r.shiwari.totalJuugyoin > 50 ? '50人超' : '50人以下') + '）') : '—' },
     { k: '税引前利益', v: fmt(inp.rieki) },
     { k: '交際費支出額', v: inp.kousaihi > 0 ? fmt(inp.kousaihi) : 'なし' },
     { k: '繰越欠損金', v: inp.kesson > 0 ? fmt(inp.kesson) : 'なし' },
@@ -823,13 +903,14 @@ function updatePrintSheet(inp, r) {
     `<tr${cls === 'sub' ? ' class="ps-subtotal"' : ''}><td>${name}</td><td>${val < 0 ? '△ ' + fmtN(-val) : fmtN(val)} 円</td></tr>`
   ).join('');
 
-  document.getElementById('ps-tbody').innerHTML = buildRows(r, C).map(row => {
+  document.getElementById('ps-tbody').innerHTML = buildRows(r).map(row => {
     const cls = row.cls === 'grand' ? ' class="ps-grand"' : row.cls === 'subtotal' ? ' class="ps-subtotal"' : '';
     return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
   }).join('');
 
   const notes = [
-    '12か月決算・宮城県内単一事業所の前提で計算しています。',
+    '12か月決算・全事業所が宮城県内にある前提で計算しています。',
+    ...(r.shiwari.bunkatsu ? ['2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分計算しています（地方税法第321条の13）。市民税均等割は事務所等のある各市町村で課税されます。'] : []),
     '中間納付額・税額控除（所得税額控除等）・留保金課税は考慮していません。',
     '事業税・特別法人事業税は納付事業年度の損金に算入されるため、翌期以降の税額に影響します。',
     ...Y.notes,
@@ -841,7 +922,7 @@ function updatePrintSheet(inp, r) {
   const now = new Date();
   document.getElementById('ps-footer').textContent =
     `出力日：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日　｜　` +
-    `${Y.label}　宮城県・${C.label} の税率で計算`;
+    `${Y.label}　宮城県・${r.shiwari.list.map(s => s.label).join('・')} の税率で計算`;
 }
 
 /* ━━━ Main render ━━━ */
@@ -854,7 +935,6 @@ function renderResult() {
     return;
   }
   const r = calcAll(inp);
-  const C = CITIES[inp.cityKey];
   const Y = TAX_YEARS[inp.yearKey];
   updatePrintSheet(inp, r);
 
@@ -868,7 +948,7 @@ function renderResult() {
     `<tr${cls === 'sub' ? ' class="subtotal"' : ''}><td>${name}</td><td>${val < 0 ? '△ ' + fmtN(-val) : fmtN(val)} 円</td></tr>`
   ).join('');
 
-  const taxRows = buildRows(r, C).map(row => {
+  const taxRows = buildRows(r).map(row => {
     const cls = row.cls ? ` class="${row.cls}"` : '';
     return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
   }).join('');
@@ -918,7 +998,7 @@ function renderResult() {
           <thead><tr><th>税目</th><th>課税標準</th><th>税率</th><th>税額</th></tr></thead>
           <tbody>${taxRows}</tbody>
         </table>
-        <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています</div>
+        <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています${r.shiwari.bunkatsu ? '<br>※ 2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分しています（1人当たり課税標準 ' + r.shiwari.perCapita.toLocaleString('ja-JP') + '円）' : ''}</div>
         ${finalTable}
 
         <div class="action-row">
@@ -927,15 +1007,16 @@ function renderResult() {
           <button class="pdf-btn" onclick="doPrint()">🖨 印刷 / PDF</button>
         </div>
         <div class="formula-box" id="formula-detail">
-          <strong>【適用税率の判定（${Y.short}事業年度・${C.label}）】</strong><br>
+          <strong>【適用税率の判定（${Y.short}事業年度・${r.shiwari.list.map(s => s.label).join('・')}）】</strong><br>
           法人税: ${r.isChusho ? `年800万円以下 <em>${fmtPct(r.houjinzei.lowRate)}</em> ／ 800万円超 <em>${fmtPct(Y.houjinzei.high)}</em>（中小法人）` : `<em>${fmtPct(Y.houjinzei.high)}</em>（資本金1億円超）`}<br>
           地方法人税: 法人税額 × <em>${fmtPct(Y.chihouHoujinzei)}</em><br>
           ${r.bouei ? `防衛特別法人税: （法人税額 − 基礎控除500万円）× <em>${fmtPct(r.bouei.rate)}</em><br>` : `防衛特別法人税: <em>対象外</em>（令和8年4月1日以後開始事業年度から適用）<br>`}
           法人県民税 法人税割: <em>${fmtPct(r.kenwari.rate)}</em>${r.kenwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）'}<br>
-          法人市民税 法人税割: <em>${fmtPct(r.shiwari.rate)}</em>${C.overThreshold !== undefined ? (r.shiwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）') : ''}<br>
+          ${r.shiwari.list.map(s => `法人市民税 法人税割（${s.label}）: <em>${fmtPct(s.rate)}</em>${s.over ? '（法人税額1,000万円超のため超過税率）' : ''}${r.shiwari.bunkatsu ? `｜分割課税標準 ${fmtN(s.base)}円（従業者${s.juugyoin}人）` : ''}`).join('<br>')}<br>
+          ${r.shiwari.bunkatsu ? `分割基準: 課税標準総額 ÷ 従業者総数${r.shiwari.totalJuugyoin}人 ＝ 1人当たり <em>${r.shiwari.perCapita.toLocaleString('ja-JP')}円</em>（各市の従業者数を乗じて按分）<br>` : ''}
           法人事業税: ${r.jigyouzei.hatten ? `超過税率 <em>3.75%／5.665%／7.48%</em>（みやぎ発展税・所得4,000万円超）` : `標準税率 <em>3.5%／5.3%／7.0%</em>（所得4,000万円以下のため発展税対象外）`}<br>
           特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em><br>
-          均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${fmtN(r.shiKinto)}円</em><br><br>
+          均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${r.shiKinto.list.map(s => `${fmtN(s.amount)}円${r.shiKinto.list.length > 1 ? `（${s.label}）` : ''}`).join(' ＋ ')}</em><br><br>
           <strong>【交際費】</strong> ${inp.kousaihi > 0 ? `支出額 ${fmtN(inp.kousaihi)}円 − 損金算入限度 ${fmtN(r.kousai.gendo)}円（${r.kousai.houhou}）＝ 加算 <em>${fmtN(r.kousai.kasan)}円</em>` : '入力なし'}<br>
           <strong>【繰越欠損金】</strong> ${inp.kesson > 0 ? `控除 <em>${fmtN(r.kessonKoujo)}円</em>（${r.isChusho ? '中小法人につき所得の100%まで' : '所得の50%が限度'}）` : '入力なし'}
         </div>
@@ -953,15 +1034,17 @@ function copyResult(btn) {
   const inp = getInputs();
   const r = calcAll(inp);
   const Y = TAX_YEARS[inp.yearKey];
-  const C = CITIES[inp.cityKey];
+  const officeStr = r.shiwari.list.map(s => s.label).join('・');
   const lines = [
-    `【法人税・地方税 概算（${Y.short}事業年度・宮城県${C.label}）】`,
+    `【法人税・地方税 概算（${Y.short}事業年度・宮城県${officeStr}）】`,
     `課税所得: ${fmtN(r.kazeiShotoku)}円`,
     `法人税: ${fmtN(r.houjinzei.amount)}円`,
     `地方法人税: ${fmtN(r.chihouHoujinzei.amount)}円`,
     ...(r.bouei ? [`防衛特別法人税: ${fmtN(r.bouei.amount)}円`] : []),
     `法人県民税: ${fmtN(r.kenzei)}円（法人税割${fmtN(r.kenwari.amount)}＋均等割${fmtN(r.kenKinto)}）`,
-    `法人市民税: ${fmtN(r.shizei)}円（法人税割${fmtN(r.shiwari.amount)}＋均等割${fmtN(r.shiKinto)}）`,
+    `法人市民税: ${fmtN(r.shizei)}円（法人税割${fmtN(r.shiwari.amount)}＋均等割${fmtN(r.shiKinto.amount)}）`,
+    ...(r.shiwari.bunkatsu ? r.shiwari.list.map(s =>
+      `　└ ${s.label}: 法人税割${fmtN(s.amount)}円＋均等割${fmtN(r.shiKinto.list.find(k => k.key === s.key).amount)}円（従業者${s.juugyoin}人）`) : []),
     `法人事業税: ${fmtN(r.jigyouzei.amount)}円`,
     `特別法人事業税: ${fmtN(r.tokubetsu.amount)}円`,
     `合計納税額（概算）: ${fmtN(r.total)}円`,

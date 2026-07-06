@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法人税・地方税 概算計算ツール｜中小企業向け（宮城県対応）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f5f7fa;
+  --bg2:      #eef1f6;
+  --card:     #ffffff;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+  --accent:   #2563eb;
+  --accent2:  #3b82f6;
+  --accent-l: #eff6ff;
+  --text:     #1e293b;
+  --text2:    #475569;
+  --muted:    #94a3b8;
+  --muted2:   #64748b;
+  --green:    #059669;
+  --green-l:  #ecfdf5;
+  --red:      #dc2626;
+  --gold:     #d97706;
+  --gold-l:   #fffbeb;
+  --shadow:   0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;background:var(--bg);
+  font-family:'Noto Sans JP','Hiragino Sans',sans-serif;
+  color:var(--text);padding:0 0 80px;line-height:1.7;font-size:14px;
+}
+
+/* ── Top bar ── */
+.topbar{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:center;justify-content:space-between;
+  height:52px;position:sticky;top:0;z-index:100;gap:8px;
+}
+.topbar-logo{
+  font-family:'DM Serif Display',serif;font-size:17px;color:var(--accent);
+  letter-spacing:-.02em;white-space:nowrap;flex-shrink:0;
+}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.badge{
+  font-size:10px;padding:3px 8px;border-radius:20px;
+  letter-spacing:.03em;font-weight:600;border:1px solid;white-space:nowrap;
+}
+.badge-year{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+.badge-blue{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
+@media(max-width:480px){
+  .badge-blue{ display:none }
+  .badge-year{ font-size:9px; padding:2px 6px }
+  .topbar{ padding:0 12px }
+}
+.btn-print{
+  display:flex;align-items:center;gap:4px;
+  background:var(--accent);color:#fff;border:none;border-radius:7px;
+  padding:6px 10px;font-size:11px;font-weight:600;font-family:inherit;
+  cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;
+}
+.btn-print:hover{background:#1d4ed8}
+@media(max-width:360px){
+  .btn-print .btn-print-label{ display:none }
+}
+
+/* ── Layout ── */
+.page-wrap{max-width:760px;margin:0 auto;padding:20px 16px 0}
+
+/* ── Page title ── */
+.page-title{margin-bottom:16px}
+.page-title h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(17px,4vw,26px);color:var(--text);
+  letter-spacing:-.02em;line-height:1.3;
+}
+.page-title p{font-size:11px;color:var(--muted2);margin-top:4px}
+.year-banner{
+  display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px;
+  margin-top:8px;background:#fef9c3;border:1px solid #fde68a;
+  border-radius:6px;padding:5px 12px;font-size:10px;color:#854d0e;font-weight:600;
+  line-height:1.5;
+}
+.year-banner span{font-weight:400;color:#92400e}
+
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);margin-bottom:12px}
+
+/* ── Section label ── */
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section-note{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:6px}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* ── Field ── */
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+.field>label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.field input[type=text]{
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;color:var(--text);
+  padding:9px 13px;font-size:15px;font-family:inherit;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input[type=text]:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.field-note{font-size:11px;color:var(--muted);margin-top:4px}
+.auto-hint{font-size:11px;color:var(--accent);margin-top:4px;min-height:14px;font-weight:500}
+.calc-badge{font-size:9px;font-weight:600;letter-spacing:.06em;background:var(--accent-l);color:var(--accent);border:1px solid #bfdbfe;border-radius:3px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+
+/* 2カラムのフィールド行 */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.field-row{grid-template-columns:1fr}}
+
+/* ── Select (dropdown) ── */
+.sel-field{margin-bottom:16px}
+.sel-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.sel-field select{
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;
+  color:var(--text);padding:9px 13px;font-size:13px;font-family:inherit;
+  outline:none;cursor:pointer;transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.sel-field select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+
+/* ── Result ── */
+.result{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:12px;animation:pulseIn .4s ease}
+.result-hero{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#3b82f6 100%);padding:24px 24px 20px;text-align:center}
+.result-eyebrow{font-size:10px;letter-spacing:.3em;color:rgba(255,255,255,.65);margin-bottom:8px;font-weight:500}
+.result-amount{font-family:'DM Serif Display',serif;font-size:clamp(30px,8vw,48px);color:#fff;letter-spacing:-.02em;line-height:1}
+.result-sublabel{font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;letter-spacing:.05em}
+.result-body{padding:18px 20px 16px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:560px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.stat-key{color:var(--muted);font-size:9.5px;letter-spacing:.06em;margin-bottom:3px;font-weight:500;text-transform:uppercase}
+.stat-val{color:var(--text);font-size:13px;font-weight:600}
+
+/* ── Breakdown table ── */
+.sim-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border);margin-top:14px}
+.sim-table{width:100%;border-collapse:collapse;font-size:12px}
+.sim-table th{color:var(--muted2);font-size:10px;letter-spacing:.06em;font-weight:600;border-bottom:1.5px solid var(--border2);padding:6px 8px;text-align:right;text-transform:uppercase}
+.sim-table th:first-child{text-align:left}
+.sim-table td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2)}
+.sim-table td:first-child{text-align:left;color:var(--text);font-weight:500}
+.sim-table tr.subtotal td{background:var(--bg);font-weight:600;color:var(--text)}
+.sim-table tr.grand td{background:var(--gold-l);color:var(--gold);font-weight:700;border-top:1.5px solid #fde68a}
+.sim-table tr.grand td:first-child{color:var(--gold)}
+.sim-table tr:last-child td{border-bottom:none}
+.sim-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.7}
+
+/* ── Action row ── */
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.formula-toggle,.copy-btn,.pdf-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--bg2);border:1px solid var(--border2);color:var(--text2);
+  padding:6px 13px;border-radius:7px;cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;
+}
+.formula-toggle:hover,.copy-btn:hover,.pdf-btn:hover{background:var(--accent-l);border-color:#93c5fd;color:var(--accent)}
+.copy-btn.copied{color:var(--green);border-color:#6ee7b7;background:var(--green-l)}
+.formula-box{margin-top:10px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);font-size:11.5px;color:var(--text2);line-height:2;display:none}
+.formula-box.open{display:block;animation:fadeUp .25s ease}
+.formula-box em{color:var(--accent);font-style:normal;font-weight:600}
+.formula-box strong{color:var(--text);font-weight:700}
+
+/* ── Placeholder ── */
+.placeholder{background:#fff;border:1.5px dashed var(--border2);border-radius:12px;padding:36px 28px;text-align:center;color:var(--muted);font-size:13px;line-height:2.2}
+.placeholder-icon{font-size:26px;margin-bottom:8px;opacity:.4}
+
+/* ── Footer ── */
+.footer{text-align:center;font-size:10px;color:var(--muted);margin-top:18px;line-height:2}
+
+/* ── Animations ── */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+@keyframes pulseIn {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:scale(1)}}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━
+   印刷・PDF用スタイル（A4縦 1枚）
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media print {
+  @page { size: A4 portrait; margin: 10mm 14mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: #fff !important; padding: 0 !important; font-size: 10px !important; color: #000 !important; line-height: 1.5 !important; }
+  .topbar,
+  #input-card,
+  #result-area,
+  .btn-print,
+  .action-row,
+  .formula-box,
+  .footer,
+  .placeholder { display: none !important; }
+  .page-wrap { max-width: 100% !important; padding: 0 !important; }
+  .page-title { margin-bottom: 6px !important; }
+  .page-title h1 { font-size: 14px !important; line-height: 1.3 !important; }
+  .page-title p  { font-size: 9px !important; margin-top: 2px !important; }
+  .year-banner   { font-size: 9px !important; padding: 3px 8px !important; margin-top: 4px !important; }
+  .print-only { display: block !important; }
+}
+.print-only { display: none; }
+
+/* ── 印刷レイアウト本体 ── */
+.print-sheet {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  font-size: 10px;
+  color: #1e293b;
+  line-height: 1.6;
+}
+.ps-section-title {
+  font-size: 9px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #64748b;
+  border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px; margin-top: 10px;
+}
+.ps-params {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; margin-bottom: 12px;
+}
+.ps-param {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;
+}
+.ps-param-key { font-size: 8.5px; color: #94a3b8; font-weight: 600; margin-bottom: 2px; letter-spacing: .05em; }
+.ps-param-val { font-size: 11px; font-weight: 700; color: #1e293b; }
+.ps-hero {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
+  border-radius: 6px; padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ps-hero-label { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.7); margin-bottom: 3px; }
+.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; letter-spacing: -.02em; line-height: 1; }
+.ps-hero-sub { font-size: 9px; color: rgba(255,255,255,.7); margin-top: 3px; }
+.ps-hero-right { display: flex; gap: 10px; }
+.ps-hero-stat { text-align: right; }
+.ps-hero-stat-key { font-size: 8px; color: rgba(255,255,255,.6); }
+.ps-hero-stat-val { font-size: 13px; font-weight: 700; color: #fff; }
+.ps-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.ps-table th {
+  font-size: 8.5px; font-weight: 600; color: #64748b; letter-spacing: .05em;
+  border-bottom: 1.5px solid #cbd5e1; padding: 4px 8px; text-align: right;
+}
+.ps-table th:first-child { text-align: left; }
+.ps-table td { padding: 3.5px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569; }
+.ps-table td:first-child { text-align: left; color: #1e293b; font-weight: 500; }
+.ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
+.ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
+.ps-table tr:last-child td { border-bottom: none; }
+.ps-notes {
+  margin-top: 10px; padding: 8px 10px;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
+  font-size: 8.5px; color: #64748b; line-height: 1.8;
+}
+.ps-footer {
+  margin-top: 8px; text-align: right; font-size: 8.5px; color: #94a3b8;
+  border-top: 1px solid #e2e8f0; padding-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">houjinzei<span style="color:var(--text2);font-size:13px;font-family:inherit;font-weight:400"> calc</span></div>
+  <div class="topbar-right">
+    <div class="badge badge-year" id="badge-year">令和7年度開始事業年度</div>
+    <div class="badge badge-blue">宮城県対応</div>
+    <button class="btn-print" onclick="doPrint()">🖨<span class="btn-print-label"> 印刷 / PDF</span></button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Page title -->
+  <div class="page-title">
+    <h1>法人税・地方税 概算計算ツール</h1>
+    <p>中小企業（資本金1億円以下）の所得金額から、法人税・地方法人税・住民税・事業税の概算年税額を算出します</p>
+    <div class="year-banner" id="year-banner">
+      📅 令和7年4月1日以後開始事業年度 対応
+      <span>｜ 中小軽減税率15%（〜令和9年3月31日開始年度）｜ 宮城県・県内5市の税率収録</span>
+    </div>
+  </div>
+
+  <!-- ===== 入力カード ===== -->
+  <div class="card" id="input-card">
+
+    <div class="section-label">基本情報</div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>事業年度</label>
+        <select id="year_sel" onchange="onInput()"></select>
+      </div>
+      <div class="sel-field">
+        <label>本店所在地（市町村）</label>
+        <select id="city_sel" onchange="onInput()"></select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>資本金の額（円）</label>
+        <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
+      </div>
+      <div class="field">
+        <label>従業員数（人）</label>
+        <input type="text" id="juugyoin" placeholder="例：12" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="auto-hint" id="juugyoin-hint"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">当期利益・申告調整<span class="section-note">別表四のイメージで入力</span></div>
+    <div class="field">
+      <label>税引前当期純利益（円）<span class="calc-badge">損益計算書</span></label>
+      <input type="text" id="rieki" placeholder="例：12,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">マイナス（赤字）の場合は 0 を入力し、欠損見込みとしてご利用ください</div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>交際費 支出額（円）</label>
+        <input type="text" id="kousaihi" placeholder="例：3,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">年800万円までの定額控除超過分を自動で加算します</div>
+      </div>
+      <div class="field">
+        <label>うち接待飲食費（円）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <input type="text" id="inshokuhi" placeholder="例：1,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">飲食費×50% が800万円を超える場合は有利な方を自動選択</div>
+      </div>
+    </div>
+    <div class="auto-hint" id="kousaihi-hint"></div>
+    <div class="field-row" style="margin-top:12px">
+      <div class="field">
+        <label>その他 加算額（円）</label>
+        <input type="text" id="kasan" placeholder="例：500,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">減価償却超過額・役員給与損金不算入・納税充当金 等</div>
+      </div>
+      <div class="field">
+        <label>その他 減算額（円）</label>
+        <input type="text" id="gensan" placeholder="例：300,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">受取配当等の益金不算入・事業税認定損 等</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">繰越欠損金</div>
+    <div class="field">
+      <label>繰越欠損金 残高（円）<span class="calc-badge">別表七(一)</span></label>
+      <input type="text" id="kesson" placeholder="例：5,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">10年以内に生じた期限内の欠損金残高。中小法人は所得の100%まで控除可能</div>
+      <div class="auto-hint" id="kesson-hint"></div>
+    </div>
+  </div>
+
+  <!-- ===== 印刷専用エリア（画面上は非表示） ===== -->
+  <div class="print-only" id="print-sheet">
+    <div class="print-sheet">
+      <div class="ps-section-title">前提条件</div>
+      <div class="ps-params" id="ps-params"></div>
+      <div class="ps-hero">
+        <div>
+          <div class="ps-hero-label" id="ps-hero-label">ESTIMATED TAX</div>
+          <div class="ps-hero-amount" id="ps-amount">—</div>
+          <div class="ps-hero-sub">法人税・地方税 概算納税額（年間合計）</div>
+        </div>
+        <div class="ps-hero-right">
+          <div class="ps-hero-stat">
+            <div class="ps-hero-stat-key">課税所得</div>
+            <div class="ps-hero-stat-val" id="ps-shotoku">—</div>
+          </div>
+          <div class="ps-hero-stat">
+            <div class="ps-hero-stat-key">実効税率</div>
+            <div class="ps-hero-stat-val" id="ps-jikko">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="ps-section-title">所得金額の計算</div>
+      <table class="ps-table"><tbody id="ps-shotoku-tbody"></tbody></table>
+      <div class="ps-section-title">税額の内訳</div>
+      <table class="ps-table">
+        <thead><tr><th>税目</th><th>課税標準</th><th>税率</th><th>税額</th></tr></thead>
+        <tbody id="ps-tbody"></tbody>
+      </table>
+      <div class="ps-notes" id="ps-notes"></div>
+      <div class="ps-footer" id="ps-footer"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="result-area">
+    <div class="placeholder">
+      <div class="placeholder-icon">🏢</div>
+      税引前当期純利益を入力すると<br>概算税額と内訳が表示されます
+    </div>
+  </div>
+
+  <div class="footer" id="screen-footer">
+    ※ 本ツールは概算です。実際の申告税額とは異なる場合があります。<br>
+    中小軽減税率15%（年800万円以下・令和9年3月31日までに開始する事業年度）｜ 地方法人税10.3% ｜ 特別法人事業税37%
+  </div>
+</div>
+
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   税率マスタ（年度キーの追加で令和9年度以降に対応）
+
+   出典（2026年7月確認）:
+   - 法人税軽減税率: 中小企業庁 https://www.chusho.meti.go.jp/zaimu/zeisei/tokurei/houjin_keigen.html
+   - 宮城県 法人県民税: https://www.pref.miyagi.jp/soshiki/zeimu/houjinkenmin.html
+   - 宮城県 超過課税（みやぎ発展税・みやぎ環境税）: https://www.pref.miyagi.jp/soshiki/zeimu/choukakazei.html
+   - 仙台市 法人市民税: https://www.city.sendai.jp/hojinkaze/kurashi/tetsuzuki/zekin/hojin/hojin.html
+   - 名取市: https://www.city.natori.miyagi.jp/page/1523.html （法人税割 8.4% 一律）
+   - 多賀城市: https://www.city.tagajo.miyagi.jp/shize/kurashi/zekin/hojin.html （8.4% 一律）
+   - 岩沼市: https://www.city.iwanuma.miyagi.jp/kurashi/zei/hojin-juminzei/hojin-juminzei.html （6.0%）
+   - 富谷市: https://www.tomiya-city.miyagi.jp/kurashi/zeikin/shiminzei/houjinsiminn.html （6.0%）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const TAX_YEARS = {
+  R7: {
+    label: '令和7年4月1日〜令和8年3月31日 開始事業年度',
+    short: '令和7年度開始',
+    houjinzei: { low: 0.15, lowBig: 0.17, high: 0.232, lowLimit: 8000000, bigShotoku: 1000000000 },
+    chihouHoujinzei: 0.103,
+    kousai: { teigaku: 8000000, inshoku: 0.50 },
+    kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
+    kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
+    jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
+                 hattenMult: 1.05, hattenShotokuLimit: 40000000 },
+    tokubetsu: 0.37,
+    notes: [
+      '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
+      'みやぎ発展税（事業税×1.05）は令和10年2月29日までの期間内に終了する事業年度に適用',
+    ],
+  },
+  R8: {
+    label: '令和8年4月1日以後 開始事業年度',
+    short: '令和8年度開始',
+    houjinzei: { low: 0.15, lowBig: 0.17, high: 0.232, lowLimit: 8000000, bigShotoku: 1000000000 },
+    chihouHoujinzei: 0.103,
+    kousai: { teigaku: 8000000, inshoku: 0.50 },
+    kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
+    kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
+    jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
+                 hattenMult: 1.05, hattenShotokuLimit: 40000000 },
+    tokubetsu: 0.37,
+    notes: [
+      '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
+      'みやぎ環境税（県均等割10%上乗せ）・みやぎ発展税は5年ごとの更新制。更新後の継続を前提に計算',
+    ],
+  },
+};
+
+// 市町村マスタ（エントリ追加で他市町村に対応）
+// overThreshold あり: 法人税額がその額を超える場合に over 税率（仙台市方式）
+const CITIES = {
+  sendai:  { label: '仙台市',   std: 0.060, over: 0.084, overThreshold: 10000000 },
+  natori:  { label: '名取市',   std: 0.084, over: 0.084 },
+  tomiya:  { label: '富谷市',   std: 0.060, over: 0.060 },
+  iwanuma: { label: '岩沼市',   std: 0.060, over: 0.060 },
+  tagajo:  { label: '多賀城市', std: 0.084, over: 0.084 },
+  other:   { label: 'その他市町村（標準税率）', std: 0.060, over: 0.060 },
+};
+
+// 市均等割（標準税率表・宮城県内5市共通で採用を確認済み）
+// [資本金等の上限, 従業者50人以下の年額, 50人超の年額]
+const CITY_KINTO = [
+  [10000000,   50000,  120000],
+  [100000000,  130000, 150000],
+  [1000000000, 160000, 400000],
+  [5000000000, 410000, 1750000],
+  [Infinity,   410000, 3000000],
+];
+
+/* ━━━ 端数処理ユーティリティ ━━━ */
+function floor1000(n) { return Math.floor(n / 1000) * 1000; } // 課税標準: 千円未満切捨
+function floor100(n)  { return Math.floor(n / 100) * 100; }   // 税額: 百円未満切捨
+
+/* ━━━ 計算エンジン（純関数・DOM非依存） ━━━ */
+function calcAll(inp) {
+  const Y = TAX_YEARS[inp.yearKey];
+  const C = CITIES[inp.cityKey];
+  const isChusho = inp.shihonkin <= 100000000;
+
+  // ── 交際費の損金不算入額 ──
+  // 中小: 定額控除800万円 と 接待飲食費×50% の有利選択（措法61の4）
+  const teigakuGendo = isChusho ? Math.min(inp.kousaihi, Y.kousai.teigaku) : 0;
+  const inshokuGendo = Math.min(inp.kousaihi, inp.inshokuhi * Y.kousai.inshoku);
+  const kousaiGendo  = Math.max(teigakuGendo, inshokuGendo);
+  const kousaiKasan  = Math.max(0, inp.kousaihi - kousaiGendo);
+  const kousaiHouhou = kousaiGendo === 0 ? '' : (teigakuGendo >= inshokuGendo ? '定額控除800万円' : '接待飲食費×50%');
+
+  // ── 所得金額 ──
+  const shotokuMae = inp.rieki + kousaiKasan + inp.kasan - inp.gensan; // 欠損金控除前
+  // 欠損金控除: 中小100% / 資本金1億超は所得の50%が限度
+  const kessonGendo = isChusho ? Math.max(0, shotokuMae) : Math.max(0, shotokuMae) * 0.5;
+  const kessonKoujo = Math.min(inp.kesson, kessonGendo);
+  const shotoku     = Math.max(0, shotokuMae - kessonKoujo);
+  const kazeiShotoku = floor1000(shotoku); // 法人税・事業税の課税標準
+
+  // ── 法人税 ──
+  const H = Y.houjinzei;
+  const lowRate = kazeiShotoku > H.bigShotoku ? H.lowBig : H.low;
+  let houjinzeiRaw;
+  if (isChusho) {
+    const lowPart  = Math.min(kazeiShotoku, H.lowLimit);
+    const highPart = Math.max(0, kazeiShotoku - H.lowLimit);
+    houjinzeiRaw = lowPart * lowRate + highPart * H.high;
+  } else {
+    houjinzeiRaw = kazeiShotoku * H.high;
+  }
+  const houjinzei = floor100(houjinzeiRaw);
+
+  // ── 地方法人税（国税） ──
+  const chihouBase = floor1000(houjinzei);
+  const chihouHoujinzei = floor100(chihouBase * Y.chihouHoujinzei);
+
+  // ── 住民税 法人税割（課税標準 = 法人税額 千円未満切捨） ──
+  const juminBase = floor1000(houjinzei);
+  // 県: 資本金1億超 または 法人税額 年1,000万円超 → 超過税率1.8%
+  const kenOver = !isChusho || houjinzei > Y.kenminzei.overThreshold;
+  const kenRate = kenOver ? Y.kenminzei.over : Y.kenminzei.std;
+  const kenwari = floor100(juminBase * kenRate);
+  // 市: 仙台市は県と同基準で8.4%、名取・多賀城は一律8.4%
+  const cityOver = C.overThreshold !== undefined
+    ? (!isChusho || houjinzei > C.overThreshold)
+    : false;
+  const cityRate = cityOver ? C.over : C.std;
+  const shiwari  = floor100(juminBase * cityRate);
+
+  // ── 均等割（12か月決算前提） ──
+  const kenKinto = Y.kenKinto.find(r => inp.shihonkin <= r[0])[1];
+  const cityKintoRow = CITY_KINTO.find(r => inp.shihonkin <= r[0]);
+  const shiKinto = inp.juugyoin > 50 ? cityKintoRow[2] : cityKintoRow[1];
+
+  // ── 法人事業税（所得割） ──
+  const J = Y.jigyouzei;
+  // みやぎ発展税: 資本金1億円以下かつ所得4,000万円以下は標準税率（不均一課税）
+  const hattenTekiyo = !(isChusho && kazeiShotoku <= J.hattenShotokuLimit);
+  const mult = hattenTekiyo ? J.hattenMult : 1;
+  let jigyouRaw = 0, jigyouStdRaw = 0, prev = 0;
+  const jigyouDetail = [];
+  for (const [max, rate] of J.brackets) {
+    const part = Math.max(0, Math.min(kazeiShotoku, max) - prev);
+    if (part > 0) {
+      jigyouRaw    += part * rate * mult;
+      jigyouStdRaw += part * rate;
+      jigyouDetail.push({ part, rate: rate * mult });
+    }
+    prev = max;
+    if (kazeiShotoku <= max) break;
+  }
+  const jigyouzei = floor100(jigyouRaw);
+  // 特別法人事業税 = 基準法人所得割額（標準税率で計算）× 37%
+  const kijunShotokuwari = floor100(jigyouStdRaw);
+  const tokubetsu = floor100(kijunShotokuwari * Y.tokubetsu);
+
+  // ── 集計 ──
+  const kokuzei   = houjinzei + chihouHoujinzei;
+  const kenzei    = kenwari + kenKinto;
+  const shizei    = shiwari + shiKinto;
+  const jigyoukei = jigyouzei + tokubetsu;
+  const chihouzei = kenzei + shizei + jigyoukei;
+  const total     = kokuzei + chihouzei;
+  const jikkou    = kazeiShotoku > 0 ? total / kazeiShotoku : null;
+
+  return {
+    isChusho,
+    kousai: { gendo: kousaiGendo, kasan: kousaiKasan, houhou: kousaiHouhou },
+    shotokuMae, kessonKoujo, shotoku, kazeiShotoku,
+    houjinzei: { amount: houjinzei, lowRate, base: kazeiShotoku },
+    chihouHoujinzei: { amount: chihouHoujinzei, base: chihouBase, rate: Y.chihouHoujinzei },
+    kenwari:  { amount: kenwari, base: juminBase, rate: kenRate, over: kenOver },
+    shiwari:  { amount: shiwari, base: juminBase, rate: cityRate, over: cityOver },
+    kenKinto, shiKinto,
+    jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, detail: jigyouDetail },
+    tokubetsu: { amount: tokubetsu, base: kijunShotokuwari, rate: Y.tokubetsu },
+    kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
+  };
+}
+
+/* ━━━ Utilities ━━━ */
+function addCommas(str) {
+  const d = str.replace(/[^\d]/g,'');
+  return d ? parseInt(d,10).toLocaleString('ja-JP') : '';
+}
+function onCommaInput(el, cb) {
+  const pos = el.selectionStart, before = el.value.length;
+  el.value = addCommas(el.value);
+  const added = el.value.length - before;
+  try { el.setSelectionRange(pos+added, pos+added); } catch(e) {}
+  cb();
+}
+function numVal(id) {
+  const el = document.getElementById(id);
+  if (!el) return NaN;
+  const v = el.value.replace(/[^\d]/g,'');
+  return v ? parseFloat(v) : NaN;
+}
+function numOr0(id) { const v = numVal(id); return isNaN(v) ? 0 : v; }
+function fmt(n)  { return Math.floor(n).toLocaleString('ja-JP')+' 円'; }
+function fmtN(n) { return Math.floor(n).toLocaleString('ja-JP'); }
+function fmtPct(r) {
+  const p = r * 100;
+  return (Math.round(p * 1000) / 1000).toLocaleString('ja-JP', { maximumFractionDigits: 3 }) + '%';
+}
+
+/* ━━━ Select 初期化 ━━━ */
+function buildSelects() {
+  const ySel = document.getElementById('year_sel');
+  Object.entries(TAX_YEARS).forEach(([k, y]) => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = y.label;
+    ySel.appendChild(opt);
+  });
+  const cSel = document.getElementById('city_sel');
+  Object.entries(CITIES).forEach(([k, c]) => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = c.label;
+    cSel.appendChild(opt);
+  });
+}
+
+/* ━━━ 入力の収集 ━━━ */
+function getInputs() {
+  return {
+    yearKey:   document.getElementById('year_sel').value,
+    cityKey:   document.getElementById('city_sel').value,
+    shihonkin: numOr0('shihonkin'),
+    juugyoin:  numOr0('juugyoin'),
+    rieki:     numOr0('rieki'),
+    kousaihi:  numOr0('kousaihi'),
+    inshokuhi: numOr0('inshokuhi'),
+    kasan:     numOr0('kasan'),
+    gensan:    numOr0('gensan'),
+    kesson:    numOr0('kesson'),
+  };
+}
+
+/* ━━━ 入力ハンドラ ━━━ */
+function onInput() {
+  const inp = getInputs();
+  const Y = TAX_YEARS[inp.yearKey];
+
+  // トップバーのバッジ・年度バナー
+  document.getElementById('badge-year').textContent = Y.short + '事業年度';
+  document.getElementById('year-banner').innerHTML =
+    '📅 ' + Y.label + ' 対応<span>｜ ' + Y.notes[0] + '</span>';
+
+  // 従業員数ヒント
+  const jh = document.getElementById('juugyoin-hint');
+  if (inp.juugyoin > 0) {
+    jh.textContent = '✦ 均等割区分: 従業者数 ' + (inp.juugyoin > 50 ? '50人超' : '50人以下');
+  } else { jh.textContent = ''; }
+
+  // 交際費ヒント
+  const kh = document.getElementById('kousaihi-hint');
+  if (inp.kousaihi > 0) {
+    const r = calcAll(inp);
+    if (r.kousai.kasan > 0) {
+      kh.textContent = '✦ 損金算入限度 ' + fmtN(r.kousai.gendo) + '円（' + r.kousai.houhou + '）→ 損金不算入額 ' + fmtN(r.kousai.kasan) + '円 を加算';
+    } else {
+      kh.textContent = '✦ 全額損金算入（' + r.kousai.houhou + 'の範囲内）';
+    }
+  } else { kh.textContent = ''; }
+
+  renderResult();
+}
+
+/* ━━━ 内訳テーブル行の生成（画面・印刷共用） ━━━ */
+function buildRows(r, C) {
+  return [
+    { name: '法人税', base: fmtN(r.houjinzei.base), rate: r.isChusho ? fmtPct(r.houjinzei.lowRate) + ' / ' + fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high) : fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high), amount: r.houjinzei.amount },
+    { name: '地方法人税（国税）', base: fmtN(r.chihouHoujinzei.base), rate: fmtPct(r.chihouHoujinzei.rate), amount: r.chihouHoujinzei.amount },
+    { name: '国税 小計', amount: r.kokuzei, cls: 'subtotal' },
+    { name: '法人県民税 法人税割' + (r.kenwari.over ? '（超過税率）' : ''), base: fmtN(r.kenwari.base), rate: fmtPct(r.kenwari.rate), amount: r.kenwari.amount },
+    { name: '法人県民税 均等割', base: '—', rate: '年額', amount: r.kenKinto },
+    { name: '法人市民税 法人税割（' + C.label + '）' + (r.shiwari.over ? '（超過税率）' : ''), base: fmtN(r.shiwari.base), rate: fmtPct(r.shiwari.rate), amount: r.shiwari.amount },
+    { name: '法人市民税 均等割', base: '—', rate: '年額', amount: r.shiKinto },
+    { name: '法人事業税 所得割' + (r.jigyouzei.hatten ? '（みやぎ発展税適用）' : ''), base: fmtN(r.jigyouzei.base), rate: r.jigyouzei.detail.map(d => fmtPct(d.rate)).join(' / ') || '—', amount: r.jigyouzei.amount },
+    { name: '特別法人事業税', base: fmtN(r.tokubetsu.base), rate: fmtPct(r.tokubetsu.rate), amount: r.tokubetsu.amount },
+    { name: '地方税 小計', amount: r.chihouzei, cls: 'subtotal' },
+    { name: '合計納税額（概算）', amount: r.total, cls: 'grand' },
+  ];
+}
+
+function buildShotokuRows(inp, r) {
+  const rows = [
+    ['税引前当期純利益', inp.rieki],
+    ['交際費等の損金不算入額（加算）', r.kousai.kasan],
+    ['その他 加算額', inp.kasan],
+    ['その他 減算額', inp.gensan === 0 ? 0 : -inp.gensan],
+    ['差引 所得金額（欠損金控除前）', r.shotokuMae, 'sub'],
+    ['繰越欠損金の当期控除額', r.kessonKoujo === 0 ? 0 : -r.kessonKoujo],
+    ['課税所得金額（千円未満切捨）', r.kazeiShotoku, 'sub'],
+  ];
+  return rows;
+}
+
+/* ━━━ 印刷シート更新 ━━━ */
+function updatePrintSheet(inp, r) {
+  const Y = TAX_YEARS[inp.yearKey];
+  const C = CITIES[inp.cityKey];
+
+  const params = [
+    { k: '事業年度',   v: Y.short },
+    { k: '本店所在地', v: '宮城県 ' + C.label },
+    { k: '資本金',     v: inp.shihonkin > 0 ? fmt(inp.shihonkin) : '—' },
+    { k: '従業員数',   v: inp.juugyoin > 0 ? inp.juugyoin + '人（' + (inp.juugyoin > 50 ? '50人超' : '50人以下') + '）' : '—' },
+    { k: '税引前利益', v: fmt(inp.rieki) },
+    { k: '交際費支出額', v: inp.kousaihi > 0 ? fmt(inp.kousaihi) : 'なし' },
+    { k: '繰越欠損金', v: inp.kesson > 0 ? fmt(inp.kesson) : 'なし' },
+    { k: '区分',       v: r.isChusho ? '中小法人（資本金1億円以下）' : '大法人（資本金1億円超）' },
+  ];
+  document.getElementById('ps-params').innerHTML = params.map(p =>
+    `<div class="ps-param"><div class="ps-param-key">${p.k}</div><div class="ps-param-val">${p.v}</div></div>`
+  ).join('');
+
+  document.getElementById('ps-hero-label').textContent = 'ESTIMATED TAX — ' + Y.short;
+  document.getElementById('ps-amount').textContent = fmt(r.total);
+  document.getElementById('ps-shotoku').textContent = fmt(r.kazeiShotoku);
+  document.getElementById('ps-jikko').textContent = r.jikkou !== null ? fmtPct(r.jikkou) : '—';
+
+  document.getElementById('ps-shotoku-tbody').innerHTML = buildShotokuRows(inp, r).map(([name, val, cls]) =>
+    `<tr${cls === 'sub' ? ' class="ps-subtotal"' : ''}><td>${name}</td><td>${val < 0 ? '△ ' + fmtN(-val) : fmtN(val)} 円</td></tr>`
+  ).join('');
+
+  document.getElementById('ps-tbody').innerHTML = buildRows(r, C).map(row => {
+    const cls = row.cls === 'grand' ? ' class="ps-grand"' : row.cls === 'subtotal' ? ' class="ps-subtotal"' : '';
+    return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
+  }).join('');
+
+  const notes = [
+    '12か月決算・宮城県内単一事業所の前提で計算しています。',
+    '中間納付額・税額控除（所得税額控除等）・留保金課税は考慮していません。',
+    '事業税・特別法人事業税は納付事業年度の損金に算入されるため、翌期以降の税額に影響します。',
+    ...Y.notes,
+    '本計算は概算であり、実際の申告税額とは異なる場合があります。',
+  ];
+  document.getElementById('ps-notes').innerHTML =
+    '<strong>【前提・注記】</strong><br>' + notes.map(n => '・' + n).join('<br>');
+
+  const now = new Date();
+  document.getElementById('ps-footer').textContent =
+    `出力日：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日　｜　` +
+    `${Y.label}　宮城県・${C.label} の税率で計算`;
+}
+
+/* ━━━ Main render ━━━ */
+function renderResult() {
+  const area = document.getElementById('result-area');
+  const inp = getInputs();
+  const hasInput = inp.rieki > 0 || inp.kasan > 0 || inp.kousaihi > 0;
+  if (!hasInput) {
+    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🏢</div>税引前当期純利益を入力すると<br>概算税額と内訳が表示されます</div>`;
+    return;
+  }
+  const r = calcAll(inp);
+  const C = CITIES[inp.cityKey];
+  const Y = TAX_YEARS[inp.yearKey];
+  updatePrintSheet(inp, r);
+
+  // 欠損金ヒント
+  const khint = document.getElementById('kesson-hint');
+  if (inp.kesson > 0) {
+    khint.textContent = '✦ 当期控除額 ' + fmtN(r.kessonKoujo) + '円（残高 ' + fmtN(Math.max(0, inp.kesson - r.kessonKoujo)) + '円 は翌期繰越）';
+  } else { khint.textContent = ''; }
+
+  const shotokuRows = buildShotokuRows(inp, r).map(([name, val, cls]) =>
+    `<tr${cls === 'sub' ? ' class="subtotal"' : ''}><td>${name}</td><td>${val < 0 ? '△ ' + fmtN(-val) : fmtN(val)} 円</td></tr>`
+  ).join('');
+
+  const taxRows = buildRows(r, C).map(row => {
+    const cls = row.cls ? ` class="${row.cls}"` : '';
+    return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="result">
+      <div class="result-hero">
+        <div class="result-eyebrow">ESTIMATED TAX — ${Y.short}</div>
+        <div class="result-amount">${fmt(r.total)}</div>
+        <div class="result-sublabel">法人税・地方税 概算納税額（年間合計）</div>
+      </div>
+      <div class="result-body">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-key">課税所得</div><div class="stat-val">${fmt(r.kazeiShotoku)}</div></div>
+          <div class="stat-box"><div class="stat-key">国税（法人税等）</div><div class="stat-val">${fmt(r.kokuzei)}</div></div>
+          <div class="stat-box"><div class="stat-key">地方税 合計</div><div class="stat-val">${fmt(r.chihouzei)}</div></div>
+          <div class="stat-box"><div class="stat-key">実効税率（対課税所得）</div><div class="stat-val">${r.jikkou !== null ? fmtPct(r.jikkou) : '—'}</div></div>
+        </div>
+
+        <div class="sim-title">所得金額の計算</div>
+        <table class="sim-table">
+          <tbody>${shotokuRows}</tbody>
+        </table>
+
+        <div class="sim-title">税額の内訳</div>
+        <table class="sim-table">
+          <thead><tr><th>税目</th><th>課税標準</th><th>税率</th><th>税額</th></tr></thead>
+          <tbody>${taxRows}</tbody>
+        </table>
+        <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています</div>
+
+        <div class="action-row">
+          <button class="formula-toggle" onclick="toggleFormula(this)">▼ 計算根拠を表示</button>
+          <button class="copy-btn" onclick="copyResult(this)">📋 結果をコピー</button>
+          <button class="pdf-btn" onclick="doPrint()">🖨 印刷 / PDF</button>
+        </div>
+        <div class="formula-box" id="formula-detail">
+          <strong>【適用税率の判定（${Y.short}事業年度・${C.label}）】</strong><br>
+          法人税: ${r.isChusho ? `年800万円以下 <em>${fmtPct(r.houjinzei.lowRate)}</em> ／ 800万円超 <em>${fmtPct(Y.houjinzei.high)}</em>（中小法人）` : `<em>${fmtPct(Y.houjinzei.high)}</em>（資本金1億円超）`}<br>
+          地方法人税: 法人税額 × <em>${fmtPct(Y.chihouHoujinzei)}</em><br>
+          法人県民税 法人税割: <em>${fmtPct(r.kenwari.rate)}</em>${r.kenwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）'}<br>
+          法人市民税 法人税割: <em>${fmtPct(r.shiwari.rate)}</em>${C.overThreshold !== undefined ? (r.shiwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）') : ''}<br>
+          法人事業税: ${r.jigyouzei.hatten ? `標準税率×1.05 <em>（みやぎ発展税）</em>` : `標準税率 <em>（所得4,000万円以下のため発展税対象外）</em>`}<br>
+          特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em><br>
+          均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${fmtN(r.shiKinto)}円</em><br><br>
+          <strong>【交際費】</strong> ${inp.kousaihi > 0 ? `支出額 ${fmtN(inp.kousaihi)}円 − 損金算入限度 ${fmtN(r.kousai.gendo)}円（${r.kousai.houhou}）＝ 加算 <em>${fmtN(r.kousai.kasan)}円</em>` : '入力なし'}<br>
+          <strong>【繰越欠損金】</strong> ${inp.kesson > 0 ? `控除 <em>${fmtN(r.kessonKoujo)}円</em>（${r.isChusho ? '中小法人につき所得の100%まで' : '所得の50%が限度'}）` : '入力なし'}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleFormula(btn) {
+  const box = document.getElementById('formula-detail');
+  const open = box.classList.toggle('open');
+  btn.textContent = open ? '▲ 計算根拠を隠す' : '▼ 計算根拠を表示';
+}
+
+function copyResult(btn) {
+  const inp = getInputs();
+  const r = calcAll(inp);
+  const Y = TAX_YEARS[inp.yearKey];
+  const C = CITIES[inp.cityKey];
+  const lines = [
+    `【法人税・地方税 概算（${Y.short}事業年度・宮城県${C.label}）】`,
+    `課税所得: ${fmtN(r.kazeiShotoku)}円`,
+    `法人税: ${fmtN(r.houjinzei.amount)}円`,
+    `地方法人税: ${fmtN(r.chihouHoujinzei.amount)}円`,
+    `法人県民税: ${fmtN(r.kenzei)}円（法人税割${fmtN(r.kenwari.amount)}＋均等割${fmtN(r.kenKinto)}）`,
+    `法人市民税: ${fmtN(r.shizei)}円（法人税割${fmtN(r.shiwari.amount)}＋均等割${fmtN(r.shiKinto)}）`,
+    `法人事業税: ${fmtN(r.jigyouzei.amount)}円`,
+    `特別法人事業税: ${fmtN(r.tokubetsu.amount)}円`,
+    `合計納税額（概算）: ${fmtN(r.total)}円`,
+    `実効税率: ${r.jikkou !== null ? fmtPct(r.jikkou) : '—'}`,
+  ];
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ コピーしました'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 結果をコピー'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => { alert(text); });
+}
+
+/* ━━━ 印刷 / PDF ━━━ */
+function doPrint() {
+  window.print();
+}
+
+/* ━━━ 初期化 ━━━ */
+buildSelects();
+onInput();
+</script>
+</body>
+</html>

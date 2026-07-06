@@ -115,6 +115,9 @@ body{
 /* 2カラムのフィールド行 */
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.field-row{grid-template-columns:1fr}}
+/* 3カラムのフィールド行（予定納税額） */
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:620px){.field-row-3{grid-template-columns:1fr}}
 
 /* ── Select (dropdown) ── */
 .sel-field{margin-bottom:16px}
@@ -355,6 +358,27 @@ body{
       <div class="field-note">10年以内に生じた期限内の欠損金残高。中小法人は所得の100%まで控除可能</div>
       <div class="auto-hint" id="kesson-hint"></div>
     </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">予定納税額（中間納付額）<span class="section-note">任意・入力すると差引最終納付額を計算</span></div>
+    <div class="field-row-3">
+      <div class="field">
+        <label>国税分（円）</label>
+        <input type="text" id="yotei_koku" placeholder="例：600,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">法人税・地方法人税・防衛特別法人税</div>
+      </div>
+      <div class="field">
+        <label>県税分（円）</label>
+        <input type="text" id="yotei_ken" placeholder="例：150,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">県民税・事業税・特別法人事業税</div>
+      </div>
+      <div class="field">
+        <label>市税分（円）</label>
+        <input type="text" id="yotei_shi" placeholder="例：80,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">市民税（法人税割・均等割）</div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== 印刷専用エリア（画面上は非表示） ===== -->
@@ -386,6 +410,10 @@ body{
         <thead><tr><th>税目</th><th>課税標準</th><th>税率</th><th>税額</th></tr></thead>
         <tbody id="ps-tbody"></tbody>
       </table>
+      <div id="ps-final-wrap" style="display:none">
+        <div class="ps-section-title">差引 最終納付額の計算</div>
+        <table class="ps-table"><tbody id="ps-final-tbody"></tbody></table>
+      </div>
       <div class="ps-notes" id="ps-notes"></div>
       <div class="ps-footer" id="ps-footer"></div>
     </div>
@@ -401,7 +429,7 @@ body{
 
   <div class="footer" id="screen-footer">
     ※ 本ツールは概算です。実際の申告税額とは異なる場合があります。<br>
-    中小軽減税率15%（年800万円以下・令和9年3月31日までに開始する事業年度）｜ 地方法人税10.3% ｜ 特別法人事業税37%
+    中小軽減税率15%（年800万円以下・令和9年3月31日までに開始する事業年度）｜ 地方法人税10.3% ｜ 特別法人事業税37% ｜ 防衛特別法人税4%（令和8年4月1日以後開始事業年度・基礎控除500万円）
   </div>
 </div>
 
@@ -431,8 +459,10 @@ const TAX_YEARS = {
     jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
                  hattenMult: 1.05, hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
+    bouei: null, // 防衛特別法人税は令和8年4月1日以後開始事業年度から
     notes: [
       '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
+      '防衛特別法人税は対象外（令和8年4月1日以後開始事業年度から適用）',
       'みやぎ発展税（事業税×1.05）は令和10年2月29日までの期間内に終了する事業年度に適用',
     ],
   },
@@ -447,8 +477,11 @@ const TAX_YEARS = {
     jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ],
                  hattenMult: 1.05, hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
+    // 防衛特別法人税（令和7年度税制改正で創設）: (基準法人税額 − 基礎控除500万円) × 4%
+    bouei: { rate: 0.04, kiso: 5000000 },
     notes: [
       '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
+      '防衛特別法人税4%を適用（基準法人税額から基礎控除500万円を差し引いた額に課税）',
       'みやぎ環境税（県均等割10%上乗せ）・みやぎ発展税は5年ごとの更新制。更新後の継続を前提に計算',
     ],
   },
@@ -518,6 +551,14 @@ function calcAll(inp) {
   const chihouBase = floor1000(houjinzei);
   const chihouHoujinzei = floor100(chihouBase * Y.chihouHoujinzei);
 
+  // ── 防衛特別法人税（国税・令和8年4月1日以後開始事業年度） ──
+  // 課税標準 = 基準法人税額（税額控除前の法人税額）− 基礎控除500万円
+  let bouei = null;
+  if (Y.bouei) {
+    const boueiBase = floor1000(Math.max(0, houjinzei - Y.bouei.kiso));
+    bouei = { base: boueiBase, rate: Y.bouei.rate, amount: floor100(boueiBase * Y.bouei.rate) };
+  }
+
   // ── 住民税 法人税割（課税標準 = 法人税額 千円未満切捨） ──
   const juminBase = floor1000(houjinzei);
   // 県: 資本金1億超 または 法人税額 年1,000万円超 → 超過税率1.8%
@@ -559,7 +600,7 @@ function calcAll(inp) {
   const tokubetsu = floor100(kijunShotokuwari * Y.tokubetsu);
 
   // ── 集計 ──
-  const kokuzei   = houjinzei + chihouHoujinzei;
+  const kokuzei   = houjinzei + chihouHoujinzei + (bouei ? bouei.amount : 0);
   const kenzei    = kenwari + kenKinto;
   const shizei    = shiwari + shiKinto;
   const jigyoukei = jigyouzei + tokubetsu;
@@ -567,18 +608,27 @@ function calcAll(inp) {
   const total     = kokuzei + chihouzei;
   const jikkou    = kazeiShotoku > 0 ? total / kazeiShotoku : null;
 
+  // ── 予定納税額（中間納付額）の控除 → 差引最終納付額 ──
+  const yoteiKoku = inp.yoteiKoku || 0;
+  const yoteiKen  = inp.yoteiKen  || 0;
+  const yoteiShi  = inp.yoteiShi  || 0;
+  const yoteiTotal = yoteiKoku + yoteiKen + yoteiShi;
+  const final = total - yoteiTotal; // マイナスは還付見込み
+
   return {
     isChusho,
     kousai: { gendo: kousaiGendo, kasan: kousaiKasan, houhou: kousaiHouhou },
     shotokuMae, kessonKoujo, shotoku, kazeiShotoku,
     houjinzei: { amount: houjinzei, lowRate, base: kazeiShotoku },
     chihouHoujinzei: { amount: chihouHoujinzei, base: chihouBase, rate: Y.chihouHoujinzei },
+    bouei,
     kenwari:  { amount: kenwari, base: juminBase, rate: kenRate, over: kenOver },
     shiwari:  { amount: shiwari, base: juminBase, rate: cityRate, over: cityOver },
     kenKinto, shiKinto,
     jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, detail: jigyouDetail },
     tokubetsu: { amount: tokubetsu, base: kijunShotokuwari, rate: Y.tokubetsu },
     kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
+    yoteiKoku, yoteiKen, yoteiShi, yoteiTotal, final,
   };
 }
 
@@ -637,6 +687,9 @@ function getInputs() {
     kasan:     numOr0('kasan'),
     gensan:    numOr0('gensan'),
     kesson:    numOr0('kesson'),
+    yoteiKoku: numOr0('yotei_koku'),
+    yoteiKen:  numOr0('yotei_ken'),
+    yoteiShi:  numOr0('yotei_shi'),
   };
 }
 
@@ -672,9 +725,13 @@ function onInput() {
 
 /* ━━━ 内訳テーブル行の生成（画面・印刷共用） ━━━ */
 function buildRows(r, C) {
+  const boueiRows = r.bouei
+    ? [{ name: '防衛特別法人税（国税）', base: fmtN(r.bouei.base), rate: fmtPct(r.bouei.rate), amount: r.bouei.amount }]
+    : [];
   return [
     { name: '法人税', base: fmtN(r.houjinzei.base), rate: r.isChusho ? fmtPct(r.houjinzei.lowRate) + ' / ' + fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high) : fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high), amount: r.houjinzei.amount },
     { name: '地方法人税（国税）', base: fmtN(r.chihouHoujinzei.base), rate: fmtPct(r.chihouHoujinzei.rate), amount: r.chihouHoujinzei.amount },
+    ...boueiRows,
     { name: '国税 小計', amount: r.kokuzei, cls: 'subtotal' },
     { name: '法人県民税 法人税割' + (r.kenwari.over ? '（超過税率）' : ''), base: fmtN(r.kenwari.base), rate: fmtPct(r.kenwari.rate), amount: r.kenwari.amount },
     { name: '法人県民税 均等割', base: '—', rate: '年額', amount: r.kenKinto },
@@ -685,6 +742,22 @@ function buildRows(r, C) {
     { name: '地方税 小計', amount: r.chihouzei, cls: 'subtotal' },
     { name: '合計納税額（概算）', amount: r.total, cls: 'grand' },
   ];
+}
+
+// 予定納税控除後の最終納付額テーブル行（予定納税入力時のみ使用）
+function buildFinalRows(r) {
+  const rows = [
+    { name: '年税額 合計（概算）', amount: fmtN(r.total) + ' 円' },
+  ];
+  if (r.yoteiKoku > 0) rows.push({ name: '予定納税額 国税分', amount: '△ ' + fmtN(r.yoteiKoku) + ' 円' });
+  if (r.yoteiKen  > 0) rows.push({ name: '予定納税額 県税分', amount: '△ ' + fmtN(r.yoteiKen)  + ' 円' });
+  if (r.yoteiShi  > 0) rows.push({ name: '予定納税額 市税分', amount: '△ ' + fmtN(r.yoteiShi)  + ' 円' });
+  rows.push({
+    name: r.final >= 0 ? '差引 最終納付額（概算）' : '差引 還付見込額（概算）',
+    amount: (r.final >= 0 ? fmtN(r.final) : '△ ' + fmtN(-r.final)) + ' 円',
+    cls: 'grand',
+  });
+  return rows;
 }
 
 function buildShotokuRows(inp, r) {
@@ -715,14 +788,30 @@ function updatePrintSheet(inp, r) {
     { k: '繰越欠損金', v: inp.kesson > 0 ? fmt(inp.kesson) : 'なし' },
     { k: '区分',       v: r.isChusho ? '中小法人（資本金1億円以下）' : '大法人（資本金1億円超）' },
   ];
+  if (r.yoteiTotal > 0) params.push({ k: '予定納税額', v: fmt(r.yoteiTotal) });
   document.getElementById('ps-params').innerHTML = params.map(p =>
     `<div class="ps-param"><div class="ps-param-key">${p.k}</div><div class="ps-param-val">${p.v}</div></div>`
   ).join('');
 
   document.getElementById('ps-hero-label').textContent = 'ESTIMATED TAX — ' + Y.short;
-  document.getElementById('ps-amount').textContent = fmt(r.total);
+  const hasYotei = r.yoteiTotal > 0;
+  document.getElementById('ps-amount').textContent = hasYotei
+    ? (r.final >= 0 ? fmt(r.final) : '△ ' + fmt(-r.final))
+    : fmt(r.total);
+  document.querySelector('.ps-hero-sub').textContent = hasYotei
+    ? (r.final >= 0
+        ? `差引 最終納付額（年税額 ${fmtN(r.total)}円 − 予定納税 ${fmtN(r.yoteiTotal)}円）`
+        : `差引 還付見込額（年税額 ${fmtN(r.total)}円 − 予定納税 ${fmtN(r.yoteiTotal)}円）`)
+    : '法人税・地方税 概算納税額（年間合計）';
   document.getElementById('ps-shotoku').textContent = fmt(r.kazeiShotoku);
   document.getElementById('ps-jikko').textContent = r.jikkou !== null ? fmtPct(r.jikkou) : '—';
+
+  document.getElementById('ps-final-wrap').style.display = hasYotei ? 'block' : 'none';
+  if (hasYotei) {
+    document.getElementById('ps-final-tbody').innerHTML = buildFinalRows(r).map(row =>
+      `<tr${row.cls ? ' class="ps-grand"' : ''}><td>${row.name}</td><td>${row.amount}</td></tr>`
+    ).join('');
+  }
 
   document.getElementById('ps-shotoku-tbody').innerHTML = buildShotokuRows(inp, r).map(([name, val, cls]) =>
     `<tr${cls === 'sub' ? ' class="ps-subtotal"' : ''}><td>${name}</td><td>${val < 0 ? '△ ' + fmtN(-val) : fmtN(val)} 円</td></tr>`
@@ -778,12 +867,32 @@ function renderResult() {
     return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
   }).join('');
 
+  // 予定納税入力時はヒーローに差引最終納付額を表示し、控除の内訳表を追加
+  const hasYotei = r.yoteiTotal > 0;
+  const heroAmount = hasYotei
+    ? (r.final >= 0 ? fmt(r.final) : '△ ' + fmt(-r.final))
+    : fmt(r.total);
+  const heroSub = hasYotei
+    ? (r.final >= 0 ? '差引 最終納付額（予定納税控除後・概算）' : '差引 還付見込額（予定納税控除後・概算）')
+    : '法人税・地方税 概算納税額（年間合計）';
+  const heroNote = hasYotei
+    ? `<div class="result-sublabel" style="margin-top:4px;opacity:.85">年税額 ${fmt(r.total)} − 予定納税 ${fmt(r.yoteiTotal)}</div>`
+    : '';
+  const finalTable = hasYotei ? `
+        <div class="sim-title">差引 最終納付額の計算</div>
+        <table class="sim-table">
+          <tbody>${buildFinalRows(r).map(row =>
+            `<tr${row.cls ? ` class="${row.cls}"` : ''}><td>${row.name}</td><td>${row.amount}</td></tr>`
+          ).join('')}</tbody>
+        </table>` : '';
+
   area.innerHTML = `
     <div class="result">
       <div class="result-hero">
         <div class="result-eyebrow">ESTIMATED TAX — ${Y.short}</div>
-        <div class="result-amount">${fmt(r.total)}</div>
-        <div class="result-sublabel">法人税・地方税 概算納税額（年間合計）</div>
+        <div class="result-amount">${heroAmount}</div>
+        <div class="result-sublabel">${heroSub}</div>
+        ${heroNote}
       </div>
       <div class="result-body">
         <div class="stats-grid">
@@ -804,6 +913,7 @@ function renderResult() {
           <tbody>${taxRows}</tbody>
         </table>
         <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています</div>
+        ${finalTable}
 
         <div class="action-row">
           <button class="formula-toggle" onclick="toggleFormula(this)">▼ 計算根拠を表示</button>
@@ -814,6 +924,7 @@ function renderResult() {
           <strong>【適用税率の判定（${Y.short}事業年度・${C.label}）】</strong><br>
           法人税: ${r.isChusho ? `年800万円以下 <em>${fmtPct(r.houjinzei.lowRate)}</em> ／ 800万円超 <em>${fmtPct(Y.houjinzei.high)}</em>（中小法人）` : `<em>${fmtPct(Y.houjinzei.high)}</em>（資本金1億円超）`}<br>
           地方法人税: 法人税額 × <em>${fmtPct(Y.chihouHoujinzei)}</em><br>
+          ${r.bouei ? `防衛特別法人税: （法人税額 − 基礎控除500万円）× <em>${fmtPct(r.bouei.rate)}</em><br>` : `防衛特別法人税: <em>対象外</em>（令和8年4月1日以後開始事業年度から適用）<br>`}
           法人県民税 法人税割: <em>${fmtPct(r.kenwari.rate)}</em>${r.kenwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）'}<br>
           法人市民税 法人税割: <em>${fmtPct(r.shiwari.rate)}</em>${C.overThreshold !== undefined ? (r.shiwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）') : ''}<br>
           法人事業税: ${r.jigyouzei.hatten ? `標準税率×1.05 <em>（みやぎ発展税）</em>` : `標準税率 <em>（所得4,000万円以下のため発展税対象外）</em>`}<br>
@@ -842,12 +953,17 @@ function copyResult(btn) {
     `課税所得: ${fmtN(r.kazeiShotoku)}円`,
     `法人税: ${fmtN(r.houjinzei.amount)}円`,
     `地方法人税: ${fmtN(r.chihouHoujinzei.amount)}円`,
+    ...(r.bouei ? [`防衛特別法人税: ${fmtN(r.bouei.amount)}円`] : []),
     `法人県民税: ${fmtN(r.kenzei)}円（法人税割${fmtN(r.kenwari.amount)}＋均等割${fmtN(r.kenKinto)}）`,
     `法人市民税: ${fmtN(r.shizei)}円（法人税割${fmtN(r.shiwari.amount)}＋均等割${fmtN(r.shiKinto)}）`,
     `法人事業税: ${fmtN(r.jigyouzei.amount)}円`,
     `特別法人事業税: ${fmtN(r.tokubetsu.amount)}円`,
     `合計納税額（概算）: ${fmtN(r.total)}円`,
     `実効税率: ${r.jikkou !== null ? fmtPct(r.jikkou) : '—'}`,
+    ...(r.yoteiTotal > 0 ? [
+      `予定納税額: ${fmtN(r.yoteiTotal)}円`,
+      r.final >= 0 ? `差引最終納付額（概算）: ${fmtN(r.final)}円` : `差引還付見込額（概算）: ${fmtN(-r.final)}円`,
+    ] : []),
   ];
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {

@@ -306,7 +306,7 @@ body{
 
     <div class="divider"></div>
 
-    <div class="section-label">事業所の所在地・従業者数<span class="section-note">同一県内 最大3か所（本店含む）。2以上の市町村がある場合、市民税法人税割は従業者数で按分</span></div>
+    <div class="section-label">事業所の所在地・従業者数<span class="section-note">同一県内 最大5か所（本店含む）。2以上の市町村がある場合、市民税法人税割は従業者数で按分</span></div>
     <div class="field-row">
       <div class="sel-field">
         <label>本店（市町村）</label>
@@ -335,6 +335,26 @@ body{
       <div class="field">
         <label>事業所3の従業者数（人）</label>
         <input type="text" id="juugyoin3" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>事業所4（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <select id="city_sel4" onchange="onInput()"></select>
+      </div>
+      <div class="field">
+        <label>事業所4の従業者数（人）</label>
+        <input type="text" id="juugyoin4" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>事業所5（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <select id="city_sel5" onchange="onInput()"></select>
+      </div>
+      <div class="field">
+        <label>事業所5の従業者数（人）</label>
+        <input type="text" id="juugyoin5" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
     <div class="auto-hint" id="offices-hint"></div>
@@ -742,7 +762,7 @@ function buildSelects() {
     opt.value = k; opt.textContent = y.label;
     ySel.appendChild(opt);
   });
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 5; i++) {
     const cSel = document.getElementById('city_sel' + i);
     if (i > 1) {
       const none = document.createElement('option');
@@ -760,7 +780,7 @@ function buildSelects() {
 /* ━━━ 入力の収集 ━━━ */
 function getInputs() {
   const offices = [];
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 5; i++) {
     const key = document.getElementById('city_sel' + i).value;
     if (key === 'none') continue;
     offices.push({ cityKey: key, juugyoin: numOr0('juugyoin' + i) });

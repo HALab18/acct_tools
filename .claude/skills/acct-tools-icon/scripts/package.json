@@ -1,0 +1,8 @@
+{
+  "name": "acct-tools-icon-scripts",
+  "private": true,
+  "description": "Local, one-time dependency install for svg_to_pngs.js. Not part of the acct_tools web app itself — build-time tooling only.",
+  "dependencies": {
+    "sharp": "^0.33.0"
+  }
+}

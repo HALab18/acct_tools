@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>借入金 返済予定表 作成ツール｜実日数日割り計算対応（元利均等・元金均等）</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="返済予定表">
+<link rel="apple-touch-icon" href="icons/kariire_icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/kariire_icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/kariire_icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/kariire_icon.png">
+<link rel="icon" href="icons/kariire_icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f5f7fa;
+  --bg2:      #eef1f6;
+  --card:     #ffffff;
+  --border:   #e2e8f0;
+  --border2:  #cbd5e1;
+  --accent:   #2563eb;
+  --accent2:  #3b82f6;
+  --accent-l: #eff6ff;
+  --text:     #1e293b;
+  --text2:    #475569;
+  --muted:    #94a3b8;
+  --muted2:   #64748b;
+  --green:    #059669;
+  --green-l:  #ecfdf5;
+  --red:      #dc2626;
+  --gold:     #d97706;
+  --gold-l:   #fffbeb;
+  --shadow:   0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;background:var(--bg);
+  font-family:'Noto Sans JP','Hiragino Sans',sans-serif;
+  color:var(--text);padding:0 0 80px;line-height:1.7;font-size:14px;
+}
+
+/* ── Top bar ── */
+.topbar{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:center;justify-content:space-between;
+  height:52px;position:sticky;top:0;z-index:100;gap:8px;
+}
+.topbar-logo{
+  font-family:'DM Serif Display',serif;font-size:17px;color:var(--accent);
+  letter-spacing:-.02em;white-space:nowrap;flex-shrink:0;
+}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.badge{
+  font-size:10px;padding:3px 8px;border-radius:20px;
+  letter-spacing:.03em;font-weight:600;border:1px solid;white-space:nowrap;
+}
+.badge-year{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+.badge-blue{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
+@media(max-width:480px){
+  .badge-blue{ display:none }
+  .badge-year{ font-size:9px; padding:2px 6px }
+  .topbar{ padding:0 12px }
+}
+.btn-print{
+  display:flex;align-items:center;gap:4px;
+  background:var(--accent);color:#fff;border:none;border-radius:7px;
+  padding:6px 10px;font-size:11px;font-weight:600;font-family:inherit;
+  cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;
+}
+.btn-print:hover{background:#1d4ed8}
+@media(max-width:360px){
+  .btn-print .btn-print-label{ display:none }
+}
+
+/* ── Layout ── */
+.page-wrap{max-width:760px;margin:0 auto;padding:20px 16px 0}
+
+/* ── Page title ── */
+.page-title{margin-bottom:16px}
+.page-title h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(17px,4vw,26px);color:var(--text);
+  letter-spacing:-.02em;line-height:1.3;
+}
+.page-title p{font-size:11px;color:var(--muted2);margin-top:4px}
+
+/* ── Card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);margin-bottom:12px}
+
+/* ── Section label ── */
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section-note{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:6px}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* ── Field ── */
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+.field>label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.field input[type=text],
+.field input[type=date]{
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;color:var(--text);
+  padding:9px 13px;font-size:15px;font-family:inherit;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input[type=text]:focus,
+.field input[type=date]:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.field-note{font-size:11px;color:var(--muted);margin-top:4px}
+.auto-hint{font-size:11px;color:var(--accent);margin-top:4px;min-height:14px;font-weight:500}
+.opt-badge{font-size:10px;color:var(--muted);font-weight:400;margin-left:4px}
+
+/* 2カラムのフィールド行 */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.field-row{grid-template-columns:1fr}}
+/* 3カラムのフィールド行 */
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:620px){.field-row-3{grid-template-columns:1fr}}
+
+/* ── Select (dropdown) ── */
+.sel-field{margin-bottom:16px}
+.sel-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.sel-field select{
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;
+  color:var(--text);padding:9px 13px;font-size:13px;font-family:inherit;
+  outline:none;cursor:pointer;transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.sel-field select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+/* 年＋月の横並び */
+.ym-row{display:flex;gap:8px}
+.ym-row select{flex:1}
+
+/* ── 返済方法トグル ── */
+.method-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.method-btn{
+  background:#fff;border:1.5px solid var(--border2);border-radius:8px;
+  padding:10px 8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text2);
+  cursor:pointer;transition:all .15s;text-align:center;line-height:1.4;
+}
+.method-btn small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
+.method-btn.active{
+  background:var(--accent-l);border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 0 3px rgba(59,130,246,.10);
+}
+.method-btn.active small{color:var(--accent2)}
+
+/* ── 印刷オプション ── */
+.print-opt{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.print-opt input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+
+/* ── Result ── */
+.result{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:12px;animation:pulseIn .4s ease}
+.result-hero{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#3b82f6 100%);padding:24px 24px 20px;text-align:center}
+.result-eyebrow{font-size:10px;letter-spacing:.3em;color:rgba(255,255,255,.65);margin-bottom:8px;font-weight:500}
+.result-amount{font-family:'DM Serif Display',serif;font-size:clamp(30px,8vw,48px);color:#fff;letter-spacing:-.02em;line-height:1}
+.result-sublabel{font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;letter-spacing:.05em}
+.result-body{padding:18px 20px 16px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:560px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.stat-key{color:var(--muted);font-size:9.5px;letter-spacing:.06em;margin-bottom:3px;font-weight:500;text-transform:uppercase}
+.stat-val{color:var(--text);font-size:13px;font-weight:600}
+
+/* ── 明細テーブル ── */
+.sim-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border);margin-top:14px}
+.table-scroll{max-height:460px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.table-x{overflow-x:auto}
+.sim-table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
+.sim-table th{color:var(--muted2);font-size:10px;letter-spacing:.06em;font-weight:600;border-bottom:1.5px solid var(--border2);padding:6px 8px;text-align:right;text-transform:uppercase;background:var(--card)}
+.sim-table th:first-child{text-align:left}
+.table-scroll .sim-table th{position:sticky;top:0;z-index:1}
+.sim-table td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2);white-space:nowrap}
+.sim-table td:first-child{text-align:left;color:var(--text);font-weight:500}
+.sim-table tr.grace td{background:var(--bg);color:var(--muted2)}
+.sim-table tr.fy-end td{border-bottom:2px solid var(--border2)}
+.sim-table tr.subtotal td{background:var(--bg);font-weight:600;color:var(--text)}
+.sim-table tr.grand td{background:var(--gold-l);color:var(--gold);font-weight:700;border-top:1.5px solid #fde68a}
+.sim-table tr.grand td:first-child{color:var(--gold)}
+.sim-table tr:last-child td{border-bottom:none}
+.grace-tag{font-size:9px;font-weight:600;background:var(--bg2);color:var(--muted2);border:1px solid var(--border2);border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
+.sim-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.7}
+
+/* ── エラー ── */
+.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;font-size:13px;color:var(--red);font-weight:500;margin-bottom:12px}
+
+/* ── Action row ── */
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.copy-btn,.pdf-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--bg2);border:1px solid var(--border2);color:var(--text2);
+  padding:6px 13px;border-radius:7px;cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;
+}
+.copy-btn:hover,.pdf-btn:hover{background:var(--accent-l);border-color:#93c5fd;color:var(--accent)}
+.copy-btn.copied{color:var(--green);border-color:#6ee7b7;background:var(--green-l)}
+
+/* ── Placeholder ── */
+.placeholder{background:#fff;border:1.5px dashed var(--border2);border-radius:12px;padding:36px 28px;text-align:center;color:var(--muted);font-size:13px;line-height:2.2}
+.placeholder-icon{font-size:26px;margin-bottom:8px;opacity:.4}
+
+/* ── Footer ── */
+.footer{text-align:center;font-size:10px;color:var(--muted);margin-top:18px;line-height:2}
+
+/* ── Animations ── */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+@keyframes pulseIn {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:scale(1)}}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━
+   印刷・PDF用スタイル（A4縦・複数ページ対応）
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media print {
+  @page { size: A4 portrait; margin: 10mm 14mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: #fff !important; padding: 0 !important; font-size: 10px !important; color: #000 !important; line-height: 1.5 !important; }
+  .topbar,
+  .page-title,
+  #input-card,
+  #result-area,
+  .btn-print,
+  .action-row,
+  .footer,
+  .placeholder { display: none !important; }
+  .page-wrap { max-width: 100% !important; padding: 0 !important; }
+  .print-only { display: block !important; }
+}
+.print-only { display: none; }
+
+/* ── 印刷レイアウト本体 ── */
+.print-sheet {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  font-size: 10px;
+  color: #1e293b;
+  line-height: 1.6;
+}
+.ps-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  border-bottom: 2px solid #1e293b; padding-bottom: 5px; margin-bottom: 10px;
+}
+.ps-head-title {
+  font-family: 'DM Serif Display', 'Noto Sans JP', serif;
+  font-size: 17px; font-weight: 700; letter-spacing: .04em; color: #1e293b;
+}
+.ps-head-sub { font-size: 11px; font-weight: 600; color: #1e293b; }
+.ps-section-title {
+  font-size: 9px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #64748b;
+  border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px; margin-top: 10px;
+}
+.ps-params {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; margin-bottom: 12px;
+}
+.ps-param {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;
+}
+.ps-param-key { font-size: 8.5px; color: #94a3b8; font-weight: 600; margin-bottom: 2px; letter-spacing: .05em; }
+.ps-param-val { font-size: 11px; font-weight: 700; color: #1e293b; }
+.ps-hero {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
+  border-radius: 6px; padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ps-hero-label { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.7); margin-bottom: 3px; }
+.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; letter-spacing: -.02em; line-height: 1; }
+.ps-hero-sub { font-size: 9px; color: rgba(255,255,255,.7); margin-top: 3px; }
+.ps-hero-right { display: flex; gap: 10px; }
+.ps-hero-stat { text-align: right; }
+.ps-hero-stat-key { font-size: 8px; color: rgba(255,255,255,.6); }
+.ps-hero-stat-val { font-size: 13px; font-weight: 700; color: #fff; }
+.ps-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.ps-table thead { display: table-header-group; }
+.ps-table tr { break-inside: avoid; page-break-inside: avoid; }
+.ps-table th {
+  font-size: 8.5px; font-weight: 600; color: #64748b; letter-spacing: .05em;
+  border-bottom: 1.5px solid #cbd5e1; padding: 4px 8px; text-align: right;
+}
+.ps-table th:first-child { text-align: left; }
+.ps-table td { padding: 3px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569; }
+.ps-table td:first-child { text-align: left; color: #1e293b; font-weight: 500; }
+.ps-table tr.ps-grace td { background: #f8fafc; color: #64748b; }
+.ps-table tr.ps-fy-end td { border-bottom: 1.5px solid #cbd5e1; }
+.ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
+.ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
+.ps-table tr:last-child td { border-bottom: none; }
+.ps-notes {
+  margin-top: 10px; padding: 8px 10px;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
+  font-size: 8.5px; color: #64748b; line-height: 1.8;
+  break-inside: avoid;
+}
+.ps-footer {
+  margin-top: 8px; text-align: right; font-size: 8.5px; color: #94a3b8;
+  border-top: 1px solid #e2e8f0; padding-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">hensai<span style="color:var(--text2);font-size:13px;font-family:inherit;font-weight:400"> schedule</span></div>
+  <div class="topbar-right">
+    <div class="badge badge-year">実日数日割り計算</div>
+    <div class="badge badge-blue">据置期間対応</div>
+    <button class="btn-print" onclick="doPrint()">🖨<span class="btn-print-label"> 印刷 / PDF</span></button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Page title -->
+  <div class="page-title">
+    <h1>借入金 返済予定表 作成ツール</h1>
+    <p>法人が銀行等から融資を受けた場合の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・年度別集計に対応</p>
+  </div>
+
+  <!-- ===== 入力カード ===== -->
+  <div class="card" id="input-card">
+
+    <div class="section-label">基本情報<span class="section-note">すべて任意入力</span></div>
+    <div class="field-row">
+      <div class="field">
+        <label>法人名（借入を行う法人）<span class="opt-badge">任意</span></label>
+        <input type="text" id="houjin_name" placeholder="例：株式会社○○" oninput="onInput()">
+      </div>
+      <div class="field">
+        <label>借入先（金融機関名）<span class="opt-badge">任意</span></label>
+        <input type="text" id="kariire_saki" placeholder="例：○○銀行 ○○支店" oninput="onInput()">
+      </div>
+    </div>
+    <div class="field">
+      <label>摘要<span class="opt-badge">任意</span></label>
+      <input type="text" id="tekiyo" placeholder="例：運転資金／設備資金" oninput="onInput()">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">借入条件</div>
+    <div class="field-row">
+      <div class="field">
+        <label>借入日（融資実行日）</label>
+        <input type="date" id="kariire_date" onchange="onDateChange()">
+        <div class="field-note">実日数による利息計算の起算日として使用します。入力すると借入日以降で最初に到来する返済日の月を初回返済年月に自動セットします</div>
+      </div>
+      <div class="field">
+        <label>借入金額（円）</label>
+        <input type="text" id="kingaku" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>年利率（%）</label>
+        <input type="text" id="riritsu" placeholder="例：1.875" inputmode="decimal" oninput="onRateInput(this)">
+        <div class="field-note">小数第3位まで入力可（固定金利として計算）</div>
+      </div>
+      <div class="field">
+        <label>借入期間</label>
+        <div class="ym-row">
+          <div class="sel-field" style="margin-bottom:0;flex:1">
+            <select id="kikan_y" onchange="onInput()"></select>
+          </div>
+          <div class="sel-field" style="margin-bottom:0;flex:1">
+            <select id="kikan_m" onchange="onInput()"></select>
+          </div>
+        </div>
+        <div class="auto-hint" id="kikan-hint"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="sel-field">
+        <label>据置期間（元金返済なし・利息のみ支払）</label>
+        <select id="sueoki" onchange="onInput()"></select>
+        <div class="field-note">借入期間に含めます（例：期間7年うち据置1年 → 元金返済72回）</div>
+      </div>
+      <div class="field">
+        <label>返済方法</label>
+        <div class="method-toggle">
+          <button type="button" class="method-btn" id="btn-ganri" onclick="setMethod('ganri')">元利均等<small>毎回の返済額が一定</small></button>
+          <button type="button" class="method-btn active" id="btn-gankin" onclick="setMethod('gankin')">元金均等<small>毎回の元金が一定</small></button>
+        </div>
+      </div>
+    </div>
+    <div class="field-row-3">
+      <div class="sel-field">
+        <label>返済日（毎月）</label>
+        <select id="hensai_day" onchange="onHensaiDayChange()"></select>
+        <div class="field-note">31日等、存在しない月はその月の末日に繰上げ</div>
+      </div>
+      <div class="sel-field">
+        <label>初回返済年月</label>
+        <div class="ym-row">
+          <select id="first_y" onchange="onInput()"></select>
+          <select id="first_m" onchange="onInput()"></select>
+        </div>
+      </div>
+      <div class="sel-field">
+        <label>決算月（年度別集計に使用）</label>
+        <select id="kessan_m" onchange="onInput()"></select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">印刷設定</div>
+    <label class="print-opt">
+      <input type="checkbox" id="print_detail" checked onchange="onInput()">
+      印刷 / PDF に返済明細（全回分）を含める
+      <span class="opt-badge">OFF にすると前提条件と年度別集計のみの1〜2枚に収まります</span>
+    </label>
+  </div>
+
+  <!-- ===== 印刷専用エリア（画面上は非表示） ===== -->
+  <div class="print-only" id="print-sheet">
+    <div class="print-sheet">
+      <div class="ps-head">
+        <div class="ps-head-title">借入金 返済予定表</div>
+        <div class="ps-head-sub" id="ps-company"></div>
+      </div>
+      <div class="ps-section-title">借入条件</div>
+      <div class="ps-params" id="ps-params"></div>
+      <div class="ps-hero">
+        <div>
+          <div class="ps-hero-label">REPAYMENT SCHEDULE</div>
+          <div class="ps-hero-amount" id="ps-amount">—</div>
+          <div class="ps-hero-sub" id="ps-hero-sub">毎回返済額</div>
+        </div>
+        <div class="ps-hero-right">
+          <div class="ps-hero-stat">
+            <div class="ps-hero-stat-key">総返済額</div>
+            <div class="ps-hero-stat-val" id="ps-total">—</div>
+          </div>
+          <div class="ps-hero-stat">
+            <div class="ps-hero-stat-key">うち利息総額</div>
+            <div class="ps-hero-stat-val" id="ps-interest">—</div>
+          </div>
+        </div>
+      </div>
+      <div id="ps-detail-wrap">
+        <div class="ps-section-title">返済明細</div>
+        <table class="ps-table">
+          <thead><tr><th>回</th><th>返済日</th><th>経過日数</th><th>返済額</th><th>うち元金</th><th>うち利息</th><th>借入金残高</th></tr></thead>
+          <tbody id="ps-detail-tbody"></tbody>
+        </table>
+      </div>
+      <div class="ps-section-title">年度別集計（決算月ベース）</div>
+      <table class="ps-table">
+        <thead><tr><th>事業年度</th><th>元金返済額</th><th>支払利息</th><th>期末借入金残高</th></tr></thead>
+        <tbody id="ps-fy-tbody"></tbody>
+      </table>
+      <div class="ps-notes" id="ps-notes"></div>
+      <div class="ps-footer" id="ps-footer"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="result-area">
+    <div class="placeholder">
+      <div class="placeholder-icon">🏦</div>
+      借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別集計が表示されます
+    </div>
+  </div>
+
+  <div class="footer" id="screen-footer">
+    ※ 利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）で計算しています。<br>
+    元金の端数は最終回で調整しています。実際の金融機関の返済予定表とは端数が異なる場合があります。
+  </div>
+</div>
+
+<script>
+/* ━━━ Utilities ━━━ */
+function addCommas(str) {
+  const d = str.replace(/[^\d]/g,'');
+  return d ? parseInt(d,10).toLocaleString('ja-JP') : '';
+}
+function onCommaInput(el, cb) {
+  const pos = el.selectionStart, before = el.value.length;
+  el.value = addCommas(el.value);
+  const added = el.value.length - before;
+  try { el.setSelectionRange(pos+added, pos+added); } catch(e) {}
+  cb();
+}
+function onRateInput(el) {
+  // 数字と小数点1つのみ許可、小数第3位まで
+  let v = el.value.replace(/[^\d.]/g,'');
+  const parts = v.split('.');
+  if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+  const [i, f] = v.split('.');
+  if (f !== undefined && f.length > 3) v = i + '.' + f.slice(0,3);
+  el.value = v;
+  onInput();
+}
+function numVal(id) {
+  const el = document.getElementById(id);
+  if (!el) return NaN;
+  const v = el.value.replace(/[^\d]/g,'');
+  return v ? parseFloat(v) : NaN;
+}
+function numOr0(id) { const v = numVal(id); return isNaN(v) ? 0 : v; }
+function fmt(n)  { return Math.floor(n).toLocaleString('ja-JP')+' 円'; }
+function fmtN(n) { return Math.floor(n).toLocaleString('ja-JP'); }
+function fmtYM(y, m) { return y + '年' + m + '月'; }
+function fmtYMD(y, m, d) { return y + '年' + m + '月' + d + '日'; }
+
+/* ━━━ 返済方法トグル ━━━ */
+let method = 'gankin'; // 'ganri' 元利均等 / 'gankin' 元金均等
+function setMethod(m) {
+  method = m;
+  document.getElementById('btn-ganri').classList.toggle('active', m === 'ganri');
+  document.getElementById('btn-gankin').classList.toggle('active', m === 'gankin');
+  onInput();
+}
+
+/* ━━━ Select 初期化 ━━━ */
+function buildSelects() {
+  const ySel = document.getElementById('kikan_y');
+  for (let y = 0; y <= 35; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + ' 年';
+    ySel.appendChild(opt);
+  }
+  const mSel = document.getElementById('kikan_m');
+  for (let m = 0; m <= 11; m++) {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m + ' か月';
+    mSel.appendChild(opt);
+  }
+  const sSel = document.getElementById('sueoki');
+  for (let m = 0; m <= 60; m++) {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m === 0 ? 'なし' : m + ' か月';
+    sSel.appendChild(opt);
+  }
+  const dSel = document.getElementById('hensai_day');
+  const optEom = document.createElement('option');
+  optEom.value = ''; optEom.textContent = '月末';
+  dSel.appendChild(optEom);
+  for (let d = 1; d <= 31; d++) {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d + ' 日';
+    dSel.appendChild(opt);
+  }
+  const now = new Date();
+  const fySel = document.getElementById('first_y');
+  for (let y = now.getFullYear() - 10; y <= now.getFullYear() + 35; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + ' 年';
+    fySel.appendChild(opt);
+  }
+  const fmSel = document.getElementById('first_m');
+  const kSel = document.getElementById('kessan_m');
+  for (let m = 1; m <= 12; m++) {
+    const o1 = document.createElement('option');
+    o1.value = m; o1.textContent = m + ' 月';
+    fmSel.appendChild(o1);
+    const o2 = document.createElement('option');
+    o2.value = m; o2.textContent = m + ' 月';
+    kSel.appendChild(o2);
+  }
+  // 初期値: 初回返済＝翌月、決算月＝3月
+  const nextM = now.getMonth() + 2; // getMonth()は0始まり → 翌月
+  fySel.value = nextM > 12 ? now.getFullYear() + 1 : now.getFullYear();
+  fmSel.value = nextM > 12 ? nextM - 12 : nextM;
+  kSel.value = 3;
+}
+
+/* ━━━ 借入日・返済日 → 初回返済年月の自動セット ━━━
+   借入日以降で最初に到来する「返済日」を含む月を初回返済年月とする
+   （例：借入日4/10・返済日25日 → 同月4/25が借入日より後なので初回は4月） */
+function suggestFirstRepayment(dateStr, day) {
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d)) return null;
+  const y = d.getFullYear(), m = d.getMonth() + 1;
+  const candidate = repaymentDate(y, m, day);
+  if (candidate.getTime() > d.getTime()) return { y, m };
+  const nm = m + 1;
+  return nm > 12 ? { y: y + 1, m: nm - 12 } : { y, m: nm };
+}
+function applyFirstRepaymentSuggestion() {
+  const v = document.getElementById('kariire_date').value;
+  if (!v) return;
+  const dayStr = document.getElementById('hensai_day').value;
+  const day = dayStr ? parseInt(dayStr, 10) : null;
+  const sug = suggestFirstRepayment(v, day);
+  if (sug) {
+    document.getElementById('first_y').value = sug.y;
+    document.getElementById('first_m').value = sug.m;
+  }
+}
+function onDateChange() {
+  applyFirstRepaymentSuggestion();
+  onInput();
+}
+function onHensaiDayChange() {
+  applyFirstRepaymentSuggestion();
+  onInput();
+}
+
+/* ━━━ 入力の収集 ━━━ */
+function getInputs() {
+  const rateStr = document.getElementById('riritsu').value;
+  const rate = rateStr === '' ? 0 : (parseFloat(rateStr) || 0);
+  return {
+    houjin:  document.getElementById('houjin_name').value.trim(),
+    lender:  document.getElementById('kariire_saki').value.trim(),
+    tekiyo:  document.getElementById('tekiyo').value.trim(),
+    dateStr: document.getElementById('kariire_date').value,
+    kingaku: numOr0('kingaku'),
+    rate,
+    totalMonths: parseInt(document.getElementById('kikan_y').value, 10) * 12
+               + parseInt(document.getElementById('kikan_m').value, 10),
+    sueoki:  parseInt(document.getElementById('sueoki').value, 10),
+    hensaiDay: document.getElementById('hensai_day').value ? parseInt(document.getElementById('hensai_day').value, 10) : null,
+    method,
+    firstY:  parseInt(document.getElementById('first_y').value, 10),
+    firstM:  parseInt(document.getElementById('first_m').value, 10),
+    kessanM: parseInt(document.getElementById('kessan_m').value, 10),
+    printDetail: document.getElementById('print_detail').checked,
+  };
+}
+
+/* ━━━ 日付ユーティリティ（実日数日割り計算用） ━━━ */
+function lastDayOfMonth(y, m) { return new Date(y, m, 0).getDate(); } // m:1-12
+function repaymentDate(y, m, day) { // day: 1-31 or null(=月末)
+  const ld = lastDayOfMonth(y, m);
+  return new Date(y, m - 1, day ? Math.min(day, ld) : ld);
+}
+function daysBetween(d1, d2) { return Math.round((d2.getTime() - d1.getTime()) / 86400000); }
+
+/* ━━━ 計算エンジン（純関数・DOM非依存） ━━━
+   利息 = 前回返済日からの経過日数 × 前回元金残高 × 年利率 ÷ 365日（円未満切捨て）
+   整数演算のため 年利率×1000 を整数化して 残高×r1000×日数÷36,500,000 で計算 */
+function calcAll(inp) {
+  const P = inp.kingaku;
+  const n = inp.totalMonths;   // 総回数（据置含む）
+  const g = inp.sueoki;        // 据置回数
+  const m = n - g;             // 元金返済回数
+
+  if (g >= n) return { error: '据置期間が借入期間以上です。据置期間は借入期間より短く設定してください。' };
+  if (!inp.dateStr) return { error: '借入日を入力してください（実日数による利息計算の起算日として必要です）。' };
+
+  const r1000 = Math.round(inp.rate * 1000);        // 年利率(%)×1000 の整数
+  const rm = inp.rate / 1200;                        // 月利（元利均等の返済額算定用）
+  const dailyInterest = (bal, days) => Math.floor(bal * r1000 * days / 36500000);
+
+  // 元利均等の毎回返済額（据置期間を除く m 回で算定）
+  let ganriA = 0;
+  if (inp.method === 'ganri') {
+    ganriA = rm > 0
+      ? Math.round(P * rm / (1 - Math.pow(1 + rm, -m)))
+      : Math.floor(P / m);
+  }
+  // 元金均等の毎回元金（端数は最終回で調整）
+  const gankinBase = Math.floor(P / m);
+
+  const rows = [];
+  let balance = P;
+  let totalPayment = 0, totalInterest = 0;
+  const startIdx = inp.firstY * 12 + (inp.firstM - 1);
+  let prevDate = new Date(inp.dateStr + 'T00:00:00');
+
+  for (let i = 1; i <= n; i++) {
+    const idx = startIdx + (i - 1);
+    const y = Math.floor(idx / 12), mo = (idx % 12) + 1;
+    const curDate = repaymentDate(y, mo, inp.hensaiDay);
+    const days = daysBetween(prevDate, curDate);
+    const interest = dailyInterest(balance, days);
+    let principal = 0;
+
+    if (i > g) {
+      if (i === n) {
+        principal = balance; // 最終回: 残高全額で端数調整
+      } else if (inp.method === 'gankin') {
+        principal = Math.min(gankinBase, balance);
+      } else {
+        principal = Math.min(Math.max(0, ganriA - interest), balance);
+      }
+    }
+    balance -= principal;
+    const payment = principal + interest;
+    totalPayment += payment;
+    totalInterest += interest;
+    rows.push({ no: i, y, m: mo, day: curDate.getDate(), days, payment, principal, interest, balance, isGrace: i <= g, isFyEnd: mo === inp.kessanM });
+    prevDate = curDate;
+  }
+
+  // 年度別集計（決算月で区切る）
+  const fy = [];
+  let seg = null;
+  rows.forEach((r, i) => {
+    if (!seg) seg = { startY: r.y, startM: r.m, principal: 0, interest: 0 };
+    seg.principal += r.principal;
+    seg.interest  += r.interest;
+    if (r.m === inp.kessanM || i === rows.length - 1) {
+      seg.endY = r.y; seg.endM = r.m; seg.balance = r.balance;
+      fy.push(seg);
+      seg = null;
+    }
+  });
+
+  // 毎回返済額の代表値（サマリー表示用）
+  const firstRepay = rows.find(r => !r.isGrace);
+  const perPayment = inp.method === 'ganri' ? ganriA : (firstRepay ? firstRepay.payment : 0);
+  const last = rows[rows.length - 1];
+
+  return {
+    rows, fy,
+    n, g, m,
+    ganriA, gankinBase,
+    perPayment,
+    totalPayment, totalInterest,
+    lastY: last.y, lastM: last.m,
+  };
+}
+
+/* ━━━ ラベル系 ━━━ */
+function methodLabel(m) { return m === 'ganri' ? '元利均等' : '元金均等'; }
+function kikanLabel(inp) {
+  const y = Math.floor(inp.totalMonths / 12), m = inp.totalMonths % 12;
+  return (y > 0 ? y + '年' : '') + (m > 0 ? m + 'か月' : '') + '（全' + inp.totalMonths + '回）';
+}
+function dateLabel(str) {
+  if (!str) return '—';
+  const [y, m, d] = str.split('-').map(Number);
+  return y + '年' + m + '月' + d + '日';
+}
+
+/* ━━━ 入力ハンドラ ━━━ */
+function onInput() {
+  const inp = getInputs();
+  const kh = document.getElementById('kikan-hint');
+  if (inp.totalMonths > 0) {
+    kh.textContent = '✦ ' + kikanLabel(inp) + (inp.sueoki > 0 ? '・うち据置 ' + inp.sueoki + '回 → 元金返済 ' + (inp.totalMonths - inp.sueoki) + '回' : '');
+  } else { kh.textContent = ''; }
+  renderResult();
+}
+
+/* ━━━ 印刷シート更新 ━━━ */
+function updatePrintSheet(inp, r) {
+  document.getElementById('ps-company').textContent = inp.houjin ? inp.houjin + '　御中' : '';
+
+  const params = [
+    { k: '借入先',     v: inp.lender || '—' },
+    { k: '借入日',     v: dateLabel(inp.dateStr) },
+    { k: '借入金額',   v: fmt(inp.kingaku) },
+    { k: '年利率',     v: inp.rate + '%（固定・実日数日割り／年365日）' },
+    { k: '借入期間',   v: kikanLabel(inp) },
+    { k: '据置期間',   v: inp.sueoki > 0 ? inp.sueoki + 'か月（利息のみ支払）' : 'なし' },
+    { k: '返済方法',   v: methodLabel(inp.method) },
+    { k: '返済日',     v: inp.hensaiDay ? '毎月' + inp.hensaiDay + '日' : '毎月末日' },
+    { k: '返済期間',   v: fmtYM(inp.firstY, inp.firstM) + ' 〜 ' + fmtYM(r.lastY, r.lastM) },
+  ];
+  if (inp.tekiyo) params.push({ k: '摘要', v: inp.tekiyo });
+  document.getElementById('ps-params').innerHTML = params.map(p =>
+    `<div class="ps-param"><div class="ps-param-key">${p.k}</div><div class="ps-param-val">${p.v}</div></div>`
+  ).join('');
+
+  document.getElementById('ps-amount').textContent = fmt(r.perPayment);
+  document.getElementById('ps-hero-sub').textContent = inp.method === 'ganri'
+    ? '毎回返済額（元利均等' + (r.g > 0 ? '・据置期間中は利息のみ' : '') + '）'
+    : '初回返済額（元金均等・以後逓減）';
+  document.getElementById('ps-total').textContent = fmt(r.totalPayment);
+  document.getElementById('ps-interest').textContent = fmt(r.totalInterest);
+
+  // 返済明細（チェックボックスで印刷対象を切替）
+  document.getElementById('ps-detail-wrap').style.display = inp.printDetail ? 'block' : 'none';
+  if (inp.printDetail) {
+    document.getElementById('ps-detail-tbody').innerHTML = r.rows.map(row => {
+      const cls = [row.isGrace ? 'ps-grace' : '', row.isFyEnd ? 'ps-fy-end' : ''].filter(Boolean).join(' ');
+      return `<tr${cls ? ` class="${cls}"` : ''}><td>${row.no}${row.isGrace ? '（据置）' : ''}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.days}日</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
+    }).join('');
+  }
+
+  document.getElementById('ps-fy-tbody').innerHTML = r.fy.map(s =>
+    `<tr><td>自 ${fmtYM(s.startY, s.startM)} 〜 至 ${fmtYM(s.endY, s.endM)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
+  ).join('') +
+  `<tr class="ps-grand"><td>合計</td><td>${fmtN(inp.kingaku)} 円</td><td>${fmtN(r.totalInterest)} 円</td><td>—</td></tr>`;
+
+  const notes = [
+    '利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）で計算しています。',
+    '返済日は' + (inp.hensaiDay ? '毎月' + inp.hensaiDay + '日' : '毎月末日') + 'とし、該当日が存在しない月はその月の末日としています。',
+    '元金の端数は最終回の返済額で調整しています。',
+  ];
+  if (r.g > 0) notes.push('据置期間中（' + r.g + 'か月）は元金返済なし・利息のみのお支払いとして計算しています。');
+  notes.push('年度別集計は決算月を ' + inp.kessanM + '月 とした事業年度ごとの集計です。');
+  notes.push('本表は概算であり、実際の返済条件は金融機関発行の返済予定表をご確認ください。');
+  document.getElementById('ps-notes').innerHTML =
+    '<strong>【前提・注記】</strong><br>' + notes.map(n => '・' + n).join('<br>');
+
+  const now = new Date();
+  document.getElementById('ps-footer').textContent =
+    `出力日：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日　｜　` +
+    `${methodLabel(inp.method)}・年利率${inp.rate}%（実日数日割り／年365日）で計算`;
+}
+
+/* ━━━ Main render ━━━ */
+function renderResult() {
+  const area = document.getElementById('result-area');
+  const inp = getInputs();
+  if (!(inp.kingaku > 0 && inp.totalMonths > 0 && inp.dateStr)) {
+    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🏦</div>借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別集計が表示されます</div>`;
+    return;
+  }
+  const r = calcAll(inp);
+  if (r.error) {
+    area.innerHTML = `<div class="error-box">⚠ ${r.error}</div>`;
+    return;
+  }
+  updatePrintSheet(inp, r);
+
+  const detailRows = r.rows.map(row => {
+    const cls = [row.isGrace ? 'grace' : '', row.isFyEnd ? 'fy-end' : ''].filter(Boolean).join(' ');
+    return `<tr${cls ? ` class="${cls}"` : ''}><td>${row.no}${row.isGrace ? '<span class="grace-tag">据置</span>' : ''}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.days}日</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
+  }).join('');
+
+  const fyRows = r.fy.map(s =>
+    `<tr><td>自 ${fmtYM(s.startY, s.startM)} 〜 至 ${fmtYM(s.endY, s.endM)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
+  ).join('') +
+  `<tr class="grand"><td>合計</td><td>${fmtN(inp.kingaku)} 円</td><td>${fmtN(r.totalInterest)} 円</td><td>—</td></tr>`;
+
+  const heroSub = inp.method === 'ganri'
+    ? `毎回返済額（元利均等・全${r.n}回${r.g > 0 ? '・うち据置' + r.g + '回は利息のみ' : ''}）`
+    : `初回返済額（元金均等・以後逓減・全${r.n}回${r.g > 0 ? '・うち据置' + r.g + '回' : ''}）`;
+
+  area.innerHTML = `
+    <div class="result">
+      <div class="result-hero">
+        <div class="result-eyebrow">REPAYMENT SCHEDULE — ${methodLabel(inp.method)}</div>
+        <div class="result-amount">${fmt(r.perPayment)}</div>
+        <div class="result-sublabel">${heroSub}</div>
+      </div>
+      <div class="result-body">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-key">借入金額</div><div class="stat-val">${fmt(inp.kingaku)}</div></div>
+          <div class="stat-box"><div class="stat-key">総返済額</div><div class="stat-val">${fmt(r.totalPayment)}</div></div>
+          <div class="stat-box"><div class="stat-key">うち利息総額</div><div class="stat-val">${fmt(r.totalInterest)}</div></div>
+          <div class="stat-box"><div class="stat-key">最終返済年月</div><div class="stat-val">${fmtYM(r.lastY, r.lastM)}</div></div>
+        </div>
+
+        <div class="sim-title">返済明細（全${r.n}回）</div>
+        <div class="table-scroll">
+          <table class="sim-table">
+            <thead><tr><th>回</th><th>返済日</th><th>経過日数</th><th>返済額</th><th>うち元金</th><th>うち利息</th><th>借入金残高</th></tr></thead>
+            <tbody>${detailRows}</tbody>
+          </table>
+        </div>
+        <div class="sim-note">※ 利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）。元金の端数は最終回で調整。決算月（${inp.kessanM}月）の行に区切り線を表示しています</div>
+
+        <div class="sim-title">年度別集計（決算月：${inp.kessanM}月）</div>
+        <div class="table-x">
+          <table class="sim-table">
+            <thead><tr><th>事業年度</th><th>元金返済額</th><th>支払利息</th><th>期末借入金残高</th></tr></thead>
+            <tbody>${fyRows}</tbody>
+          </table>
+        </div>
+
+        <div class="action-row">
+          <button class="copy-btn" onclick="copyResult(this)">📋 結果をコピー</button>
+          <button class="pdf-btn" onclick="doPrint()">🖨 印刷 / PDF</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ━━━ 結果コピー ━━━ */
+function copyResult(btn) {
+  const inp = getInputs();
+  const r = calcAll(inp);
+  if (r.error) return;
+  const lines = [
+    `【借入金 返済予定表（${methodLabel(inp.method)}・実日数日割り／年365日）】`,
+    ...(inp.houjin ? [`法人名: ${inp.houjin}`] : []),
+    ...(inp.lender ? [`借入先: ${inp.lender}`] : []),
+    ...(inp.tekiyo ? [`摘要: ${inp.tekiyo}`] : []),
+    `借入金額: ${fmtN(inp.kingaku)}円`,
+    `年利率: ${inp.rate}%`,
+    `借入期間: ${kikanLabel(inp)}` + (inp.sueoki > 0 ? `（うち据置${inp.sueoki}か月）` : ''),
+    `返済日: ${inp.hensaiDay ? '毎月' + inp.hensaiDay + '日' : '毎月末日'}`,
+    `返済期間: ${fmtYM(inp.firstY, inp.firstM)} 〜 ${fmtYM(r.lastY, r.lastM)}`,
+    inp.method === 'ganri' ? `毎回返済額: ${fmtN(r.perPayment)}円` : `初回返済額: ${fmtN(r.perPayment)}円（以後逓減）`,
+    `総返済額: ${fmtN(r.totalPayment)}円（うち利息 ${fmtN(r.totalInterest)}円）`,
+    '',
+    `【年度別集計（決算月: ${inp.kessanM}月）】`,
+    ...r.fy.map(s => `自${fmtYM(s.startY, s.startM)}〜至${fmtYM(s.endY, s.endM)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / 期末残高 ${fmtN(s.balance)}円`),
+  ];
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ コピーしました'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 結果をコピー'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => { alert(text); });
+}
+
+/* ━━━ 印刷 / PDF ━━━ */
+function doPrint() {
+  window.print();
+}
+
+/* ━━━ 初期化 ━━━ */
+buildSelects();
+onInput();
+</script>
+</body>
+</html>

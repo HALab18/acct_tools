@@ -123,9 +123,10 @@ body{
 /* 2カラムのフィールド行 */
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.field-row{grid-template-columns:1fr}}
-/* 3カラムのフィールド行（予定納税額） */
-.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media(max-width:620px){.field-row-3{grid-template-columns:1fr}}
+/* 4カラムのフィールド行（予定納税額） */
+.field-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:620px){.field-row-4{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.field-row-4{grid-template-columns:1fr}}
 
 /* ── Select (dropdown) ── */
 .sel-field{margin-bottom:16px}
@@ -196,7 +197,7 @@ body{
    印刷・PDF用スタイル（A4縦 1枚）
 ━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media print {
-  @page { size: A4 portrait; margin: 10mm 14mm; }
+  @page { size: A4 portrait; margin: 8mm 14mm; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body { background: #fff !important; padding: 0 !important; font-size: 10px !important; color: #000 !important; line-height: 1.5 !important; }
   .topbar,
@@ -226,25 +227,25 @@ body{
 .ps-section-title {
   font-size: 9px; font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: #64748b;
-  border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px; margin-top: 10px;
+  border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 5px; margin-top: 7px;
 }
 .ps-params {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 6px; margin-bottom: 12px;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 5px; margin-bottom: 8px;
 }
 .ps-param {
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 7px;
 }
-.ps-param-key { font-size: 8.5px; color: #94a3b8; font-weight: 600; margin-bottom: 2px; letter-spacing: .05em; }
-.ps-param-val { font-size: 11px; font-weight: 700; color: #1e293b; }
+.ps-param-key { font-size: 8px; color: #94a3b8; font-weight: 600; margin-bottom: 1px; letter-spacing: .03em; }
+.ps-param-val { font-size: 10px; font-weight: 700; color: #1e293b; line-height: 1.4; }
 .ps-hero {
   background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
-  border-radius: 6px; padding: 12px 18px;
+  border-radius: 6px; padding: 8px 16px;
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
-.ps-hero-label { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.7); margin-bottom: 3px; }
-.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; letter-spacing: -.02em; line-height: 1; }
+.ps-hero-label { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.7); margin-bottom: 2px; }
+.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 25px; color: #fff; letter-spacing: -.02em; line-height: 1; }
 .ps-hero-sub { font-size: 9px; color: rgba(255,255,255,.7); margin-top: 3px; }
 .ps-hero-right { display: flex; gap: 10px; }
 .ps-hero-stat { text-align: right; }
@@ -253,22 +254,22 @@ body{
 .ps-table { width: 100%; border-collapse: collapse; font-size: 10px; }
 .ps-table th {
   font-size: 8.5px; font-weight: 600; color: #64748b; letter-spacing: .05em;
-  border-bottom: 1.5px solid #cbd5e1; padding: 4px 8px; text-align: right;
+  border-bottom: 1.5px solid #cbd5e1; padding: 3px 8px; text-align: right;
 }
 .ps-table th:first-child { text-align: left; }
-.ps-table td { padding: 3.5px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569; }
+.ps-table td { padding: 1.5px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569; }
 .ps-table td:first-child { text-align: left; color: #1e293b; font-weight: 500; }
 .ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
 .ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
 .ps-table tr:last-child td { border-bottom: none; }
 .ps-notes {
-  margin-top: 10px; padding: 8px 10px;
+  margin-top: 7px; padding: 6px 9px;
   background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
-  font-size: 8.5px; color: #64748b; line-height: 1.8;
+  font-size: 8px; color: #64748b; line-height: 1.55;
 }
 .ps-footer {
-  margin-top: 8px; text-align: right; font-size: 8.5px; color: #94a3b8;
-  border-top: 1px solid #e2e8f0; padding-top: 4px;
+  margin-top: 5px; text-align: right; font-size: 8px; color: #94a3b8;
+  border-top: 1px solid #e2e8f0; padding-top: 3px;
 }
 </style>
 </head>
@@ -397,9 +398,22 @@ body{
       <div class="field">
         <label>その他 減算額（円）</label>
         <input type="text" id="gensan" placeholder="例：300,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
-        <div class="field-note">受取配当等の益金不算入・事業税認定損 等</div>
+        <div class="field-note">受取配当等の益金不算入 等<br>※ 事業税等は下の専用欄で入力するため、ここには含めないでください</div>
       </div>
     </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">事業税等の損金算入<span class="section-note">事業税・特別法人事業税は「納付した事業年度」の損金。当期に納付した額を所得計算で減算します</span></div>
+    <div class="field">
+      <label>前期確定分 事業税等（当期納付額）（円）<span class="calc-badge">前期未払計上分</span></label>
+      <input type="text" id="jigyou_zenki" placeholder="例：500,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">前期末に未払計上し、当期に納付した事業税・特別法人事業税の額</div>
+    </div>
+    <div class="field-note" style="margin-top:-4px">
+      当期中間納付分は下の「予定納税額」欄の <strong>事業税・特別法人事業税分</strong> と自動連動します
+    </div>
+    <div class="auto-hint" id="jigyou-hint"></div>
 
     <div class="divider"></div>
 
@@ -414,16 +428,21 @@ body{
     <div class="divider"></div>
 
     <div class="section-label">予定納税額（中間納付額）<span class="section-note">任意・入力すると差引最終納付額を計算</span></div>
-    <div class="field-row-3">
+    <div class="field-row-4">
       <div class="field">
         <label>国税分（円）</label>
         <input type="text" id="yotei_koku" placeholder="例：600,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
         <div class="field-note">法人税・地方法人税・防衛特別法人税</div>
       </div>
       <div class="field">
-        <label>県税分（円）</label>
-        <input type="text" id="yotei_ken" placeholder="例：150,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
-        <div class="field-note">県民税・事業税・特別法人事業税</div>
+        <label>県民税分（円）</label>
+        <input type="text" id="yotei_ken" placeholder="例：50,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">法人県民税（法人税割・均等割）</div>
+      </div>
+      <div class="field">
+        <label>事業税等（円）<span class="calc-badge">損金算入</span></label>
+        <input type="text" id="yotei_jigyou" placeholder="例：100,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="field-note">事業税・特別法人事業税<br>当期の損金となり所得計算で減算されます</div>
       </div>
       <div class="field">
         <label>市税分（円）</label>
@@ -481,6 +500,7 @@ body{
 
   <div class="footer" id="screen-footer">
     ※ 本ツールは概算です。実際の申告税額とは異なる場合があります。<br>
+    ※ 事業税・特別法人事業税は納付事業年度の損金。当期に納付した前期確定分・当期中間納付分を所得計算で減算し、当期確定分は翌期の損金として扱います。<br>
     中小軽減税率15%（年800万円以下・令和9年3月31日までに開始する事業年度）｜ 地方法人税10.3% ｜ 特別法人事業税37% ｜ 防衛特別法人税4%（令和8年4月1日以後開始事業年度・基礎控除500万円）
   </div>
 </div>
@@ -593,8 +613,18 @@ function calcAll(inp) {
   const kousaiKasan  = Math.max(0, inp.kousaihi - kousaiGendo);
   const kousaiHouhou = kousaiGendo === 0 ? '' : (teigakuGendo >= inshokuGendo ? '定額控除800万円' : '接待飲食費×50%');
 
+  // ── 事業税等の損金算入 ──
+  // 事業税・特別法人事業税は「納付した事業年度」の損金（法基通9-5-1）。
+  // 税引前当期純利益を起点とするため、当期に納付した①前期確定分（前期末の未払計上分）と
+  // ②当期中間納付分 を所得計算で減算する。当期確定分は翌期の損金となるため反映しない。
+  const jigyouSonkin = {
+    zenki:  inp.jigyouZenki,
+    chuukan: inp.yoteiJigyou,
+    total:  inp.jigyouZenki + inp.yoteiJigyou,
+  };
+
   // ── 所得金額 ──
-  const shotokuMae = inp.rieki + kousaiKasan + inp.kasan - inp.gensan; // 欠損金控除前
+  const shotokuMae = inp.rieki + kousaiKasan + inp.kasan - inp.gensan - jigyouSonkin.total; // 欠損金控除前
   // 欠損金控除: 中小100% / 資本金1億超は所得の50%が限度
   const kessonGendo = isChusho ? Math.max(0, shotokuMae) : Math.max(0, shotokuMae) * 0.5;
   const kessonKoujo = Math.min(inp.kesson, kessonGendo);
@@ -712,15 +742,17 @@ function calcAll(inp) {
   const jikkou    = kazeiShotoku > 0 ? total / kazeiShotoku : null;
 
   // ── 予定納税額（中間納付額）の控除 → 差引最終納付額 ──
-  const yoteiKoku = inp.yoteiKoku || 0;
-  const yoteiKen  = inp.yoteiKen  || 0;
-  const yoteiShi  = inp.yoteiShi  || 0;
-  const yoteiTotal = yoteiKoku + yoteiKen + yoteiShi;
+  const yoteiKoku   = inp.yoteiKoku   || 0;
+  const yoteiKen    = inp.yoteiKen    || 0;
+  const yoteiJigyou = inp.yoteiJigyou || 0;
+  const yoteiShi    = inp.yoteiShi    || 0;
+  const yoteiTotal = yoteiKoku + yoteiKen + yoteiJigyou + yoteiShi;
   const final = total - yoteiTotal; // マイナスは還付見込み
 
   return {
     isChusho,
     kousai: { gendo: kousaiGendo, kasan: kousaiKasan, houhou: kousaiHouhou },
+    jigyouSonkin,
     shotokuMae, kessonKoujo, shotoku, kazeiShotoku,
     houjinzei: { amount: houjinzei, lowRate, base: kazeiShotoku },
     chihouHoujinzei: { amount: chihouHoujinzei, base: chihouBase, rate: Y.chihouHoujinzei },
@@ -732,7 +764,7 @@ function calcAll(inp) {
     jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, detail: jigyouDetail },
     tokubetsu: { amount: tokubetsu, base: kijunShotokuwari, rate: Y.tokubetsu },
     kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
-    yoteiKoku, yoteiKen, yoteiShi, yoteiTotal, final,
+    yoteiKoku, yoteiKen, yoteiJigyou, yoteiShi, yoteiTotal, final,
   };
 }
 
@@ -803,9 +835,11 @@ function getInputs() {
     kasan:     numOr0('kasan'),
     gensan:    numOr0('gensan'),
     kesson:    numOr0('kesson'),
-    yoteiKoku: numOr0('yotei_koku'),
-    yoteiKen:  numOr0('yotei_ken'),
-    yoteiShi:  numOr0('yotei_shi'),
+    jigyouZenki: numOr0('jigyou_zenki'),
+    yoteiKoku:   numOr0('yotei_koku'),
+    yoteiKen:    numOr0('yotei_ken'),
+    yoteiJigyou: numOr0('yotei_jigyou'),
+    yoteiShi:    numOr0('yotei_shi'),
   };
 }
 
@@ -850,6 +884,17 @@ function onInput() {
     }
   } else { kh.textContent = ''; }
 
+  // 事業税等の損金算入ヒント
+  const jh = document.getElementById('jigyou-hint');
+  const jTotal = inp.jigyouZenki + inp.yoteiJigyou;
+  if (jTotal > 0) {
+    const parts = [];
+    if (inp.jigyouZenki  > 0) parts.push('前期確定分 ' + fmtN(inp.jigyouZenki) + '円');
+    if (inp.yoteiJigyou > 0) parts.push('当期中間納付分 ' + fmtN(inp.yoteiJigyou) + '円');
+    jh.textContent = '✦ ' + parts.join(' ＋ ') +
+      (parts.length > 1 ? ' ＝ ' + fmtN(jTotal) + '円' : '') + ' を所得計算で減算します';
+  } else { jh.textContent = ''; }
+
   renderResult();
 }
 
@@ -887,9 +932,10 @@ function buildFinalRows(r) {
   const rows = [
     { name: '年税額 合計（概算）', amount: fmtN(r.total) + ' 円' },
   ];
-  if (r.yoteiKoku > 0) rows.push({ name: '予定納税額 国税分', amount: '△ ' + fmtN(r.yoteiKoku) + ' 円' });
-  if (r.yoteiKen  > 0) rows.push({ name: '予定納税額 県税分', amount: '△ ' + fmtN(r.yoteiKen)  + ' 円' });
-  if (r.yoteiShi  > 0) rows.push({ name: '予定納税額 市税分', amount: '△ ' + fmtN(r.yoteiShi)  + ' 円' });
+  if (r.yoteiKoku   > 0) rows.push({ name: '予定納税額 国税分',                amount: '△ ' + fmtN(r.yoteiKoku)   + ' 円' });
+  if (r.yoteiKen    > 0) rows.push({ name: '予定納税額 県民税分',              amount: '△ ' + fmtN(r.yoteiKen)    + ' 円' });
+  if (r.yoteiJigyou > 0) rows.push({ name: '予定納税額 事業税・特別法人事業税分', amount: '△ ' + fmtN(r.yoteiJigyou) + ' 円' });
+  if (r.yoteiShi    > 0) rows.push({ name: '予定納税額 市税分',                amount: '△ ' + fmtN(r.yoteiShi)    + ' 円' });
   rows.push({
     name: r.final >= 0 ? '差引 最終納付額（概算）' : '差引 還付見込額（概算）',
     amount: (r.final >= 0 ? fmtN(r.final) : '△ ' + fmtN(-r.final)) + ' 円',
@@ -904,6 +950,7 @@ function buildShotokuRows(inp, r) {
     ['交際費等の損金不算入額（加算）', r.kousai.kasan],
     ['その他 加算額', inp.kasan],
     ['その他 減算額', inp.gensan === 0 ? 0 : -inp.gensan],
+    ['事業税等の損金算入額（減算）', r.jigyouSonkin.total === 0 ? 0 : -r.jigyouSonkin.total],
     ['差引 所得金額（欠損金控除前）', r.shotokuMae, 'sub'],
     ['繰越欠損金の当期控除額', r.kessonKoujo === 0 ? 0 : -r.kessonKoujo],
     ['課税所得金額（千円未満切捨）', r.kazeiShotoku, 'sub'],
@@ -924,6 +971,7 @@ function updatePrintSheet(inp, r) {
     { k: '税引前利益', v: fmt(inp.rieki) },
     { k: '交際費支出額', v: inp.kousaihi > 0 ? fmt(inp.kousaihi) : 'なし' },
     { k: '繰越欠損金', v: inp.kesson > 0 ? fmt(inp.kesson) : 'なし' },
+    { k: '事業税等 損金算入額', v: r.jigyouSonkin.total > 0 ? fmt(r.jigyouSonkin.total) : 'なし' },
     { k: '区分',       v: r.isChusho ? '中小法人（資本金1億円以下）' : '大法人（資本金1億円超）' },
   ];
   if (r.yoteiTotal > 0) params.push({ k: '予定納税額', v: fmt(r.yoteiTotal) });
@@ -964,8 +1012,8 @@ function updatePrintSheet(inp, r) {
     '12か月決算・全事業所が宮城県内にある前提で計算しています。',
     ...(r.shiwari.bunkatsu ? ['2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分計算しています（地方税法第321条の13）。市民税均等割は事務所等のある各市町村で課税されます。'] : []),
     ...(r.shiKinto.list.filter(k => CITIES[k.key].group).length > 1 ? ['仙台市は政令指定都市のため、市民税均等割は区ごとに課税しています（従業者数50人超の判定も区ごと・地方税法第737条）。'] : []),
-    '中間納付額・税額控除（所得税額控除等）・留保金課税は考慮していません。',
-    '事業税・特別法人事業税は納付事業年度の損金に算入されるため、翌期以降の税額に影響します。',
+    '税額控除（所得税額控除等）・留保金課税は考慮していません。',
+    '事業税・特別法人事業税は納付事業年度の損金。当期に納付した前期確定分・当期中間納付分は所得計算で減算済み。当期確定分は翌期の損金となるため未反映です。',
     ...Y.notes,
     '本計算は概算であり、実際の申告税額とは異なる場合があります。',
   ];
@@ -1071,6 +1119,9 @@ function renderResult() {
           特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em><br>
           均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${r.shiKinto.list.map(s => `${fmtN(s.amount)}円${r.shiKinto.list.length > 1 ? `（${s.label}）` : ''}`).join(' ＋ ')}</em><br><br>
           <strong>【交際費】</strong> ${inp.kousaihi > 0 ? `支出額 ${fmtN(inp.kousaihi)}円 − 損金算入限度 ${fmtN(r.kousai.gendo)}円（${r.kousai.houhou}）＝ 加算 <em>${fmtN(r.kousai.kasan)}円</em>` : '入力なし'}<br>
+          <strong>【事業税等の損金算入】</strong> ${r.jigyouSonkin.total > 0
+            ? `前期確定分 ${fmtN(r.jigyouSonkin.zenki)}円 ＋ 当期中間納付分 ${fmtN(r.jigyouSonkin.chuukan)}円 ＝ 減算 <em>${fmtN(r.jigyouSonkin.total)}円</em>（事業税・特別法人事業税は納付事業年度の損金）`
+            : '入力なし'}<br>
           <strong>【繰越欠損金】</strong> ${inp.kesson > 0 ? `控除 <em>${fmtN(r.kessonKoujo)}円</em>（${r.isChusho ? '中小法人につき所得の100%まで' : '所得の50%が限度'}）` : '入力なし'}
         </div>
       </div>
@@ -1090,6 +1141,9 @@ function copyResult(btn) {
   const officeStr = r.shiwari.list.map(s => s.label).join('・');
   const lines = [
     `【法人税・地方税 概算（${Y.short}事業年度・宮城県${officeStr}）】`,
+    ...(r.jigyouSonkin.total > 0 ? [
+      `事業税等の損金算入額: ${fmtN(r.jigyouSonkin.total)}円（前期確定分${fmtN(r.jigyouSonkin.zenki)}＋当期中間納付分${fmtN(r.jigyouSonkin.chuukan)}）`,
+    ] : []),
     `課税所得: ${fmtN(r.kazeiShotoku)}円`,
     `法人税: ${fmtN(r.houjinzei.amount)}円`,
     `地方法人税: ${fmtN(r.chihouHoujinzei.amount)}円`,
@@ -1106,7 +1160,7 @@ function copyResult(btn) {
     `合計納税額（概算）: ${fmtN(r.total)}円`,
     `実効税率: ${r.jikkou !== null ? fmtPct(r.jikkou) : '—'}`,
     ...(r.yoteiTotal > 0 ? [
-      `予定納税額: ${fmtN(r.yoteiTotal)}円`,
+      `予定納税額: ${fmtN(r.yoteiTotal)}円（国税${fmtN(r.yoteiKoku)}＋県民税${fmtN(r.yoteiKen)}＋事業税等${fmtN(r.yoteiJigyou)}＋市税${fmtN(r.yoteiShi)}）`,
       r.final >= 0 ? `差引最終納付額（概算）: ${fmtN(r.final)}円` : `差引還付見込額（概算）: ${fmtN(-r.final)}円`,
     ] : []),
   ];

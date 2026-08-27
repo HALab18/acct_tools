@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法人税・地方税 概算計算ツール｜中小企業向け（宮城県対応）</title>
+<title>法人税・地方税 概算計算ツール｜中小企業向け（宮城県・長野県対応）</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="法人税概算">
@@ -280,7 +280,7 @@ body{
   <div class="topbar-logo">houjinzei<span style="color:var(--text2);font-size:13px;font-family:inherit;font-weight:400"> calc</span></div>
   <div class="topbar-right">
     <div class="badge badge-year" id="badge-year">令和7年度開始事業年度</div>
-    <div class="badge badge-blue">宮城県対応</div>
+    <div class="badge badge-blue" id="badge-pref">宮城県対応</div>
     <button class="btn-print" onclick="doPrint()">🖨<span class="btn-print-label"> 印刷 / PDF</span></button>
   </div>
 </div>
@@ -306,11 +306,15 @@ body{
         <label>事業年度</label>
         <select id="year_sel" onchange="onInput()"></select>
       </div>
-      <div class="field">
-        <label>資本金の額（円）</label>
-        <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
-        <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
+      <div class="sel-field">
+        <label>都道府県</label>
+        <select id="pref_sel" onchange="onPrefChange()"></select>
       </div>
+    </div>
+    <div class="field">
+      <label>資本金の額（円）</label>
+      <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
     </div>
 
     <div class="divider"></div>
@@ -507,18 +511,29 @@ body{
 
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   税率マスタ（年度キーの追加で令和9年度以降に対応）
+   税率マスタ
+   - TAX_YEARS: 国税・全国共通（年度キーの追加で令和9年度以降に対応）
+   - PREFS:     都道府県ごとの県民税・事業税（年度キー別。キー追加で他県に対応）
+   - CITIES:    市町村ごとの市民税（pref で所属県を指定）
 
-   出典（2026年7月確認）:
+   出典（2026年8月確認）:
+   [国税]
    - 法人税軽減税率: 中小企業庁 https://www.chusho.meti.go.jp/zaimu/zeisei/tokurei/houjin_keigen.html
-   - 宮城県 法人県民税: https://www.pref.miyagi.jp/soshiki/zeimu/houjinkenmin.html
-   - 宮城県 超過課税（みやぎ発展税・みやぎ環境税）: https://www.pref.miyagi.jp/soshiki/zeimu/choukakazei.html
+   [宮城県]
+   - 法人県民税: https://www.pref.miyagi.jp/soshiki/zeimu/houjinkenmin.html
+   - 超過課税（みやぎ発展税・みやぎ環境税）: https://www.pref.miyagi.jp/soshiki/zeimu/choukakazei.html
+   - 法人事業税税率表: https://www.pref.miyagi.jp/documents/28552/2022zigyozei.pdf
    - 仙台市 法人市民税: https://www.city.sendai.jp/hojinkaze/kurashi/tetsuzuki/zekin/hojin/hojin.html
    - 名取市: https://www.city.natori.miyagi.jp/page/1523.html （法人税割 8.4% 一律）
    - 多賀城市: https://www.city.tagajo.miyagi.jp/shize/kurashi/zekin/hojin.html （8.4% 一律）
    - 岩沼市: https://www.city.iwanuma.miyagi.jp/kurashi/zei/hojin-juminzei/hojin-juminzei.html （6.0%）
    - 富谷市: https://www.tomiya-city.miyagi.jp/kurashi/zeikin/shiminzei/houjinsiminn.html （6.0%）
    - 東松島市: https://www.city.higashimatsushima.miyagi.jp/kurashi/tetsuduki-sodan/zeikin/hojinshiminzei/hojinshiminzei.html （6.0%）
+   [長野県]
+   - 法人県民税・事業税の税率一覧表: https://www.pref.nagano.lg.jp/zeimu/kurashi/kenze/aramashi/aramashi/documents/040501zeiritsuhyou.pdf
+     （県民税は超過課税・均等割は長野県森林づくり県民税5%上乗せ／事業税は標準税率を適用）
+   - 長野市 法人市民税: https://www.city.nagano.nagano.jp/n062000/contents/p000490.html （7.1%／7.7%／8.4%・均等割1.2倍）
+   - 上田市 法人市民税: https://www.city.ueda.nagano.jp/soshiki/zeimu/3115.html （7.4% 一律・均等割は資本金等1億円超が1.2倍）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const TAX_YEARS = {
   R7: {
@@ -527,19 +542,11 @@ const TAX_YEARS = {
     houjinzei: { low: 0.15, lowBig: 0.17, high: 0.232, lowLimit: 8000000, bigShotoku: 1000000000 },
     chihouHoujinzei: 0.103,
     kousai: { teigaku: 8000000, inshoku: 0.50 },
-    kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
-    kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
-    // brackets: [上限, 標準税率(B), 超過税率(A・みやぎ発展税)]
-    // 超過税率 = 現行標準税率 + 引下げ前標準税率(5.0/7.3/9.6%)×5% → 3.75% / 5.665% / 7.48%
-    // 出典: 宮城県 法人事業税税率表 https://www.pref.miyagi.jp/documents/28552/2022zigyozei.pdf
-    jigyouzei: { brackets: [ [4000000, 0.035, 0.0375], [8000000, 0.053, 0.05665], [Infinity, 0.070, 0.0748] ],
-                 hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
     bouei: null, // 防衛特別法人税は令和8年4月1日以後開始事業年度から
     notes: [
       '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
       '防衛特別法人税は対象外（令和8年4月1日以後開始事業年度から適用）',
-      'みやぎ発展税（事業税 超過税率3.75%・5.665%・7.48%）は令和10年2月29日までの期間内に終了する事業年度に適用',
     ],
   },
   R8: {
@@ -548,45 +555,106 @@ const TAX_YEARS = {
     houjinzei: { low: 0.15, lowBig: 0.17, high: 0.232, lowLimit: 8000000, bigShotoku: 1000000000 },
     chihouHoujinzei: 0.103,
     kousai: { teigaku: 8000000, inshoku: 0.50 },
-    kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
-    kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
-    // brackets: [上限, 標準税率(B), 超過税率(A・みやぎ発展税)]
-    // 超過税率 = 現行標準税率 + 引下げ前標準税率(5.0/7.3/9.6%)×5% → 3.75% / 5.665% / 7.48%
-    // 出典: 宮城県 法人事業税税率表 https://www.pref.miyagi.jp/documents/28552/2022zigyozei.pdf
-    jigyouzei: { brackets: [ [4000000, 0.035, 0.0375], [8000000, 0.053, 0.05665], [Infinity, 0.070, 0.0748] ],
-                 hattenShotokuLimit: 40000000 },
     tokubetsu: 0.37,
     // 防衛特別法人税（令和7年度税制改正で創設）: (基準法人税額 − 基礎控除500万円) × 4%
     bouei: { rate: 0.04, kiso: 5000000 },
     notes: [
       '中小軽減税率15%は令和9年3月31日までに開始する事業年度まで適用（所得10億円超の年度は17%）',
       '防衛特別法人税4%を適用（基準法人税額から基礎控除500万円を差し引いた額に課税）',
-      'みやぎ環境税（県均等割10%上乗せ）・みやぎ発展税は5年ごとの更新制。更新後の継続を前提に計算',
     ],
   },
 };
 
-// 市町村マスタ（エントリ追加で他市町村に対応）
-// overThreshold あり: 法人税額がその額を超える場合に over 税率（仙台市方式）
-// 仙台市は政令指定都市のため区単位のエントリ（地方税法737条: 均等割は区を一の市とみなして課税。
-// 2以上の区に事務所等がある場合は区ごとに均等割を計算・合算。50人超判定も区内従業者数で行う）。
-// 法人税割は市単位のため group: 'sendai' で仙台市として集約する。
-const SENDAI = { group: 'sendai', groupLabel: '仙台市', std: 0.060, over: 0.084, overThreshold: 10000000 };
+/* 都道府県マスタ（キー追加で他県に対応）
+   jigyouzei.brackets: [上限, 標準税率, 超過税率]（第3要素を省略した県は超過課税なし）
+   overName あり = 事業税の超過課税を実施している県。overShotokuLimit 以下の中小法人は標準税率（不均一課税） */
+const MIYAGI_YEAR = {
+  kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
+  // 均等割はみやぎ環境税（標準税率の10%）を上乗せした額
+  kenKinto: [ [10000000, 22000], [100000000, 55000], [1000000000, 143000], [5000000000, 594000], [Infinity, 880000] ],
+  kenKintoNote: 'みやぎ環境税10%込',
+  // みやぎ発展税の超過税率 = 現行標準税率 + 引下げ前標準税率(5.0/7.3/9.6%)×5% → 3.75% / 5.665% / 7.48%
+  jigyouzei: { brackets: [ [4000000, 0.035, 0.0375], [8000000, 0.053, 0.05665], [Infinity, 0.070, 0.0748] ],
+               overName: 'みやぎ発展税', overShotokuLimit: 40000000 },
+};
+const NAGANO_YEAR = {
+  kenminzei: { std: 0.010, over: 0.018, overThreshold: 10000000 },
+  // 均等割は長野県森林づくり県民税（標準税率の5%）を上乗せした額
+  kenKinto: [ [10000000, 21000], [100000000, 52500], [1000000000, 136500], [5000000000, 567000], [Infinity, 840000] ],
+  kenKintoNote: '森林づくり県民税5%込',
+  // 長野県は事業税の超過課税を行っていない（標準税率のみ）
+  jigyouzei: { brackets: [ [4000000, 0.035], [8000000, 0.053], [Infinity, 0.070] ] },
+};
+const PREFS = {
+  miyagi: {
+    label: '宮城県',
+    years: {
+      R7: { ...MIYAGI_YEAR, notes: [
+        'みやぎ発展税（事業税 超過税率3.75%・5.665%・7.48%）は令和10年2月29日までの期間内に終了する事業年度に適用',
+        '県均等割はみやぎ環境税（標準税率の10%）を上乗せした額です',
+      ] },
+      R8: { ...MIYAGI_YEAR, notes: [
+        'みやぎ環境税（県均等割10%上乗せ）・みやぎ発展税は5年ごとの更新制。更新後の継続を前提に計算',
+      ] },
+    },
+  },
+  nagano: {
+    label: '長野県',
+    years: {
+      R7: { ...NAGANO_YEAR, notes: [
+        '長野県の法人事業税は標準税率（3.5%・5.3%・7.0%）を適用（超過課税なし）',
+        '県均等割は長野県森林づくり県民税（標準税率の5%）を上乗せした額です',
+        '長野市・上田市は法人市民税に超過課税があります（長野市：法人税割7.1%／7.7%・均等割1.2倍、上田市：法人税割7.4%一律）',
+      ] },
+      R8: { ...NAGANO_YEAR, notes: [
+        '長野県の法人事業税は標準税率（3.5%・5.3%・7.0%）を適用（超過課税なし）',
+        '長野県森林づくり県民税（県均等割5%上乗せ）は期限更新制。更新後の継続を前提に計算',
+      ] },
+    },
+  },
+};
+// 年度キーが未定義の県は、定義済みの最終年度を適用（年度追加時のフォールバック）
+function prefYear(prefKey, yearKey) {
+  const ys = PREFS[prefKey].years;
+  if (ys[yearKey]) return ys[yearKey];
+  const keys = Object.keys(ys);
+  return ys[keys[keys.length - 1]];
+}
+
+/* 市町村マスタ（エントリ追加で他市町村に対応）
+   std           : 標準の法人税割税率
+   over          : 法人税額が overThreshold を超える場合の税率（overThreshold なし = 一律 std）
+   big           : 資本金等1億円超の法人の税率（省略時は over を適用）
+   kintoMult     : 均等割の超過課税倍率（省略時は標準税率）
+   kintoMultFrom : その倍率を適用する資本金等の額の下限（超過した場合に適用・省略時は全区分）
+   group         : 法人税割を合算する課税団体キー（政令指定都市の区）
+
+   仙台市は政令指定都市のため区単位のエントリ（地方税法737条: 均等割は区を一の市とみなして課税。
+   2以上の区に事務所等がある場合は区ごとに均等割を計算・合算。50人超判定も区内従業者数で行う）。
+   法人税割は市単位のため group: 'sendai' で仙台市として集約する。 */
+const SENDAI = { pref: 'miyagi', group: 'sendai', groupLabel: '仙台市', std: 0.060, over: 0.084, overThreshold: 10000000 };
 const CITIES = {
+  // ── 宮城県 ──
   sendai_aoba:        { label: '仙台市 青葉区',   ...SENDAI },
   sendai_miyagino:    { label: '仙台市 宮城野区', ...SENDAI },
   sendai_wakabayashi: { label: '仙台市 若林区',   ...SENDAI },
   sendai_taihaku:     { label: '仙台市 太白区',   ...SENDAI },
   sendai_izumi:       { label: '仙台市 泉区',     ...SENDAI },
-  natori:  { label: '名取市',   std: 0.084, over: 0.084 },
-  tomiya:  { label: '富谷市',   std: 0.060, over: 0.060 },
-  iwanuma: { label: '岩沼市',   std: 0.060, over: 0.060 },
-  tagajo:  { label: '多賀城市', std: 0.084, over: 0.084 },
-  higashimatsushima: { label: '東松島市', std: 0.060, over: 0.060 },
-  other:   { label: 'その他市町村（標準税率）', std: 0.060, over: 0.060 },
+  natori:  { pref: 'miyagi', label: '名取市',   std: 0.084, over: 0.084 },
+  tomiya:  { pref: 'miyagi', label: '富谷市',   std: 0.060, over: 0.060 },
+  iwanuma: { pref: 'miyagi', label: '岩沼市',   std: 0.060, over: 0.060 },
+  tagajo:  { pref: 'miyagi', label: '多賀城市', std: 0.084, over: 0.084 },
+  higashimatsushima: { pref: 'miyagi', label: '東松島市', std: 0.060, over: 0.060 },
+  miyagi_other: { pref: 'miyagi', label: 'その他市町村（標準税率）', std: 0.060, over: 0.060 },
+  // ── 長野県 ──
+  // 長野市: 資本金等1億円以下は法人税額1,000万円以下7.1%／超7.7%、1億円超は8.4%。均等割は全区分1.2倍
+  nagano:  { pref: 'nagano', label: '長野市', std: 0.071, over: 0.077, overThreshold: 10000000, big: 0.084, kintoMult: 1.2 },
+  // 上田市: 法人税割は全法人7.4%一律。均等割は資本金等1億円超のみ1.2倍
+  ueda:    { pref: 'nagano', label: '上田市', std: 0.074, over: 0.074, kintoMult: 1.2, kintoMultFrom: 100000000 },
+  nagano_other: { pref: 'nagano', label: 'その他市町村（標準税率）', std: 0.060, over: 0.060 },
 };
 
-// 市均等割（標準税率表・宮城県内5市共通で採用を確認済み）
+// 市均等割の標準税率表（超過課税を行う市は CITIES の kintoMult で倍率を適用）
 // [資本金等の上限, 従業者50人以下の年額, 50人超の年額]
 const CITY_KINTO = [
   [10000000,   50000,  120000],
@@ -603,6 +671,7 @@ function floor100(n)  { return Math.floor(n / 100) * 100; }   // 税額: 百円�
 /* ━━━ 計算エンジン（純関数・DOM非依存） ━━━ */
 function calcAll(inp) {
   const Y = TAX_YEARS[inp.yearKey];
+  const P = prefYear(inp.prefKey, inp.yearKey); // 都道府県の県民税・事業税
   const isChusho = inp.shihonkin <= 100000000;
 
   // ── 交際費の損金不算入額 ──
@@ -659,8 +728,8 @@ function calcAll(inp) {
   // ── 住民税 法人税割（課税標準 = 法人税額 千円未満切捨） ──
   const juminBase = floor1000(houjinzei);
   // 県: 資本金1億超 または 法人税額 年1,000万円超 → 超過税率1.8%
-  const kenOver = !isChusho || houjinzei > Y.kenminzei.overThreshold;
-  const kenRate = kenOver ? Y.kenminzei.over : Y.kenminzei.std;
+  const kenOver = !isChusho || houjinzei > P.kenminzei.overThreshold;
+  const kenRate = kenOver ? P.kenminzei.over : P.kenminzei.std;
   const kenwari = floor100(juminBase * kenRate);
 
   // ── 市民税 法人税割（複数事業所対応） ──
@@ -687,15 +756,18 @@ function calcAll(inp) {
   const shiwariList = munis.map(o => {
     const C = CITIES[o.cityKey]; // 税率は代表エントリから（同一市の区は同一税率）
     // 超過税率の判定は分割前の法人税額の総額で行う（仙台市方式）
-    const over = C.overThreshold !== undefined ? (!isChusho || houjinzei > C.overThreshold) : false;
-    const rate = over ? C.over : C.std;
+    // 資本金等1億円超に独自税率を設ける市（長野市8.4%）は big を優先
+    const overByAmount = C.overThreshold !== undefined && houjinzei > C.overThreshold;
+    let rate = C.std;
+    if (!isChusho && C.big !== undefined) rate = C.big;                                    // 資本金等1億円超の独自税率
+    else if (C.overThreshold !== undefined && (!isChusho || overByAmount)) rate = C.over;  // 法人税額1,000万円超
     const base = bunkatsu ? floor1000(perCapita * o.juugyoin) : juminBase;
-    return { key: o.key, label: o.label, juugyoin: o.juugyoin, base, rate, over, amount: floor100(base * rate) };
+    return { key: o.key, label: o.label, juugyoin: o.juugyoin, base, rate, over: rate !== C.std, amount: floor100(base * rate) };
   });
   const shiwariTotal = shiwariList.reduce((s, x) => s + x.amount, 0);
 
   // ── 均等割（12か月決算前提） ──
-  const kenKinto = Y.kenKinto.find(r => inp.shihonkin <= r[0])[1];
+  const kenKinto = P.kenKinto.find(r => inp.shihonkin <= r[0])[1];
   const cityKintoRow = CITY_KINTO.find(r => inp.shihonkin <= r[0]);
   // 市均等割は事務所等のある市町村ごとに課税。仙台市（政令指定都市）は区を一の市とみなし
   // 区ごとに課税（地方税法737条）。50人超の判定はその区・市町村内の従業者数で行う
@@ -704,22 +776,25 @@ function calcAll(inp) {
     if (!wardMap.has(o.cityKey)) wardMap.set(o.cityKey, { key: o.cityKey, label: CITIES[o.cityKey].label, juugyoin: 0 });
     wardMap.get(o.cityKey).juugyoin += o.juugyoin;
   }
-  const shiKintoList = [...wardMap.values()].map(o => ({
-    key: o.key, label: o.label, juugyoin: o.juugyoin,
-    amount: o.juugyoin > 50 ? cityKintoRow[2] : cityKintoRow[1],
-  }));
+  const shiKintoList = [...wardMap.values()].map(o => {
+    const C = CITIES[o.key];
+    const std = o.juugyoin > 50 ? cityKintoRow[2] : cityKintoRow[1];
+    // 均等割の超過課税（長野市: 全区分1.2倍／上田市: 資本金等1億円超のみ1.2倍）
+    const mult = (C.kintoMult && (C.kintoMultFrom === undefined || inp.shihonkin > C.kintoMultFrom)) ? C.kintoMult : 1;
+    return { key: o.key, label: o.label, juugyoin: o.juugyoin, mult, amount: Math.round(std * mult) };
+  });
   const shiKintoTotal = shiKintoList.reduce((s, x) => s + x.amount, 0);
 
   // ── 法人事業税（所得割） ──
-  const J = Y.jigyouzei;
-  // みやぎ発展税: 資本金1億円以下かつ所得4,000万円以下は標準税率（不均一課税）
-  const hattenTekiyo = !(isChusho && kazeiShotoku <= J.hattenShotokuLimit);
+  const J = P.jigyouzei;
+  // 超過課税を行う県のみ判定（みやぎ発展税: 資本金1億円以下かつ所得4,000万円以下は標準税率＝不均一課税）
+  const hattenTekiyo = J.overName ? !(isChusho && kazeiShotoku <= J.overShotokuLimit) : false;
   let jigyouRaw = 0, jigyouStdRaw = 0, prev = 0;
   const jigyouDetail = [];
   for (const [max, std, over] of J.brackets) {
     const part = Math.max(0, Math.min(kazeiShotoku, max) - prev);
     if (part > 0) {
-      const rate = hattenTekiyo ? over : std;
+      const rate = hattenTekiyo ? (over !== undefined ? over : std) : std;
       jigyouRaw    += part * rate;
       jigyouStdRaw += part * std;
       jigyouDetail.push({ part, rate });
@@ -751,6 +826,7 @@ function calcAll(inp) {
 
   return {
     isChusho,
+    pref: { key: inp.prefKey, label: PREFS[inp.prefKey].label, kenKintoNote: P.kenKintoNote, notes: P.notes },
     kousai: { gendo: kousaiGendo, kasan: kousaiKasan, houhou: kousaiHouhou },
     jigyouSonkin,
     shotokuMae, kessonKoujo, shotoku, kazeiShotoku,
@@ -761,7 +837,9 @@ function calcAll(inp) {
     shiwari:  { amount: shiwariTotal, list: shiwariList, bunkatsu, totalJuugyoin, perCapita },
     kenKinto,
     shiKinto: { amount: shiKintoTotal, list: shiKintoList },
-    jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, detail: jigyouDetail },
+    jigyouzei: { amount: jigyouzei, base: kazeiShotoku, hatten: hattenTekiyo, overName: J.overName,
+                 stdRates: J.brackets.map(b => b[1]), overRates: J.brackets.map(b => b[2] !== undefined ? b[2] : b[1]),
+                 detail: jigyouDetail },
     tokubetsu: { amount: tokubetsu, base: kijunShotokuwari, rate: Y.tokubetsu },
     kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
     yoteiKoku, yoteiKen, yoteiJigyou, yoteiShi, yoteiTotal, final,
@@ -802,19 +880,38 @@ function buildSelects() {
     opt.value = k; opt.textContent = y.label;
     ySel.appendChild(opt);
   });
+  const pSel = document.getElementById('pref_sel');
+  Object.entries(PREFS).forEach(([k, p]) => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = p.label;
+    pSel.appendChild(opt);
+  });
+  buildCitySelects();
+}
+
+// 市町村セレクトを選択中の都道府県で組み直す（県を切り替えると選択はリセット）
+function buildCitySelects() {
+  const prefKey = document.getElementById('pref_sel').value;
+  const cities = Object.entries(CITIES).filter(([, c]) => c.pref === prefKey);
   for (let i = 1; i <= 5; i++) {
     const cSel = document.getElementById('city_sel' + i);
+    cSel.innerHTML = '';
     if (i > 1) {
       const none = document.createElement('option');
       none.value = 'none'; none.textContent = '— なし —';
       cSel.appendChild(none);
     }
-    Object.entries(CITIES).forEach(([k, c]) => {
+    cities.forEach(([k, c]) => {
       const opt = document.createElement('option');
       opt.value = k; opt.textContent = c.label;
       cSel.appendChild(opt);
     });
   }
+}
+
+function onPrefChange() {
+  buildCitySelects();
+  onInput();
 }
 
 /* ━━━ 入力の収集 ━━━ */
@@ -827,6 +924,7 @@ function getInputs() {
   }
   return {
     yearKey:   document.getElementById('year_sel').value,
+    prefKey:   document.getElementById('pref_sel').value,
     offices,
     shihonkin: numOr0('shihonkin'),
     rieki:     numOr0('rieki'),
@@ -849,9 +947,15 @@ function onInput() {
   const Y = TAX_YEARS[inp.yearKey];
 
   // トップバーのバッジ・年度バナー
+  const prefLabel = PREFS[inp.prefKey].label;
+  // 収録市数: 政令市の区は1市として数え、「その他市町村」は除く
+  const cityCount = new Set(Object.entries(CITIES)
+    .filter(([k, c]) => c.pref === inp.prefKey && !k.endsWith('_other'))
+    .map(([k, c]) => c.group || k)).size;
   document.getElementById('badge-year').textContent = Y.short + '事業年度';
+  document.getElementById('badge-pref').textContent = prefLabel + '対応';
   document.getElementById('year-banner').innerHTML =
-    '📅 ' + Y.label + ' 対応<span>｜ ' + Y.notes[0] + '</span>';
+    '📅 ' + Y.label + ' 対応<span>｜ ' + Y.notes[0] + '｜ ' + prefLabel + '・県内' + cityCount + '市の税率収録</span>';
 
   // 事業所・従業者数ヒント
   const oh = document.getElementById('offices-hint');
@@ -908,8 +1012,8 @@ function buildRows(r) {
     base: fmtN(s.base), rate: fmtPct(s.rate), amount: s.amount,
   }));
   const shiKintoRows = r.shiKinto.list.map(s => ({
-    name: '法人市民税 均等割' + (r.shiKinto.list.length > 1 ? '（' + s.label + '）' : ''),
-    base: '—', rate: '年額', amount: s.amount,
+    name: '法人市民税 均等割' + (r.shiKinto.list.length > 1 ? '（' + s.label + '）' : '') + (s.mult > 1 ? '（超過課税）' : ''),
+    base: '—', rate: s.mult > 1 ? '年額×' + s.mult : '年額', amount: s.amount,
   }));
   return [
     { name: '法人税', base: fmtN(r.houjinzei.base), rate: r.isChusho ? fmtPct(r.houjinzei.lowRate) + ' / ' + fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high) : fmtPct(TAX_YEARS[document.getElementById('year_sel').value].houjinzei.high), amount: r.houjinzei.amount },
@@ -920,7 +1024,7 @@ function buildRows(r) {
     { name: '法人県民税 均等割', base: '—', rate: '年額', amount: r.kenKinto },
     ...shiwariRows,
     ...shiKintoRows,
-    { name: '法人事業税 所得割' + (r.jigyouzei.hatten ? '（みやぎ発展税適用）' : ''), base: fmtN(r.jigyouzei.base), rate: r.jigyouzei.detail.map(d => fmtPct(d.rate)).join(' / ') || '—', amount: r.jigyouzei.amount },
+    { name: '法人事業税 所得割' + (r.jigyouzei.hatten ? '（' + r.jigyouzei.overName + '適用）' : ''), base: fmtN(r.jigyouzei.base), rate: r.jigyouzei.detail.map(d => fmtPct(d.rate)).join(' / ') || '—', amount: r.jigyouzei.amount },
     { name: '特別法人事業税', base: fmtN(r.tokubetsu.base), rate: fmtPct(r.tokubetsu.rate), amount: r.tokubetsu.amount },
     { name: '地方税 小計', amount: r.chihouzei, cls: 'subtotal' },
     { name: '合計納税額（概算）', amount: r.total, cls: 'grand' },
@@ -965,7 +1069,7 @@ function updatePrintSheet(inp, r) {
 
   const params = [
     { k: '事業年度',   v: Y.short },
-    { k: '事業所所在地', v: '宮城県 ' + officeStr },
+    { k: '事業所所在地', v: r.pref.label + ' ' + officeStr },
     { k: '資本金',     v: inp.shihonkin > 0 ? fmt(inp.shihonkin) : '—' },
     { k: '従業者数 合計', v: r.shiwari.totalJuugyoin > 0 ? r.shiwari.totalJuugyoin + '人' + (r.shiwari.bunkatsu ? '（分割法人）' : '（' + (r.shiwari.totalJuugyoin > 50 ? '50人超' : '50人以下') + '）') : '—' },
     { k: '税引前利益', v: fmt(inp.rieki) },
@@ -1009,12 +1113,14 @@ function updatePrintSheet(inp, r) {
   }).join('');
 
   const notes = [
-    '12か月決算・全事業所が宮城県内にある前提で計算しています。',
+    `12か月決算・全事業所が${r.pref.label}内にある前提で計算しています。`,
     ...(r.shiwari.bunkatsu ? ['2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分計算しています（地方税法第321条の13）。市民税均等割は事務所等のある各市町村で課税されます。'] : []),
     ...(r.shiKinto.list.filter(k => CITIES[k.key].group).length > 1 ? ['仙台市は政令指定都市のため、市民税均等割は区ごとに課税しています（従業者数50人超の判定も区ごと・地方税法第737条）。'] : []),
+    '資本金1,000万円以上で3以上の都道府県に事務所等がある法人は、事業税の軽減税率（年800万円以下の区分）が適用されず全額が最高税率となります（本ツールは同一県内前提のため未反映）。',
     '税額控除（所得税額控除等）・留保金課税は考慮していません。',
     '事業税・特別法人事業税は納付事業年度の損金。当期に納付した前期確定分・当期中間納付分は所得計算で減算済み。当期確定分は翌期の損金となるため未反映です。',
     ...Y.notes,
+    ...r.pref.notes,
     '本計算は概算であり、実際の申告税額とは異なる場合があります。',
   ];
   document.getElementById('ps-notes').innerHTML =
@@ -1023,7 +1129,7 @@ function updatePrintSheet(inp, r) {
   const now = new Date();
   document.getElementById('ps-footer').textContent =
     `出力日：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日　｜　` +
-    `${Y.label}　宮城県・${r.shiwari.list.map(s => s.label).join('・')} の税率で計算`;
+    `${Y.label}　${r.pref.label}・${r.shiwari.list.map(s => s.label).join('・')} の税率で計算`;
 }
 
 /* ━━━ Main render ━━━ */
@@ -1113,11 +1219,13 @@ function renderResult() {
           地方法人税: 法人税額 × <em>${fmtPct(Y.chihouHoujinzei)}</em><br>
           ${r.bouei ? `防衛特別法人税: （法人税額 − 基礎控除500万円）× <em>${fmtPct(r.bouei.rate)}</em><br>` : `防衛特別法人税: <em>対象外</em>（令和8年4月1日以後開始事業年度から適用）<br>`}
           法人県民税 法人税割: <em>${fmtPct(r.kenwari.rate)}</em>${r.kenwari.over ? '（法人税額1,000万円超のため超過税率）' : '（標準税率）'}<br>
-          ${r.shiwari.list.map(s => `法人市民税 法人税割（${s.label}）: <em>${fmtPct(s.rate)}</em>${s.over ? '（法人税額1,000万円超のため超過税率）' : ''}${r.shiwari.bunkatsu ? `｜分割課税標準 ${fmtN(s.base)}円（従業者${s.juugyoin}人）` : ''}`).join('<br>')}<br>
+          ${r.shiwari.list.map(s => `法人市民税 法人税割（${s.label}）: <em>${fmtPct(s.rate)}</em>${s.over ? (r.isChusho ? '（法人税額1,000万円超のため超過税率）' : '（資本金1億円超のため超過税率）') : ''}${r.shiwari.bunkatsu ? `｜分割課税標準 ${fmtN(s.base)}円（従業者${s.juugyoin}人）` : ''}`).join('<br>')}<br>
           ${r.shiwari.bunkatsu ? `分割基準: 課税標準総額 ÷ 従業者総数${r.shiwari.totalJuugyoin}人 ＝ 1人当たり <em>${r.shiwari.perCapita.toLocaleString('ja-JP')}円</em>（各市の従業者数を乗じて按分）<br>` : ''}
-          法人事業税: ${r.jigyouzei.hatten ? `超過税率 <em>3.75%／5.665%／7.48%</em>（みやぎ発展税・所得4,000万円超）` : `標準税率 <em>3.5%／5.3%／7.0%</em>（所得4,000万円以下のため発展税対象外）`}<br>
+          法人事業税: ${r.jigyouzei.hatten
+            ? `超過税率 <em>${r.jigyouzei.overRates.map(fmtPct).join('／')}</em>（${r.jigyouzei.overName}・所得4,000万円超）`
+            : `標準税率 <em>${r.jigyouzei.stdRates.map(fmtPct).join('／')}</em>${r.jigyouzei.overName ? '（所得4,000万円以下のため' + r.jigyouzei.overName + '対象外）' : `（${r.pref.label}は事業税の超過課税なし）`}`}<br>
           特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em><br>
-          均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（みやぎ環境税10%込）＋ 市 <em>${r.shiKinto.list.map(s => `${fmtN(s.amount)}円${r.shiKinto.list.length > 1 ? `（${s.label}）` : ''}`).join(' ＋ ')}</em><br><br>
+          均等割: 県 <em>${fmtN(r.kenKinto)}円</em>（${r.pref.kenKintoNote}）＋ 市 <em>${r.shiKinto.list.map(s => `${fmtN(s.amount)}円${r.shiKinto.list.length > 1 ? `（${s.label}）` : ''}${s.mult > 1 ? `＝標準×${s.mult}` : ''}`).join(' ＋ ')}</em><br><br>
           <strong>【交際費】</strong> ${inp.kousaihi > 0 ? `支出額 ${fmtN(inp.kousaihi)}円 − 損金算入限度 ${fmtN(r.kousai.gendo)}円（${r.kousai.houhou}）＝ 加算 <em>${fmtN(r.kousai.kasan)}円</em>` : '入力なし'}<br>
           <strong>【事業税等の損金算入】</strong> ${r.jigyouSonkin.total > 0
             ? `前期確定分 ${fmtN(r.jigyouSonkin.zenki)}円 ＋ 当期中間納付分 ${fmtN(r.jigyouSonkin.chuukan)}円 ＝ 減算 <em>${fmtN(r.jigyouSonkin.total)}円</em>（事業税・特別法人事業税は納付事業年度の損金）`
@@ -1140,7 +1248,7 @@ function copyResult(btn) {
   const Y = TAX_YEARS[inp.yearKey];
   const officeStr = r.shiwari.list.map(s => s.label).join('・');
   const lines = [
-    `【法人税・地方税 概算（${Y.short}事業年度・宮城県${officeStr}）】`,
+    `【法人税・地方税 概算（${Y.short}事業年度・${r.pref.label}${officeStr}）】`,
     ...(r.jigyouSonkin.total > 0 ? [
       `事業税等の損金算入額: ${fmtN(r.jigyouSonkin.total)}円（前期確定分${fmtN(r.jigyouSonkin.zenki)}＋当期中間納付分${fmtN(r.jigyouSonkin.chuukan)}）`,
     ] : []),

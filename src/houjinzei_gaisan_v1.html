@@ -427,7 +427,13 @@ body{
 
     <div class="divider"></div>
 
-    <div class="section-label">予定納税額（中間納付額）<span class="section-note">任意・入力すると差引最終納付額を計算</span></div>
+    <div class="section-label">税額控除・予定納税額（中間納付額）<span class="section-note">任意・入力すると差引最終納付額を計算</span></div>
+    <div class="field">
+      <label>法人税額から控除される所得税額（円）<span class="calc-badge">別表六(一)</span></label>
+      <input type="text" id="shotokuzei" placeholder="例：30,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">預貯金の利子・配当等から源泉徴収された所得税・復興特別所得税（15.315%）のうち法人税額から控除する額<br>所得計算では加算（損金不算入）したうえで、法人税額から控除します</div>
+      <div class="auto-hint" id="shotokuzei-hint"></div>
+    </div>
     <div class="field-row-4">
       <div class="field">
         <label>国税分（円）</label>
@@ -688,7 +694,10 @@ function calcAll(inp) {
   };
 
   // ── 所得金額 ──
-  const shotokuMae = inp.rieki + kousaiKasan + inp.kasan - inp.gensan - jigyouSonkin.total; // 欠損金控除前
+  // 法人税額から控除される所得税額は損金不算入のため加算（法人税法40条・別表四 社外流出）
+  const shotokuzei = inp.shotokuzei || 0;
+  const shotokuMae = inp.rieki + kousaiKasan + inp.kasan + shotokuzei
+                   - inp.gensan - jigyouSonkin.total; // 欠損金控除前
   // 欠損金控除: 中小100% / 資本金1億超は所得の50%が限度
   const kessonGendo = isChusho ? Math.max(0, shotokuMae) : Math.max(0, shotokuMae) * 0.5;
   const kessonKoujo = Math.min(inp.kesson, kessonGendo);
@@ -707,6 +716,14 @@ function calcAll(inp) {
     houjinzeiRaw = kazeiShotoku * H.high;
   }
   const houjinzei = floor100(houjinzeiRaw);
+
+  // ── 所得税額控除（法人税法68条） ──
+  // 法人税額からのみ控除する。控除しきれない額は還付（同78条）。
+  // 地方法人税・防衛特別法人税・住民税法人税割の課税標準となる法人税額は所得税額控除を
+  // 適用しない前の額であるため（地方法人税法9条・防確法10条一・地方税法23条1項4号）、
+  // 以降の各税目は控除前の houjinzei をそのまま用いる。
+  const shotokuzeiKoujo = Math.min(shotokuzei, houjinzei);
+  const shotokuzeiKanpu = shotokuzei - shotokuzeiKoujo;
 
   // ── 地方法人税（国税） ──
   const chihouBase = floor1000(houjinzei);
@@ -860,7 +877,8 @@ function calcAll(inp) {
   const yoteiJigyou = inp.yoteiJigyou || 0;
   const yoteiShi    = inp.yoteiShi    || 0;
   const yoteiTotal = yoteiKoku + yoteiKen + yoteiJigyou + yoteiShi;
-  const final = total - yoteiTotal; // マイナスは還付見込み
+  // 所得税額控除は年税額から差し引く（控除しきれない額も還付されるため全額を減算）
+  const final = total - shotokuzei - yoteiTotal; // マイナスは還付見込み
 
   // 県ごとの注記をマージ（重複除去）
   const prefNotes = [...new Set(prefList.flatMap(p => prefYear(p.key, inp.yearKey).notes))];
@@ -871,6 +889,8 @@ function calcAll(inp) {
             label: prefList.map(p => p.label).join('・'), notes: prefNotes },
     kousai: { gendo: kousaiGendo, kasan: kousaiKasan, houhou: kousaiHouhou },
     jigyouSonkin,
+    shotokuzeiKoujo: { input: shotokuzei, koujo: shotokuzeiKoujo,
+                       kanpu: shotokuzeiKanpu, sashihiki: houjinzei - shotokuzeiKoujo },
     shotokuMae, kessonKoujo, shotoku, kazeiShotoku,
     houjinzei: { amount: houjinzei, lowRate, base: kazeiShotoku },
     chihouHoujinzei: { amount: chihouHoujinzei, base: chihouBase, rate: Y.chihouHoujinzei },
@@ -962,6 +982,7 @@ function getInputs() {
     gensan:    numOr0('gensan'),
     kesson:    numOr0('kesson'),
     jigyouZenki: numOr0('jigyou_zenki'),
+    shotokuzei:  numOr0('shotokuzei'),
     yoteiKoku:   numOr0('yotei_koku'),
     yoteiKen:    numOr0('yotei_ken'),
     yoteiJigyou: numOr0('yotei_jigyou'),
@@ -1027,6 +1048,16 @@ function onInput() {
       (parts.length > 1 ? ' ＝ ' + fmtN(jTotal) + '円' : '') + ' を所得計算で減算します';
   } else { jh.textContent = ''; }
 
+  // 所得税額控除ヒント
+  const sh = document.getElementById('shotokuzei-hint');
+  if (inp.shotokuzei > 0) {
+    const r = calcAll(inp);
+    const k = r.shotokuzeiKoujo;
+    sh.textContent = '✦ 所得計算で ' + fmtN(k.input) + '円 を加算し、法人税額 ' + fmtN(r.houjinzei.amount) +
+      '円 から ' + fmtN(k.koujo) + '円 を控除 → 差引法人税額 ' + fmtN(k.sashihiki) + '円' +
+      (k.kanpu > 0 ? '｜控除しきれない ' + fmtN(k.kanpu) + '円 は還付' : '');
+  } else { sh.textContent = ''; }
+
   renderResult();
 }
 
@@ -1076,6 +1107,7 @@ function buildFinalRows(r) {
   const rows = [
     { name: '年税額 合計（概算）', amount: fmtN(r.total) + ' 円' },
   ];
+  if (r.shotokuzeiKoujo.input > 0) rows.push({ name: '法人税額から控除される所得税額', amount: '△ ' + fmtN(r.shotokuzeiKoujo.input) + ' 円' });
   if (r.yoteiKoku   > 0) rows.push({ name: '予定納税額 国税分',                amount: '△ ' + fmtN(r.yoteiKoku)   + ' 円' });
   if (r.yoteiKen    > 0) rows.push({ name: '予定納税額 県民税分',              amount: '△ ' + fmtN(r.yoteiKen)    + ' 円' });
   if (r.yoteiJigyou > 0) rows.push({ name: '予定納税額 事業税・特別法人事業税分', amount: '△ ' + fmtN(r.yoteiJigyou) + ' 円' });
@@ -1095,6 +1127,7 @@ function buildShotokuRows(inp, r) {
     ['その他 加算額', inp.kasan],
     ['その他 減算額', inp.gensan === 0 ? 0 : -inp.gensan],
     ['事業税等の損金算入額（減算）', r.jigyouSonkin.total === 0 ? 0 : -r.jigyouSonkin.total],
+    ['法人税額から控除される所得税額（加算）', inp.shotokuzei],
     ['差引 所得金額（欠損金控除前）', r.shotokuMae, 'sub'],
     ['繰越欠損金の当期控除額', r.kessonKoujo === 0 ? 0 : -r.kessonKoujo],
     ['課税所得金額（千円未満切捨）', r.kazeiShotoku, 'sub'],
@@ -1122,20 +1155,24 @@ function updatePrintSheet(inp, r) {
     { k: '事業税等 損金算入額', v: r.jigyouSonkin.total > 0 ? fmt(r.jigyouSonkin.total) : 'なし' },
     { k: '区分',       v: r.isChusho ? '中小法人（資本金1億円以下）' : '大法人（資本金1億円超）' },
   ];
+  if (r.shotokuzeiKoujo.input > 0) params.push({ k: '所得税額控除', v: fmt(r.shotokuzeiKoujo.input) });
   if (r.yoteiTotal > 0) params.push({ k: '予定納税額', v: fmt(r.yoteiTotal) });
   document.getElementById('ps-params').innerHTML = params.map(p =>
     `<div class="ps-param"><div class="ps-param-key">${p.k}</div><div class="ps-param-val">${p.v}</div></div>`
   ).join('');
 
   document.getElementById('ps-hero-label').textContent = 'ESTIMATED TAX — ' + Y.short;
-  const hasYotei = r.yoteiTotal > 0;
+  const hasYotei = r.yoteiTotal > 0 || r.shotokuzeiKoujo.input > 0;
+  // 控除の内訳文言（所得税額控除・予定納税のうち入力があるものを並べる）
+  const koujoTerms = [
+    ...(r.shotokuzeiKoujo.input > 0 ? [`所得税額控除 ${fmtN(r.shotokuzeiKoujo.input)}円`] : []),
+    ...(r.yoteiTotal > 0 ? [`予定納税 ${fmtN(r.yoteiTotal)}円`] : []),
+  ].join(' − ');
   document.getElementById('ps-amount').textContent = hasYotei
     ? (r.final >= 0 ? fmt(r.final) : '△ ' + fmt(-r.final))
     : fmt(r.total);
   document.querySelector('.ps-hero-sub').textContent = hasYotei
-    ? (r.final >= 0
-        ? `差引 最終納付額（年税額 ${fmtN(r.total)}円 − 予定納税 ${fmtN(r.yoteiTotal)}円）`
-        : `差引 還付見込額（年税額 ${fmtN(r.total)}円 − 予定納税 ${fmtN(r.yoteiTotal)}円）`)
+    ? `${r.final >= 0 ? '差引 最終納付額' : '差引 還付見込額'}（年税額 ${fmtN(r.total)}円 − ${koujoTerms}）`
     : '法人税・地方税 概算納税額（年間合計）';
   document.getElementById('ps-shotoku').textContent = fmt(r.kazeiShotoku);
   document.getElementById('ps-jikko').textContent = r.jikkou !== null ? fmtPct(r.jikkou) : '—';
@@ -1166,7 +1203,11 @@ function updatePrintSheet(inp, r) {
       ? ['資本金1,000万円以上で3以上の都道府県に事務所等があるため、事業税の軽減税率を適用せず全額を最高税率で計算しています（地方税法第72条の24の7）。']
       : ['資本金1,000万円以上で3以上の都道府県に事務所等がある法人は、事業税の軽減税率（年800万円以下の区分）が適用されません。']),
     '分割基準の従業者数は事業年度末日現在の数によります（資本金1億円以上の製造業の工場に係る特例は考慮していません）。',
-    '税額控除（所得税額控除等）・留保金課税は考慮していません。',
+    ...(r.shotokuzeiKoujo.input > 0 ? [
+      '法人税額から控除される所得税額は、所得金額の計算上 加算（損金不算入・法人税法40条）したうえで法人税額から控除しています（同法68条）。控除しきれない額は還付されます（同法78条）。',
+      '地方法人税・防衛特別法人税・法人住民税法人税割の課税標準となる法人税額は所得税額控除前の額であるため、これらの税額は所得税額控除によって減少しません（地方法人税法9条・防確法10条一・地方税法23条1項4号）。',
+    ] : []),
+    '外国税額控除・留保金課税は考慮していません。',
     '事業税・特別法人事業税は納付事業年度の損金。当期に納付した前期確定分・当期中間納付分は所得計算で減算済み。当期確定分は翌期の損金となるため未反映です。',
     ...Y.notes,
     ...r.pref.notes,
@@ -1209,16 +1250,20 @@ function renderResult() {
     return `<tr${cls}><td>${row.name}</td><td>${row.base || ''}</td><td>${row.rate || ''}</td><td>${fmtN(row.amount)} 円</td></tr>`;
   }).join('');
 
-  // 予定納税入力時はヒーローに差引最終納付額を表示し、控除の内訳表を追加
-  const hasYotei = r.yoteiTotal > 0;
+  // 所得税額控除・予定納税の入力時はヒーローに差引最終納付額を表示し、控除の内訳表を追加
+  const hasYotei = r.yoteiTotal > 0 || r.shotokuzeiKoujo.input > 0;
+  const koujoTerms = [
+    ...(r.shotokuzeiKoujo.input > 0 ? [`所得税額控除 ${fmt(r.shotokuzeiKoujo.input)}`] : []),
+    ...(r.yoteiTotal > 0 ? [`予定納税 ${fmt(r.yoteiTotal)}`] : []),
+  ].join(' − ');
   const heroAmount = hasYotei
     ? (r.final >= 0 ? fmt(r.final) : '△ ' + fmt(-r.final))
     : fmt(r.total);
   const heroSub = hasYotei
-    ? (r.final >= 0 ? '差引 最終納付額（予定納税控除後・概算）' : '差引 還付見込額（予定納税控除後・概算）')
+    ? (r.final >= 0 ? '差引 最終納付額（控除後・概算）' : '差引 還付見込額（控除後・概算）')
     : '法人税・地方税 概算納税額（年間合計）';
   const heroNote = hasYotei
-    ? `<div class="result-sublabel" style="margin-top:4px;opacity:.85">年税額 ${fmt(r.total)} − 予定納税 ${fmt(r.yoteiTotal)}</div>`
+    ? `<div class="result-sublabel" style="margin-top:4px;opacity:.85">年税額 ${fmt(r.total)} − ${koujoTerms}</div>`
     : '';
   const finalTable = hasYotei ? `
         <div class="sim-title">差引 最終納付額の計算</div>
@@ -1281,6 +1326,10 @@ function renderResult() {
           <strong>【事業税等の損金算入】</strong> ${r.jigyouSonkin.total > 0
             ? `前期確定分 ${fmtN(r.jigyouSonkin.zenki)}円 ＋ 当期中間納付分 ${fmtN(r.jigyouSonkin.chuukan)}円 ＝ 減算 <em>${fmtN(r.jigyouSonkin.total)}円</em>（事業税・特別法人事業税は納付事業年度の損金）`
             : '入力なし'}<br>
+          <strong>【所得税額控除】</strong> ${r.shotokuzeiKoujo.input > 0
+            ? `所得計算で <em>${fmtN(r.shotokuzeiKoujo.input)}円</em> を加算（損金不算入・法人税法40条）｜法人税額 ${fmtN(r.houjinzei.amount)}円 から <em>${fmtN(r.shotokuzeiKoujo.koujo)}円</em> を控除（同68条）＝ 差引法人税額 ${fmtN(r.shotokuzeiKoujo.sashihiki)}円${r.shotokuzeiKoujo.kanpu > 0 ? `｜控除しきれない <em>${fmtN(r.shotokuzeiKoujo.kanpu)}円</em> は還付（同78条）` : ''}<br>
+               <span style="color:var(--muted)">※ 地方法人税・防衛特別法人税・住民税法人税割の課税標準は所得税額控除前の法人税額のため、これらの税額は減少しません</span>`
+            : '入力なし'}<br>
           <strong>【繰越欠損金】</strong> ${inp.kesson > 0 ? `控除 <em>${fmtN(r.kessonKoujo)}円</em>（${r.isChusho ? '中小法人につき所得の100%まで' : '所得の50%が限度'}）` : '入力なし'}
         </div>
       </div>
@@ -1324,6 +1373,9 @@ function copyResult(btn) {
     `特別法人事業税: ${fmtN(r.tokubetsu.amount)}円`,
     `合計納税額（概算）: ${fmtN(r.total)}円`,
     `実効税率: ${r.jikkou !== null ? fmtPct(r.jikkou) : '—'}`,
+    ...(r.shotokuzeiKoujo.input > 0 ? [
+      `法人税額から控除される所得税額: ${fmtN(r.shotokuzeiKoujo.input)}円（所得計算で加算し法人税額から控除${r.shotokuzeiKoujo.kanpu > 0 ? `。うち${fmtN(r.shotokuzeiKoujo.kanpu)}円は還付` : ''}）`,
+    ] : []),
     ...(r.yoteiTotal > 0 ? [
       `予定納税額: ${fmtN(r.yoteiTotal)}円（国税${fmtN(r.yoteiKoku)}＋県民税${fmtN(r.yoteiKen)}＋事業税等${fmtN(r.yoteiJigyou)}＋市税${fmtN(r.yoteiShi)}）`,
       r.final >= 0 ? `差引最終納付額（概算）: ${fmtN(r.final)}円` : `差引還付見込額（概算）: ${fmtN(-r.final)}円`,

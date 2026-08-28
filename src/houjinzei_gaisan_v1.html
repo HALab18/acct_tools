@@ -306,16 +306,23 @@ body{
         <label>事業年度</label>
         <select id="year_sel" onchange="onInput()"></select>
       </div>
-      <div class="field">
-        <label>資本金の額（円）</label>
-        <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
-        <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
+      <div class="sel-field">
+        <label>主たる事業<span class="calc-badge">事業税の分割基準</span></label>
+        <select id="gyoushu_sel" onchange="onInput()">
+          <option value="hiseizou">非製造業（その他の事業）</option>
+          <option value="seizou">製造業</option>
+        </select>
       </div>
+    </div>
+    <div class="field">
+      <label>資本金の額（円）</label>
+      <input type="text" id="shihonkin" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+      <div class="field-note">均等割の区分・中小企業判定に使用（資本金等の額とみなして計算）</div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="section-label">事業所の所在地・従業者数<span class="section-note">最大5か所（本店含む）。都道府県・市町村をまたぐ場合は従業者数を分割基準として按分</span></div>
+    <div class="section-label">事業所の所在地・従業者数<span class="section-note">最大5か所（本店含む）。1行＝1事務所として数えます（同一市町村に複数行も可）</span></div>
     <div class="field-row">
       <div class="sel-field">
         <label>本店（市町村）</label>
@@ -742,8 +749,9 @@ function calcAll(inp) {
   const prefMap = new Map();
   for (const o of inp.offices) {
     const pk = CITIES[o.cityKey].pref;
-    if (!prefMap.has(pk)) prefMap.set(pk, { key: pk, label: PREFS[pk].label, juugyoin: 0 });
+    if (!prefMap.has(pk)) prefMap.set(pk, { key: pk, label: PREFS[pk].label, juugyoin: 0, jimusho: 0 });
     prefMap.get(pk).juugyoin += o.juugyoin;
+    prefMap.get(pk).jimusho += 1; // 入力1行＝1事務所等（同一市町村内でも別々に数える）
   }
   const prefList = [...prefMap.values()];
   const muniMap = new Map();
@@ -758,15 +766,31 @@ function calcAll(inp) {
   const bunkatsu    = munis.length > 1;    // 分割法人（2以上の市町村に事務所等）
   const kenBunkatsu = prefList.length > 1; // 2以上の都道府県に事務所等 → 県民税・事業税も分割
 
-  // 分割基準: 課税標準の総額 ÷ 従業者総数 = 1人当たり額
-  // 商は従業者総数の桁数+1桁の小数点以下まで算出し、それ未満は切捨て（地方税法321条の13・72条の48）
-  const perCapitaOf = (total) => {
-    if (totalJuugyoin <= 0) return 0;
-    const f = Math.pow(10, String(totalJuugyoin).length + 1);
-    return Math.floor(total / totalJuugyoin * f) / f;
+  // 分割基準による按分: 課税標準の総額 ÷ 分割基準の総数 = 1単位当たり額
+  // 商は総数の桁数+1桁の小数点以下まで算出し、それ未満は切捨て（地方税法321条の13・72条の48）
+  const perUnitOf = (total, count) => {
+    if (count <= 0) return 0;
+    const f = Math.pow(10, String(count).length + 1);
+    return Math.floor(total / count * f) / f;
   };
-  const perCapita        = bunkatsu    ? perCapitaOf(houjinzei)    : 0; // 法人税額（住民税法人税割）
-  const perCapitaShotoku = kenBunkatsu ? perCapitaOf(kazeiShotoku) : 0; // 所得金額（事業税）
+  const totalJimusho = prefList.reduce((s, p) => s + p.jimusho, 0);
+  // 住民税法人税割の分割基準は全業種とも従業者数のみ（地方税法57条・321条の13）
+  const perCapita = bunkatsu ? perUnitOf(houjinzei, totalJuugyoin) : 0;
+
+  // 事業税の分割基準（地方税法72条の48第3項）は業種で異なる
+  //   非製造業（その他の事業）: 課税標準の1/2を事務所等の数、1/2を従業者の数で按分
+  //   製造業: 従業者の数（資本金1億円以上の法人は工場の従業者数の1/2を加算。本ツールは未対応）
+  // ※ 事務所等の数は本来「各月末日現在の数の年間合計」だが、12か月決算・期中増減なしの
+  //    前提では各県とも12倍となり按分比は同じになるため、事務所数そのもので按分する。
+  const isSeizou = inp.gyoushu === 'seizou';
+  const jigyouHalf = kenBunkatsu ? kazeiShotoku / 2 : 0;
+  const perCapitaShotoku = kenBunkatsu
+    ? (isSeizou ? perUnitOf(kazeiShotoku, totalJuugyoin) : perUnitOf(jigyouHalf, totalJuugyoin))
+    : 0;
+  const perJimushoShotoku = (kenBunkatsu && !isSeizou) ? perUnitOf(jigyouHalf, totalJimusho) : 0;
+  const jigyouBaseOf = (p) => isSeizou
+    ? floor1000(perCapitaShotoku * p.juugyoin)
+    : floor1000(perJimushoShotoku * p.jimusho + perCapitaShotoku * p.juugyoin);
 
   // ── 住民税 法人税割（課税標準 = 法人税額 千円未満切捨） ──
   const juminBase = floor1000(houjinzei);
@@ -830,7 +854,7 @@ function calcAll(inp) {
     const J = prefYear(p.key, inp.yearKey).jigyouzei;
     // 超過課税（みやぎ発展税等）の判定は分割前の所得の総額で行う
     const over = J.overName ? !(isChusho && kazeiShotoku <= J.overShotokuLimit) : false;
-    const base = kenBunkatsu ? floor1000(perCapitaShotoku * p.juugyoin) : kazeiShotoku;
+    const base = kenBunkatsu ? jigyouBaseOf(p) : kazeiShotoku;
     let raw = 0, stdRaw = 0, prev = 0;
     const detail = [];
     if (keigenFuTekiyo) {
@@ -854,7 +878,7 @@ function calcAll(inp) {
     }
     // 特別法人事業税 = 基準法人所得割額（標準税率で計算）× 37%
     const kijun = floor100(stdRaw);
-    return { key: p.key, label: p.label, juugyoin: p.juugyoin, base, over, overName: J.overName,
+    return { key: p.key, label: p.label, juugyoin: p.juugyoin, jimusho: p.jimusho, base, over, overName: J.overName,
              stdRates: J.brackets.map(b => b[1]),
              overRates: J.brackets.map(b => b[2] !== undefined ? b[2] : b[1]),
              detail, amount: floor100(raw), kijun, tokubetsu: floor100(kijun * Y.tokubetsu) };
@@ -900,8 +924,9 @@ function calcAll(inp) {
     kenKinto: { amount: kenKintoTotal, list: kenKintoList },
     shiKinto: { amount: shiKintoTotal, list: shiKintoList },
     jigyouzei: { amount: jigyouTotal, list: jigyouList, base: kazeiShotoku,
-                 bunkatsu: kenBunkatsu, perCapita: perCapitaShotoku,
-                 hatten: jigyouList.some(j => j.over) },
+                 bunkatsu: kenBunkatsu, seizou: isSeizou,
+                 perCapita: perCapitaShotoku, perJimusho: perJimushoShotoku,
+                 totalJimusho, hatten: jigyouList.some(j => j.over) },
     tokubetsu: { amount: tokubetsuTotal, list: jigyouList, rate: Y.tokubetsu },
     kokuzei, kenzei, shizei, jigyoukei, chihouzei, total, jikkou,
     yoteiKoku, yoteiKen, yoteiJigyou, yoteiShi, yoteiTotal, final,
@@ -973,6 +998,7 @@ function getInputs() {
   }
   return {
     yearKey:   document.getElementById('year_sel').value,
+    gyoushu:   document.getElementById('gyoushu_sel').value,
     offices,
     shihonkin: numOr0('shihonkin'),
     rieki:     numOr0('rieki'),
@@ -1014,7 +1040,9 @@ function onInput() {
     const breakdown = inp.offices.map(o => CITIES[o.cityKey].label + ' ' + o.juugyoin + '人').join('・');
     let t = '✦ 従業者数 合計 ' + totalJ + '人';
     if (prefKeys.length > 1) {
-      t += '（' + breakdown + '）｜2以上の都道府県に事業所があるため、県民税法人税割・事業税も従業者数で按分し、県均等割は各県で課税';
+      const gy = document.getElementById('gyoushu_sel').value === 'seizou';
+      t += '（' + breakdown + '／全' + inp.offices.length + '事務所）｜2以上の都道府県に事業所があるため、県民税法人税割は従業者数で、事業税は' +
+        (gy ? '従業者数（製造業）' : '課税標準の1/2を事務所等の数・1/2を従業者数（非製造業）') + 'で按分。県均等割は各県で課税';
     } else if (muniCount > 1) {
       t += '（分割法人：市民税法人税割を従業者数で按分 ' + breakdown + '）';
     } else if (wardCount > 1) {
@@ -1090,7 +1118,9 @@ function buildRows(r) {
     ...shiwariRows,
     ...shiKintoRows,
     ...r.jigyouzei.list.map(j => ({
-      name: '法人事業税 所得割' + (r.jigyouzei.bunkatsu ? '（' + j.label + '・従業者' + j.juugyoin + '人）' : '') + (j.over ? '（' + j.overName + '適用）' : ''),
+      name: '法人事業税 所得割' + (r.jigyouzei.bunkatsu
+              ? '（' + j.label + '・' + (r.jigyouzei.seizou ? '' : '事務所' + j.jimusho + '・') + '従業者' + j.juugyoin + '人）'
+              : '') + (j.over ? '（' + j.overName + '適用）' : ''),
       base: fmtN(j.base), rate: j.detail.map(d => fmtPct(d.rate)).join(' / ') || '—', amount: j.amount,
     })),
     ...r.tokubetsu.list.map(j => ({
@@ -1146,6 +1176,7 @@ function updatePrintSheet(inp, r) {
 
   const params = [
     { k: '事業年度',   v: Y.short },
+    { k: '主たる事業', v: r.jigyouzei.seizou ? '製造業' : '非製造業（その他の事業）' },
     { k: '事業所所在地', v: officeStr },
     { k: '資本金',     v: inp.shihonkin > 0 ? fmt(inp.shihonkin) : '—' },
     { k: '従業者数 合計', v: r.shiwari.totalJuugyoin > 0 ? r.shiwari.totalJuugyoin + '人' + (r.shiwari.bunkatsu ? '（分割法人）' : '（' + (r.shiwari.totalJuugyoin > 50 ? '50人超' : '50人以下') + '）') : '—' },
@@ -1202,7 +1233,11 @@ function updatePrintSheet(inp, r) {
     ...(r.pref.keigenFuTekiyo
       ? ['資本金1,000万円以上で3以上の都道府県に事務所等があるため、事業税の軽減税率を適用せず全額を最高税率で計算しています（地方税法第72条の24の7）。']
       : ['資本金1,000万円以上で3以上の都道府県に事務所等がある法人は、事業税の軽減税率（年800万円以下の区分）が適用されません。']),
-    '分割基準の従業者数は事業年度末日現在の数によります（資本金1億円以上の製造業の工場に係る特例は考慮していません）。',
+    ...(r.pref.bunkatsu ? [ r.jigyouzei.seizou
+      ? '事業税の分割基準は、主たる事業が製造業のため従業者の数によっています（地方税法第72条の48第3項）。資本金1億円以上の法人における工場の従業者数の1/2加算は考慮していません。'
+      : '事業税の分割基準は、主たる事業が非製造業（その他の事業）のため、課税標準の総額の1/2を事務所等の数、1/2を従業者の数で按分しています（地方税法第72条の48第3項）。住民税法人税割の分割基準は全業種とも従業者の数のみです。'
+    ] : []),
+    '分割基準の従業者数は事業年度末日現在の数によります。事務所等の数は本来「各月末日現在の数の年間合計」ですが、12か月決算・期中の増減なしを前提としているため事務所数そのもので按分しています。',
     ...(r.shotokuzeiKoujo.input > 0 ? [
       '法人税額から控除される所得税額は、所得金額の計算上 加算（損金不算入・法人税法40条）したうえで法人税額から控除しています（同法68条）。控除しきれない額は還付されます（同法78条）。',
       '地方法人税・防衛特別法人税・法人住民税法人税割の課税標準となる法人税額は所得税額控除前の額であるため、これらの税額は所得税額控除によって減少しません（地方法人税法9条・防確法10条一・地方税法23条1項4号）。',
@@ -1299,7 +1334,7 @@ function renderResult() {
           <thead><tr><th>税目</th><th>課税標準</th><th>税率</th><th>税額</th></tr></thead>
           <tbody>${taxRows}</tbody>
         </table>
-        <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています${r.shiwari.bunkatsu ? '<br>※ 2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分しています（1人当たり課税標準 ' + r.shiwari.perCapita.toLocaleString('ja-JP') + '円）' : ''}${r.pref.bunkatsu ? '<br>※ 2以上の都道府県に事務所等があるため、県民税法人税割・事業税も按分しています（事業税の1人当たり所得 ' + r.jigyouzei.perCapita.toLocaleString('ja-JP') + '円）' : ''}</div>
+        <div class="sim-note">※ 課税標準は千円未満切捨、各税額は百円未満切捨（均等割を除く）で計算しています${r.shiwari.bunkatsu ? '<br>※ 2以上の市町村に事務所等があるため、市民税法人税割は従業者数を分割基準として按分しています（1人当たり課税標準 ' + r.shiwari.perCapita.toLocaleString('ja-JP') + '円）' : ''}${r.pref.bunkatsu ? '<br>※ 2以上の都道府県に事務所等があるため、県民税法人税割・事業税も按分しています（事業税の分割基準：' + (r.jigyouzei.seizou ? '製造業のため従業者数' : '非製造業のため課税標準の1/2を事務所等の数・1/2を従業者数') + '）' : ''}</div>
         ${finalTable}
 
         <div class="action-row">
@@ -1318,7 +1353,10 @@ function renderResult() {
           ${r.jigyouzei.list.map(j => `法人事業税${r.jigyouzei.bunkatsu ? `（${j.label}）` : ''}: ${j.over
             ? `超過税率 <em>${j.overRates.map(fmtPct).join('／')}</em>（${j.overName}・所得4,000万円超）`
             : `標準税率 <em>${j.stdRates.map(fmtPct).join('／')}</em>${j.overName ? '（所得4,000万円以下のため' + j.overName + '対象外）' : '（超過課税なし）'}`}${r.jigyouzei.bunkatsu ? `｜分割課税標準 ${fmtN(j.base)}円（従業者${j.juugyoin}人）` : ''}`).join('<br>')}<br>
-          ${r.jigyouzei.bunkatsu ? `事業税の分割基準: 所得金額の総額 ÷ 従業者総数${r.shiwari.totalJuugyoin}人 ＝ 1人当たり <em>${r.jigyouzei.perCapita.toLocaleString('ja-JP')}円</em>（軽減税率は分割後の各県の課税標準に適用）<br>` : ''}
+          ${r.jigyouzei.bunkatsu ? (r.jigyouzei.seizou
+            ? `事業税の分割基準（製造業）: 所得金額の総額 ÷ 従業者総数${r.shiwari.totalJuugyoin}人 ＝ 1人当たり <em>${r.jigyouzei.perCapita.toLocaleString('ja-JP')}円</em><br>`
+            : `事業税の分割基準（非製造業）: 所得金額の総額の1/2 ÷ 事務所等の総数${r.jigyouzei.totalJimusho} ＝ 1事務所当たり <em>${r.jigyouzei.perJimusho.toLocaleString('ja-JP')}円</em>、残り1/2 ÷ 従業者総数${r.shiwari.totalJuugyoin}人 ＝ 1人当たり <em>${r.jigyouzei.perCapita.toLocaleString('ja-JP')}円</em><br>`)
+            + `（軽減税率は分割後の各県の課税標準に適用）<br>` : ''}
           ${r.pref.keigenFuTekiyo ? `<em>軽減税率不適用</em>（資本金1,000万円以上で3以上の都道府県に事務所等）<br>` : ''}
           特別法人事業税: 基準法人所得割額 × <em>${fmtPct(Y.tokubetsu)}</em>${r.jigyouzei.bunkatsu ? '（県ごとに計算）' : ''}<br>
           均等割: 県 <em>${r.kenKinto.list.map(k => `${fmtN(k.amount)}円${r.kenKinto.list.length > 1 ? `（${k.label}）` : ''}（${k.note}）`).join(' ＋ ')}</em>＋ 市 <em>${r.shiKinto.list.map(s => `${fmtN(s.amount)}円${r.shiKinto.list.length > 1 ? `（${s.label}）` : ''}${s.mult > 1 ? `＝標準×${s.mult}` : ''}`).join(' ＋ ')}</em><br><br>

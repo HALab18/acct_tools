@@ -123,6 +123,27 @@ body{
 /* 2カラムのフィールド行 */
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.field-row{grid-template-columns:1fr}}
+/* 事業所行：市町村＋従業者数を1セットに見せる（スマホでは枠でグルーピング）
+   横方向は .card の padding(22px) にマイナスマージン12px＋padding11px＋border1px で
+   食い込ませ、枠内の入力欄の左右端を他のフィールドと揃える */
+@media(max-width:480px){
+  .office-row{
+    gap:8px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:11px;
+    margin:0 -12px 8px;
+  }
+  .office-row .sel-field,
+  .office-row .field{margin-bottom:0}
+  /* 「本店の」「事業所2の」等の接頭辞は枠でセットが判るので視覚的には隠す
+     （読み上げには残すため display:none にはしない） */
+  .office-row .of-pre{
+    position:absolute;width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+  }
+}
 /* 4カラムのフィールド行（予定納税額） */
 .field-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:620px){.field-row-4{grid-template-columns:1fr 1fr}}
@@ -323,53 +344,53 @@ body{
     <div class="divider"></div>
 
     <div class="section-label">事業所の所在地・従業者数<span class="section-note">最大5か所（本店含む）。1行＝1事務所として数えます（同一市町村に複数行も可）</span></div>
-    <div class="field-row">
+    <div class="field-row office-row">
       <div class="sel-field">
-        <label>本店（市町村）</label>
+        <label for="city_sel1">本店（市町村）</label>
         <select id="city_sel1" onchange="onInput()"></select>
       </div>
       <div class="field">
-        <label>本店の従業者数（人）</label>
+        <label for="juugyoin1"><span class="of-pre">本店の</span>従業者数（人）</label>
         <input type="text" id="juugyoin1" placeholder="例：12" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
-    <div class="field-row">
+    <div class="field-row office-row">
       <div class="sel-field">
-        <label>事業所2（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <label for="city_sel2">事業所2（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
         <select id="city_sel2" onchange="onInput()"></select>
       </div>
       <div class="field">
-        <label>事業所2の従業者数（人）</label>
+        <label for="juugyoin2"><span class="of-pre">事業所2の</span>従業者数（人）</label>
         <input type="text" id="juugyoin2" placeholder="例：5" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
-    <div class="field-row">
+    <div class="field-row office-row">
       <div class="sel-field">
-        <label>事業所3（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <label for="city_sel3">事業所3（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
         <select id="city_sel3" onchange="onInput()"></select>
       </div>
       <div class="field">
-        <label>事業所3の従業者数（人）</label>
+        <label for="juugyoin3"><span class="of-pre">事業所3の</span>従業者数（人）</label>
         <input type="text" id="juugyoin3" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
-    <div class="field-row">
+    <div class="field-row office-row">
       <div class="sel-field">
-        <label>事業所4（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <label for="city_sel4">事業所4（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
         <select id="city_sel4" onchange="onInput()"></select>
       </div>
       <div class="field">
-        <label>事業所4の従業者数（人）</label>
+        <label for="juugyoin4"><span class="of-pre">事業所4の</span>従業者数（人）</label>
         <input type="text" id="juugyoin4" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>
-    <div class="field-row">
+    <div class="field-row office-row">
       <div class="sel-field">
-        <label>事業所5（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
+        <label for="city_sel5">事業所5（市町村）<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">任意</span></label>
         <select id="city_sel5" onchange="onInput()"></select>
       </div>
       <div class="field">
-        <label>事業所5の従業者数（人）</label>
+        <label for="juugyoin5"><span class="of-pre">事業所5の</span>従業者数（人）</label>
         <input type="text" id="juugyoin5" placeholder="例：3" inputmode="numeric" oninput="onCommaInput(this, onInput)">
       </div>
     </div>

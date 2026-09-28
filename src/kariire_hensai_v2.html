@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>借入金 返済予定表 作成ツール｜実日数日割り計算対応（元利均等・元金均等）</title>
+<title>借入金 返済予定表 作成ツール｜法人融資・住宅ローン対応（実日数日割り・元利均等・元金均等）</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="返済予定表">
@@ -125,7 +125,8 @@ body{
 /* ── Select (dropdown) ── */
 .sel-field{margin-bottom:16px}
 .sel-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
-.sel-field select{
+.sel-field select,
+.prepay-row select{
   width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;
   color:var(--text);padding:9px 13px;font-size:13px;font-family:inherit;
   outline:none;cursor:pointer;transition:border-color .15s;
@@ -133,7 +134,8 @@ body{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
-.sel-field select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.sel-field select:focus,
+.prepay-row select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
 /* 年＋月の横並び */
 .ym-row{display:flex;gap:8px}
 .ym-row select{flex:1}
@@ -155,6 +157,45 @@ body{
 /* ── 印刷オプション ── */
 .print-opt{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
 .print-opt input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+
+/* ── ボーナス併用払い ── */
+.bonus-fields{margin-top:14px}
+
+/* ── 繰上返済 ── */
+.prepay-row{
+  display:grid;grid-template-columns:100px 88px 1fr 140px 38px;
+  grid-template-areas:"y m amt type del";gap:8px;margin-bottom:8px;align-items:center;
+}
+.prepay-row .pp-y{grid-area:y}
+.prepay-row .pp-m{grid-area:m}
+.prepay-row .pp-amt{grid-area:amt}
+.prepay-row .pp-type{grid-area:type}
+.prepay-row .pp-del{grid-area:del}
+@media(max-width:480px){
+  .prepay-row{
+    grid-template-columns:1fr 1fr 38px;
+    grid-template-areas:"y m del" "amt amt amt" "type type type";
+    padding-bottom:10px;border-bottom:1px dashed var(--border);
+  }
+}
+.prepay-row input{
+  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;color:var(--text);
+  padding:9px 13px;font-size:15px;font-family:inherit;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.prepay-row input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.pp-del{
+  height:40px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--muted2);font-size:16px;font-family:inherit;cursor:pointer;transition:all .15s;
+}
+.pp-del:hover{color:var(--red);border-color:#fecaca;background:#fef2f2}
+.add-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--accent-l);border:1px dashed #93c5fd;color:var(--accent);
+  padding:7px 14px;border-radius:7px;cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:600;transition:all .15s;
+}
+.add-btn:hover{background:#dbeafe}
 
 /* ── Result ── */
 .result{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:12px;animation:pulseIn .4s ease}
@@ -185,7 +226,10 @@ body{
 .sim-table tr.grand td{background:var(--gold-l);color:var(--gold);font-weight:700;border-top:1.5px solid #fde68a}
 .sim-table tr.grand td:first-child{color:var(--gold)}
 .sim-table tr:last-child td{border-bottom:none}
+.sim-table tr.prepay td{background:var(--green-l);color:var(--green)}
 .grace-tag{font-size:9px;font-weight:600;background:var(--bg2);color:var(--muted2);border:1px solid var(--border2);border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
+.bonus-tag{font-size:9px;font-weight:600;background:var(--gold-l);color:var(--gold);border:1px solid #fde68a;border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
+.prepay-tag{font-size:9px;font-weight:600;background:#fff;color:var(--green);border:1px solid #6ee7b7;border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
 .sim-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.7}
 
 /* ── エラー ── */
@@ -288,6 +332,7 @@ body{
 .ps-table td:first-child { text-align: left; color: #1e293b; font-weight: 500; }
 .ps-table tr.ps-grace td { background: #f8fafc; color: #64748b; }
 .ps-table tr.ps-fy-end td { border-bottom: 1.5px solid #cbd5e1; }
+.ps-table tr.ps-prepay td { background: #ecfdf5; color: #059669; }
 .ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
 .ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
 .ps-table tr:last-child td { border-bottom: none; }
@@ -320,16 +365,26 @@ body{
   <!-- Page title -->
   <div class="page-title">
     <h1>借入金 返済予定表 作成ツール</h1>
-    <p>法人が銀行等から融資を受けた場合の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・年度別集計に対応</p>
+    <p>法人の事業融資・個人の住宅ローン等の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・ボーナス併用払い・繰上返済・年度別／暦年集計に対応</p>
   </div>
 
   <!-- ===== 入力カード ===== -->
   <div class="card" id="input-card">
 
+    <div class="section-label">借入者区分</div>
+    <div class="field">
+      <div class="method-toggle">
+        <button type="button" class="method-btn active" id="btn-houjin" onclick="setBorrower('houjin')">法人<small>事業融資・決算月で年度別集計</small></button>
+        <button type="button" class="method-btn" id="btn-kojin" onclick="setBorrower('kojin')">個人<small>住宅ローン等・暦年で年末残高を集計</small></button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <div class="section-label">基本情報<span class="section-note">すべて任意入力</span></div>
     <div class="field-row">
       <div class="field">
-        <label>法人名（借入を行う法人）<span class="opt-badge">任意</span></label>
+        <label><span id="name-label">法人名（借入を行う法人）</span><span class="opt-badge">任意</span></label>
         <input type="text" id="houjin_name" placeholder="例：株式会社○○" oninput="onInput()">
       </div>
       <div class="field">
@@ -402,11 +457,48 @@ body{
           <select id="first_m" onchange="onInput()"></select>
         </div>
       </div>
-      <div class="sel-field">
+      <div class="sel-field" id="kessan-wrap">
         <label>決算月（年度別集計に使用）</label>
         <select id="kessan_m" onchange="onInput()"></select>
       </div>
+      <div class="sel-field" id="rekinen-wrap" style="display:none">
+        <label>集計区分</label>
+        <div class="field-note" style="margin-top:0;font-size:12px;color:var(--text2)">暦年（1月〜12月）で集計し、年末借入金残高を表示します</div>
+      </div>
     </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">ボーナス併用払い<span class="section-note">年2回の増額返済がある場合</span></div>
+    <label class="print-opt">
+      <input type="checkbox" id="bonus_on" onchange="onBonusToggle()">
+      ボーナス併用払いを利用する
+    </label>
+    <div class="bonus-fields" id="bonus-fields" style="display:none">
+      <div class="field-row">
+        <div class="field">
+          <label>うちボーナス返済分の借入額（円）</label>
+          <input type="text" id="bonus_kingaku" placeholder="例：5,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+          <div class="auto-hint" id="bonus-hint"></div>
+          <div class="field-note">借入金額のうちボーナス月に返済する部分（一般に借入金額の50%以内）</div>
+        </div>
+        <div class="sel-field">
+          <label>ボーナス返済月（年2回）</label>
+          <div class="ym-row">
+            <select id="bonus_m1" onchange="onInput()"></select>
+            <select id="bonus_m2" onchange="onInput()"></select>
+          </div>
+          <div class="field-note">ボーナス分の利息は前回ボーナス返済日（初回は借入日）からの実日数で計算。元利均等は半年ごとの均等返済で算定</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">繰上返済<span class="section-note">任意・複数回指定可</span></div>
+    <div id="prepay-list"></div>
+    <button type="button" class="add-btn" onclick="addPrepay()">＋ 繰上返済を追加</button>
+    <div class="field-note">指定年月の約定返済後に一部繰上返済します。<strong>期間短縮型</strong>＝毎回の返済額を据え置き完済を早める／<strong>返済額軽減型</strong>＝期間を据え置き以後の返済額を再計算。ボーナス併用時は毎月返済分とボーナス返済分の残高比で按分して充当します</div>
 
     <div class="divider"></div>
 
@@ -451,9 +543,9 @@ body{
           <tbody id="ps-detail-tbody"></tbody>
         </table>
       </div>
-      <div class="ps-section-title">年度別集計（決算月ベース）</div>
+      <div class="ps-section-title" id="ps-fy-title">年度別集計（決算月ベース）</div>
       <table class="ps-table">
-        <thead><tr><th>事業年度</th><th>元金返済額</th><th>支払利息</th><th>期末借入金残高</th></tr></thead>
+        <thead><tr><th id="ps-fy-th1">事業年度</th><th>元金返済額</th><th>支払利息</th><th id="ps-fy-th4">期末借入金残高</th></tr></thead>
         <tbody id="ps-fy-tbody"></tbody>
       </table>
       <div class="ps-notes" id="ps-notes"></div>
@@ -465,7 +557,7 @@ body{
   <div id="result-area">
     <div class="placeholder">
       <div class="placeholder-icon">🏦</div>
-      借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別集計が表示されます
+      借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別（年別）集計が表示されます
     </div>
   </div>
 
@@ -519,10 +611,58 @@ function setMethod(m) {
   onInput();
 }
 
+/* ━━━ 借入者区分トグル（法人／個人） ━━━ */
+let borrower = 'houjin'; // 'houjin' 法人 / 'kojin' 個人
+function setBorrower(b) {
+  borrower = b;
+  const kojin = b === 'kojin';
+  document.getElementById('btn-houjin').classList.toggle('active', !kojin);
+  document.getElementById('btn-kojin').classList.toggle('active', kojin);
+  document.getElementById('name-label').textContent = kojin ? '借入者氏名' : '法人名（借入を行う法人）';
+  document.getElementById('houjin_name').placeholder = kojin ? '例：山田 太郎' : '例：株式会社○○';
+  document.getElementById('tekiyo').placeholder = kojin ? '例：住宅取得資金（新築・○○市）' : '例：運転資金／設備資金';
+  document.getElementById('kessan-wrap').style.display = kojin ? 'none' : '';
+  document.getElementById('rekinen-wrap').style.display = kojin ? '' : 'none';
+  onInput();
+}
+
+/* ━━━ ボーナス併用払い ━━━ */
+function onBonusToggle() {
+  document.getElementById('bonus-fields').style.display =
+    document.getElementById('bonus_on').checked ? '' : 'none';
+  onInput();
+}
+
+/* ━━━ 繰上返済の入力行 ━━━ */
+function addPrepay() {
+  const now = new Date();
+  const firstM = parseInt(document.getElementById('first_m').value, 10);
+  let yOpts = '', mOpts = '';
+  for (let y = now.getFullYear() - 10; y <= now.getFullYear() + 55; y++) {
+    yOpts += `<option value="${y}"${y === now.getFullYear() + 5 ? ' selected' : ''}>${y} 年</option>`;
+  }
+  for (let m = 1; m <= 12; m++) {
+    mOpts += `<option value="${m}"${m === firstM ? ' selected' : ''}>${m} 月</option>`;
+  }
+  const row = document.createElement('div');
+  row.className = 'prepay-row';
+  row.innerHTML = `
+    <select class="pp-y" onchange="onInput()" aria-label="繰上返済年">${yOpts}</select>
+    <select class="pp-m" onchange="onInput()" aria-label="繰上返済月">${mOpts}</select>
+    <input type="text" class="pp-amt" placeholder="繰上返済額（円）" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+    <select class="pp-type" onchange="onInput()" aria-label="繰上返済の型">
+      <option value="tanshuku">期間短縮型</option>
+      <option value="keigen">返済額軽減型</option>
+    </select>
+    <button type="button" class="pp-del" onclick="this.parentNode.remove(); onInput()" aria-label="削除">×</button>`;
+  document.getElementById('prepay-list').appendChild(row);
+  row.querySelector('.pp-amt').focus();
+}
+
 /* ━━━ Select 初期化 ━━━ */
 function buildSelects() {
   const ySel = document.getElementById('kikan_y');
-  for (let y = 0; y <= 35; y++) {
+  for (let y = 0; y <= 50; y++) {
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = y + ' 年';
     ySel.appendChild(opt);
@@ -555,21 +695,21 @@ function buildSelects() {
     opt.value = y; opt.textContent = y + ' 年';
     fySel.appendChild(opt);
   }
-  const fmSel = document.getElementById('first_m');
-  const kSel = document.getElementById('kessan_m');
+  const monthSels = ['first_m', 'kessan_m', 'bonus_m1', 'bonus_m2'].map(id => document.getElementById(id));
   for (let m = 1; m <= 12; m++) {
-    const o1 = document.createElement('option');
-    o1.value = m; o1.textContent = m + ' 月';
-    fmSel.appendChild(o1);
-    const o2 = document.createElement('option');
-    o2.value = m; o2.textContent = m + ' 月';
-    kSel.appendChild(o2);
+    monthSels.forEach(sel => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m + ' 月';
+      sel.appendChild(o);
+    });
   }
-  // 初期値: 初回返済＝翌月、決算月＝3月
+  // 初期値: 初回返済＝翌月、決算月＝3月、ボーナス返済月＝6月・12月
   const nextM = now.getMonth() + 2; // getMonth()は0始まり → 翌月
   fySel.value = nextM > 12 ? now.getFullYear() + 1 : now.getFullYear();
-  fmSel.value = nextM > 12 ? nextM - 12 : nextM;
-  kSel.value = 3;
+  document.getElementById('first_m').value = nextM > 12 ? nextM - 12 : nextM;
+  document.getElementById('kessan_m').value = 3;
+  document.getElementById('bonus_m1').value = 6;
+  document.getElementById('bonus_m2').value = 12;
 }
 
 /* ━━━ 借入日・返済日 → 初回返済年月の自動セット ━━━
@@ -608,7 +748,22 @@ function onHensaiDayChange() {
 function getInputs() {
   const rateStr = document.getElementById('riritsu').value;
   const rate = rateStr === '' ? 0 : (parseFloat(rateStr) || 0);
+  const prepays = [...document.querySelectorAll('#prepay-list .prepay-row')].map((el, idx) => ({
+    idx,
+    y: parseInt(el.querySelector('.pp-y').value, 10),
+    m: parseInt(el.querySelector('.pp-m').value, 10),
+    amount: parseInt(el.querySelector('.pp-amt').value.replace(/[^\d]/g, ''), 10) || 0,
+    type: el.querySelector('.pp-type').value,
+  })).filter(p => p.amount > 0);
   return {
+    borrower,
+    bonus: {
+      on:     document.getElementById('bonus_on').checked,
+      amount: numOr0('bonus_kingaku'),
+      m1:     parseInt(document.getElementById('bonus_m1').value, 10),
+      m2:     parseInt(document.getElementById('bonus_m2').value, 10),
+    },
+    prepays,
     houjin:  document.getElementById('houjin_name').value.trim(),
     lender:  document.getElementById('kariire_saki').value.trim(),
     tekiyo:  document.getElementById('tekiyo').value.trim(),
@@ -622,7 +777,7 @@ function getInputs() {
     method,
     firstY:  parseInt(document.getElementById('first_y').value, 10),
     firstM:  parseInt(document.getElementById('first_m').value, 10),
-    kessanM: parseInt(document.getElementById('kessan_m').value, 10),
+    kessanM: borrower === 'kojin' ? 12 : parseInt(document.getElementById('kessan_m').value, 10), // 個人は暦年
     printDetail: document.getElementById('print_detail').checked,
   };
 }
@@ -647,76 +802,148 @@ function calcAll(inp) {
   if (g >= n) return { error: '据置期間が借入期間以上です。据置期間は借入期間より短く設定してください。' };
   if (!inp.dateStr) return { error: '借入日を入力してください（実日数による利息計算の起算日として必要です）。' };
 
+  // ボーナス併用払い：借入金額を「毎月返済分 Pm」と「ボーナス返済分 Pb」に分けて別々に償還
+  const bonusOn = inp.bonus.on;
+  const Pb = bonusOn ? inp.bonus.amount : 0;
+  const Pm = P - Pb;
+  if (bonusOn) {
+    if (!(Pb > 0)) return { error: 'ボーナス返済分の借入額を入力してください。' };
+    if (Pb >= P) return { error: 'ボーナス返済分の借入額は借入金額より少なく設定してください。' };
+    if (inp.bonus.m1 === inp.bonus.m2) return { error: 'ボーナス返済月は異なる2つの月を指定してください。' };
+  }
+  const isBonusMonth = mo => bonusOn && (mo === inp.bonus.m1 || mo === inp.bonus.m2);
+
   const r1000 = Math.round(inp.rate * 1000);        // 年利率(%)×1000 の整数
   const rm = inp.rate / 1200;                        // 月利（元利均等の返済額算定用）
+  const rb = inp.rate / 200;                         // 半年利（ボーナス分・元利均等の返済額算定用）
   const dailyInterest = (bal, days) => Math.floor(bal * r1000 * days / 36500000);
+  const annuity = (bal, rate, cnt) => rate > 0
+    ? Math.round(bal * rate / (1 - Math.pow(1 + rate, -cnt)))
+    : Math.floor(bal / cnt);
 
-  // 元利均等の毎回返済額（据置期間を除く m 回で算定）
-  let ganriA = 0;
-  if (inp.method === 'ganri') {
-    ganriA = rm > 0
-      ? Math.round(P * rm / (1 - Math.pow(1 + rm, -m)))
-      : Math.floor(P / m);
-  }
-  // 元金均等の毎回元金（端数は最終回で調整）
-  const gankinBase = Math.floor(P / m);
+  const startIdx = inp.firstY * 12 + (inp.firstM - 1);
+  const ymOf = i => { const idx = startIdx + (i - 1); return { y: Math.floor(idx / 12), mo: (idx % 12) + 1 }; };
+
+  // ボーナス返済回数（据置期間後に到来するボーナス月の数）
+  let kb = 0;
+  for (let i = g + 1; i <= n; i++) if (isBonusMonth(ymOf(i).mo)) kb++;
+  if (bonusOn && kb === 0) return { error: '据置期間後にボーナス返済月が到来しません。借入期間またはボーナス返済月を見直してください。' };
+
+  // 元利均等の毎回返済額（据置期間を除く m 回で算定）／元金均等の毎回元金（端数は最終回で調整）
+  let ganriA     = inp.method === 'ganri' ? annuity(Pm, rm, m) : 0;
+  let gankinBase = Math.floor(Pm / m);
+  let bonusA     = bonusOn && inp.method === 'ganri' ? annuity(Pb, rb, kb) : 0;
+  let bonusBase  = bonusOn ? Math.floor(Pb / kb) : 0;
+  const initGanriA = ganriA, initBonusA = bonusA;
+
+  // 繰上返済（年月インデックス → 指定のリスト）
+  const prepayMap = {};
+  inp.prepays.forEach(p => { const k = p.y * 12 + p.m - 1; (prepayMap[k] = prepayMap[k] || []).push(p); });
+  const appliedPrepays = [];
 
   const rows = [];
-  let balance = P;
-  let totalPayment = 0, totalInterest = 0;
-  const startIdx = inp.firstY * 12 + (inp.firstM - 1);
-  let prevDate = new Date(inp.dateStr + 'T00:00:00');
+  let balM = Pm, balB = Pb;
+  let totalPayment = 0, totalInterest = 0, totalPrepay = 0;
+  const startDate = new Date(inp.dateStr + 'T00:00:00');
+  let prevDate = startDate, prevBonusDate = startDate;
+  let bonusDone = 0; // 据置期間後のボーナス返済済み回数
 
-  for (let i = 1; i <= n; i++) {
-    const idx = startIdx + (i - 1);
-    const y = Math.floor(idx / 12), mo = (idx % 12) + 1;
+  for (let i = 1; i <= n && balM + balB > 0; i++) {
+    const { y, mo } = ymOf(i);
     const curDate = repaymentDate(y, mo, inp.hensaiDay);
-    const days = daysBetween(prevDate, curDate);
-    const interest = dailyInterest(balance, days);
-    let principal = 0;
+    const monthlyActive = balM > 0;
+    const bonusNow = isBonusMonth(mo) && balB > 0;
+    let principal = 0, interest = 0, bonusPay = 0, days = 0;
 
-    if (i > g) {
-      if (i === n) {
-        principal = balance; // 最終回: 残高全額で端数調整
-      } else if (inp.method === 'gankin') {
-        principal = Math.min(gankinBase, balance);
-      } else {
-        principal = Math.min(Math.max(0, ganriA - interest), balance);
+    // 期間短縮型の繰上返済で毎月分が先に完済した後は、ボーナス月のみ返済
+    if (monthlyActive || bonusNow) {
+      // 毎月返済分
+      if (monthlyActive) {
+        days = daysBetween(prevDate, curDate);
+        const intM = dailyInterest(balM, days);
+        let prinM = 0;
+        if (i > g) {
+          if (i === n)                     prinM = balM; // 最終回: 残高全額で端数調整
+          else if (inp.method === 'gankin') prinM = Math.min(gankinBase, balM);
+          else                              prinM = Math.min(Math.max(0, ganriA - intM), balM);
+        }
+        balM -= prinM;
+        principal += prinM; interest += intM;
       }
+      // ボーナス返済分（前回ボーナス返済日からの実日数で利息計算）
+      if (bonusNow) {
+        const bDays = daysBetween(prevBonusDate, curDate);
+        const intB = dailyInterest(balB, bDays);
+        let prinB = 0;
+        if (i > g) {
+          bonusDone++;
+          if (bonusDone >= kb || i === n)   prinB = balB; // 最終ボーナス回: 残高全額
+          else if (inp.method === 'gankin') prinB = Math.min(bonusBase, balB);
+          else                              prinB = Math.min(Math.max(0, bonusA - intB), balB);
+        }
+        balB -= prinB;
+        principal += prinB; interest += intB;
+        bonusPay = prinB + intB;
+        prevBonusDate = curDate;
+        if (!monthlyActive) days = bDays;
+      }
+      const payment = principal + interest;
+      totalPayment += payment;
+      totalInterest += interest;
+      rows.push({ no: i, y, m: mo, day: curDate.getDate(), days, payment, principal, interest, bonusPay, balance: balM + balB, isGrace: i <= g, isBonus: bonusNow, isPrepay: false });
     }
-    balance -= principal;
-    const payment = principal + interest;
-    totalPayment += payment;
-    totalInterest += interest;
-    rows.push({ no: i, y, m: mo, day: curDate.getDate(), days, payment, principal, interest, balance, isGrace: i <= g, isFyEnd: mo === inp.kessanM });
     prevDate = curDate;
+
+    // 繰上返済（約定返済後に実行・利息なし）
+    (prepayMap[startIdx + (i - 1)] || []).forEach(p => {
+      if (balM + balB <= 0) return;
+      const amt = Math.min(p.amount, balM + balB);
+      // ボーナス併用時は毎月返済分とボーナス返済分の残高比で按分
+      const toB = Math.min(balB, Math.floor(amt * balB / (balM + balB))), toM = amt - toB;
+      balM -= toM; balB -= toB;
+      totalPayment += amt; totalPrepay += amt;
+      rows.push({ no: '繰上', y, m: mo, day: curDate.getDate(), days: 0, payment: amt, principal: amt, interest: 0, bonusPay: 0, balance: balM + balB, isGrace: false, isBonus: false, isPrepay: true, prepayType: p.type });
+      appliedPrepays.push({ ...p, amount: amt });
+      if (p.type === 'keigen') {
+        // 返済額軽減型: 残りの返済回数で毎回返済額（元金）を再計算
+        const remM = n - Math.max(i, g);
+        if (remM > 0 && balM > 0) { ganriA = annuity(balM, rm, remM); gankinBase = Math.floor(balM / remM); }
+        const remB = kb - bonusDone;
+        if (toB > 0 && remB > 0 && balB > 0) { bonusA = annuity(balB, rb, remB); bonusBase = Math.floor(balB / remB); }
+      }
+    });
   }
 
-  // 年度別集計（決算月で区切る）
+  // 年度別集計（法人: 決算月で区切る／個人: 暦年）
+  const fyKey = r => r.m <= inp.kessanM ? r.y : r.y + 1;
   const fy = [];
-  let seg = null;
   rows.forEach((r, i) => {
-    if (!seg) seg = { startY: r.y, startM: r.m, principal: 0, interest: 0 };
+    const k = fyKey(r);
+    let seg = fy[fy.length - 1];
+    if (!seg || seg.key !== k) { seg = { key: k, startY: r.y, startM: r.m, principal: 0, interest: 0 }; fy.push(seg); }
     seg.principal += r.principal;
     seg.interest  += r.interest;
-    if (r.m === inp.kessanM || i === rows.length - 1) {
-      seg.endY = r.y; seg.endM = r.m; seg.balance = r.balance;
-      fy.push(seg);
-      seg = null;
-    }
+    seg.endY = r.y; seg.endM = r.m; seg.balance = r.balance;
+    r.isFyEnd = i < rows.length - 1 && k !== fyKey(rows[i + 1]);
   });
 
   // 毎回返済額の代表値（サマリー表示用）
-  const firstRepay = rows.find(r => !r.isGrace);
-  const perPayment = inp.method === 'ganri' ? ganriA : (firstRepay ? firstRepay.payment : 0);
+  const regular = rows.filter(r => !r.isPrepay);
+  const firstRepay = regular.find(r => !r.isGrace && !r.isBonus) || regular.find(r => !r.isGrace);
+  const firstBonus = regular.find(r => !r.isGrace && r.isBonus);
+  const perPayment = inp.method === 'ganri' ? initGanriA : (firstRepay ? firstRepay.payment - firstRepay.bonusPay : 0);
+  const perBonus   = !bonusOn ? 0 : inp.method === 'ganri' ? initBonusA : (firstBonus ? firstBonus.bonusPay : 0);
   const last = rows[rows.length - 1];
 
   return {
     rows, fy,
-    n, g, m,
-    ganriA, gankinBase,
-    perPayment,
-    totalPayment, totalInterest,
+    n, g, m, kb, Pm, Pb,
+    count: regular.length,
+    ganriA: initGanriA, gankinBase,
+    perPayment, perBonus,
+    totalPayment, totalInterest, totalPrepay,
+    appliedPrepays,
+    prepayIgnored: inp.prepays.length - appliedPrepays.length,
     lastY: last.y, lastM: last.m,
   };
 }
@@ -732,6 +959,42 @@ function dateLabel(str) {
   const [y, m, d] = str.split('-').map(Number);
   return y + '年' + m + '月' + d + '日';
 }
+function prepayTypeLabel(t) { return t === 'keigen' ? '返済額軽減型' : '期間短縮型'; }
+function bonusMonthsLabel(inp) {
+  const [a, b] = [inp.bonus.m1, inp.bonus.m2].sort((x, y) => x - y);
+  return a + '月・' + b + '月';
+}
+// 集計表のラベル（法人: 事業年度／個人: 暦年）
+function fyLabels(inp) {
+  if (inp.borrower === 'kojin') {
+    return {
+      title: '年別集計（暦年）',
+      th1: '年', th4: '年末借入金残高',
+      row: s => `${s.key}年`,
+      text: s => `${s.key}年`,
+    };
+  }
+  return {
+    title: `年度別集計（決算月：${inp.kessanM}月）`,
+    th1: '事業年度', th4: '期末借入金残高',
+    row: s => `自 ${fmtYM(s.startY, s.startM)} 〜 至 ${fmtYM(s.endY, s.endM)}`,
+    text: s => `自${fmtYM(s.startY, s.startM)}〜至${fmtYM(s.endY, s.endM)}`,
+  };
+}
+// 返済明細の1行（画面・印刷共通。prefix は印刷用クラス接頭辞）
+function detailRowHtml(row, forPrint) {
+  const p = forPrint ? 'ps-' : '';
+  const cls = [row.isGrace ? p + 'grace' : '', row.isPrepay ? p + 'prepay' : '', row.isFyEnd ? p + 'fy-end' : ''].filter(Boolean).join(' ');
+  let no = row.no;
+  if (forPrint) {
+    no += row.isGrace ? '（据置）' : row.isBonus ? '（賞与）' : row.isPrepay ? '（' + prepayTypeLabel(row.prepayType) + '）' : '';
+  } else {
+    no += (row.isGrace ? '<span class="grace-tag">据置</span>' : '')
+        + (row.isBonus ? '<span class="bonus-tag">賞与</span>' : '')
+        + (row.isPrepay ? `<span class="prepay-tag">${prepayTypeLabel(row.prepayType)}</span>` : '');
+  }
+  return `<tr${cls ? ` class="${cls}"` : ''}><td>${no}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.isPrepay ? '—' : row.days + '日'}</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
+}
 
 /* ━━━ 入力ハンドラ ━━━ */
 function onInput() {
@@ -740,14 +1003,21 @@ function onInput() {
   if (inp.totalMonths > 0) {
     kh.textContent = '✦ ' + kikanLabel(inp) + (inp.sueoki > 0 ? '・うち据置 ' + inp.sueoki + '回 → 元金返済 ' + (inp.totalMonths - inp.sueoki) + '回' : '');
   } else { kh.textContent = ''; }
+  const bh = document.getElementById('bonus-hint');
+  bh.textContent = inp.bonus.on && inp.kingaku > 0 && inp.bonus.amount > 0 && inp.bonus.amount < inp.kingaku
+    ? '✦ 毎月返済分 ' + fmt(inp.kingaku - inp.bonus.amount) + '／ボーナス返済分 ' + fmt(inp.bonus.amount)
+    : '';
   renderResult();
 }
 
 /* ━━━ 印刷シート更新 ━━━ */
 function updatePrintSheet(inp, r) {
-  document.getElementById('ps-company').textContent = inp.houjin ? inp.houjin + '　御中' : '';
+  const kojin = inp.borrower === 'kojin';
+  document.getElementById('ps-company').textContent = inp.houjin ? inp.houjin + (kojin ? '　様' : '　御中') : '';
+  const L = fyLabels(inp);
 
   const params = [
+    { k: '借入者区分', v: kojin ? '個人' : '法人' },
     { k: '借入先',     v: inp.lender || '—' },
     { k: '借入日',     v: dateLabel(inp.dateStr) },
     { k: '借入金額',   v: fmt(inp.kingaku) },
@@ -758,29 +1028,32 @@ function updatePrintSheet(inp, r) {
     { k: '返済日',     v: inp.hensaiDay ? '毎月' + inp.hensaiDay + '日' : '毎月末日' },
     { k: '返済期間',   v: fmtYM(inp.firstY, inp.firstM) + ' 〜 ' + fmtYM(r.lastY, r.lastM) },
   ];
+  if (inp.bonus.on) params.push({ k: 'ボーナス併用', v: `${fmt(r.Pb)}（${bonusMonthsLabel(inp)}・全${r.kb}回）` });
+  if (r.appliedPrepays.length) params.push({ k: '繰上返済', v: r.appliedPrepays.map(p => `${fmtYM(p.y, p.m)} ${fmt(p.amount)}（${prepayTypeLabel(p.type)}）`).join('<br>') });
   if (inp.tekiyo) params.push({ k: '摘要', v: inp.tekiyo });
   document.getElementById('ps-params').innerHTML = params.map(p =>
     `<div class="ps-param"><div class="ps-param-key">${p.k}</div><div class="ps-param-val">${p.v}</div></div>`
   ).join('');
 
   document.getElementById('ps-amount').textContent = fmt(r.perPayment);
-  document.getElementById('ps-hero-sub').textContent = inp.method === 'ganri'
+  document.getElementById('ps-hero-sub').textContent = (inp.method === 'ganri'
     ? '毎回返済額（元利均等' + (r.g > 0 ? '・据置期間中は利息のみ' : '') + '）'
-    : '初回返済額（元金均等・以後逓減）';
+    : '初回返済額（元金均等・以後逓減）')
+    + (inp.bonus.on ? `　ボーナス月加算 ${fmt(r.perBonus)}` : '');
   document.getElementById('ps-total').textContent = fmt(r.totalPayment);
   document.getElementById('ps-interest').textContent = fmt(r.totalInterest);
 
   // 返済明細（チェックボックスで印刷対象を切替）
   document.getElementById('ps-detail-wrap').style.display = inp.printDetail ? 'block' : 'none';
   if (inp.printDetail) {
-    document.getElementById('ps-detail-tbody').innerHTML = r.rows.map(row => {
-      const cls = [row.isGrace ? 'ps-grace' : '', row.isFyEnd ? 'ps-fy-end' : ''].filter(Boolean).join(' ');
-      return `<tr${cls ? ` class="${cls}"` : ''}><td>${row.no}${row.isGrace ? '（据置）' : ''}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.days}日</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
-    }).join('');
+    document.getElementById('ps-detail-tbody').innerHTML = r.rows.map(row => detailRowHtml(row, true)).join('');
   }
 
+  document.getElementById('ps-fy-title').textContent = L.title;
+  document.getElementById('ps-fy-th1').textContent = L.th1;
+  document.getElementById('ps-fy-th4').textContent = L.th4;
   document.getElementById('ps-fy-tbody').innerHTML = r.fy.map(s =>
-    `<tr><td>自 ${fmtYM(s.startY, s.startM)} 〜 至 ${fmtYM(s.endY, s.endM)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
+    `<tr><td>${L.row(s)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
   ).join('') +
   `<tr class="ps-grand"><td>合計</td><td>${fmtN(inp.kingaku)} 円</td><td>${fmtN(r.totalInterest)} 円</td><td>—</td></tr>`;
 
@@ -790,7 +1063,13 @@ function updatePrintSheet(inp, r) {
     '元金の端数は最終回の返済額で調整しています。',
   ];
   if (r.g > 0) notes.push('据置期間中（' + r.g + 'か月）は元金返済なし・利息のみのお支払いとして計算しています。');
-  notes.push('年度別集計は決算月を ' + inp.kessanM + '月 とした事業年度ごとの集計です。');
+  if (inp.bonus.on) notes.push(`ボーナス併用払い：借入金額のうち ${fmt(r.Pb)} を毎年${bonusMonthsLabel(inp)}の返済日に返済（全${r.kb}回）。ボーナス分の利息は前回ボーナス返済日（初回は借入日）からの実日数で計算し、元利均等の場合は半年ごとの均等返済額で算定しています。`);
+  if (r.appliedPrepays.length) notes.push('繰上返済は指定年月の約定返済後に実行し、ボーナス併用時は毎月返済分とボーナス返済分の残高比で按分して充当しています。期間短縮型は毎回の返済額を据え置き、返済額軽減型は残りの回数で返済額を再計算しています。繰上返済手数料は考慮していません。');
+  if (kojin) {
+    notes.push('年別集計は暦年（1月〜12月）ごとの集計です。年末借入金残高は住宅借入金等特別控除の「年末残高等証明書」との照合の目安としてご利用ください（控除額の計算には金融機関発行の証明書の金額を使用してください）。');
+  } else {
+    notes.push('年度別集計は決算月を ' + inp.kessanM + '月 とした事業年度ごとの集計です。');
+  }
   notes.push('本表は概算であり、実際の返済条件は金融機関発行の返済予定表をご確認ください。');
   document.getElementById('ps-notes').innerHTML =
     '<strong>【前提・注記】</strong><br>' + notes.map(n => '・' + n).join('<br>');
@@ -806,7 +1085,7 @@ function renderResult() {
   const area = document.getElementById('result-area');
   const inp = getInputs();
   if (!(inp.kingaku > 0 && inp.totalMonths > 0 && inp.dateStr)) {
-    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🏦</div>借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別集計が表示されます</div>`;
+    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🏦</div>借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別（年別）集計が表示されます</div>`;
     return;
   }
   const r = calcAll(inp);
@@ -815,20 +1094,44 @@ function renderResult() {
     return;
   }
   updatePrintSheet(inp, r);
+  const L = fyLabels(inp);
 
-  const detailRows = r.rows.map(row => {
-    const cls = [row.isGrace ? 'grace' : '', row.isFyEnd ? 'fy-end' : ''].filter(Boolean).join(' ');
-    return `<tr${cls ? ` class="${cls}"` : ''}><td>${row.no}${row.isGrace ? '<span class="grace-tag">据置</span>' : ''}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.days}日</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
-  }).join('');
+  const detailRows = r.rows.map(row => detailRowHtml(row, false)).join('');
 
   const fyRows = r.fy.map(s =>
-    `<tr><td>自 ${fmtYM(s.startY, s.startM)} 〜 至 ${fmtYM(s.endY, s.endM)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
+    `<tr><td>${L.row(s)}</td><td>${fmtN(s.principal)} 円</td><td>${fmtN(s.interest)} 円</td><td>${fmtN(s.balance)} 円</td></tr>`
   ).join('') +
   `<tr class="grand"><td>合計</td><td>${fmtN(inp.kingaku)} 円</td><td>${fmtN(r.totalInterest)} 円</td><td>—</td></tr>`;
 
-  const heroSub = inp.method === 'ganri'
+  const heroSub = (r.appliedPrepays.length ? '当初の' : '') + (inp.method === 'ganri'
     ? `毎回返済額（元利均等・全${r.n}回${r.g > 0 ? '・うち据置' + r.g + '回は利息のみ' : ''}）`
-    : `初回返済額（元金均等・以後逓減・全${r.n}回${r.g > 0 ? '・うち据置' + r.g + '回' : ''}）`;
+    : `初回返済額（元金均等・以後逓減・全${r.n}回${r.g > 0 ? '・うち据置' + r.g + '回' : ''}）`)
+    + (inp.bonus.on ? `<br>ボーナス月（${bonusMonthsLabel(inp)}）は ＋${fmt(r.perBonus)}${inp.method === 'gankin' ? '（初回）' : ''}` : '');
+
+  const stats = [
+    ['借入金額', fmt(inp.kingaku)],
+    ['総返済額', fmt(r.totalPayment)],
+    ['うち利息総額', fmt(r.totalInterest)],
+    ['最終返済年月', fmtYM(r.lastY, r.lastM)],
+  ];
+  if (inp.bonus.on) {
+    stats.push(['毎月返済分', fmt(r.Pm)], ['ボーナス返済分', fmt(r.Pb)], ['ボーナス返済回数', r.kb + '回'], ['ボーナス月加算', fmt(r.perBonus)]);
+  }
+  let prepayWarn = '';
+  if (r.appliedPrepays.length) {
+    // 繰上返済なしの場合と比較
+    const base = calcAll({ ...inp, prepays: [] });
+    const shortened = (base.lastY * 12 + base.lastM) - (r.lastY * 12 + r.lastM);
+    stats.push(
+      ['繰上返済額合計', fmt(r.totalPrepay)],
+      ['利息軽減額', fmt(base.totalInterest - r.totalInterest)],
+      ['返済期間の短縮', shortened > 0 ? (Math.floor(shortened / 12) > 0 ? Math.floor(shortened / 12) + '年' : '') + (shortened % 12 > 0 ? shortened % 12 + 'か月' : '') : 'なし'],
+      ['繰上なしの利息総額', fmt(base.totalInterest)],
+    );
+  }
+  if (r.prepayIgnored > 0) {
+    prepayWarn = `<div class="sim-note" style="color:var(--red)">※ 返済期間外（または完済後）の繰上返済が ${r.prepayIgnored} 件あるため計算に含めていません</div>`;
+  }
 
   area.innerHTML = `
     <div class="result">
@@ -839,25 +1142,23 @@ function renderResult() {
       </div>
       <div class="result-body">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-key">借入金額</div><div class="stat-val">${fmt(inp.kingaku)}</div></div>
-          <div class="stat-box"><div class="stat-key">総返済額</div><div class="stat-val">${fmt(r.totalPayment)}</div></div>
-          <div class="stat-box"><div class="stat-key">うち利息総額</div><div class="stat-val">${fmt(r.totalInterest)}</div></div>
-          <div class="stat-box"><div class="stat-key">最終返済年月</div><div class="stat-val">${fmtYM(r.lastY, r.lastM)}</div></div>
+          ${stats.map(([k, v]) => `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
         </div>
+        ${prepayWarn}
 
-        <div class="sim-title">返済明細（全${r.n}回）</div>
+        <div class="sim-title">返済明細（全${r.count}回${r.appliedPrepays.length ? '・繰上返済' + r.appliedPrepays.length + '件' : ''}）</div>
         <div class="table-scroll">
           <table class="sim-table">
             <thead><tr><th>回</th><th>返済日</th><th>経過日数</th><th>返済額</th><th>うち元金</th><th>うち利息</th><th>借入金残高</th></tr></thead>
             <tbody>${detailRows}</tbody>
           </table>
         </div>
-        <div class="sim-note">※ 利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）。元金の端数は最終回で調整。決算月（${inp.kessanM}月）の行に区切り線を表示しています</div>
+        <div class="sim-note">※ 利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）。元金の端数は最終回で調整。${inp.borrower === 'kojin' ? '年末' : '決算月（' + inp.kessanM + '月）'}の行に区切り線を表示しています${inp.bonus.on ? '。「賞与」の行はボーナス返済分を含む金額です' : ''}</div>
 
-        <div class="sim-title">年度別集計（決算月：${inp.kessanM}月）</div>
+        <div class="sim-title">${L.title}</div>
         <div class="table-x">
           <table class="sim-table">
-            <thead><tr><th>事業年度</th><th>元金返済額</th><th>支払利息</th><th>期末借入金残高</th></tr></thead>
+            <thead><tr><th>${L.th1}</th><th>元金返済額</th><th>支払利息</th><th>${L.th4}</th></tr></thead>
             <tbody>${fyRows}</tbody>
           </table>
         </div>
@@ -875,9 +1176,10 @@ function copyResult(btn) {
   const inp = getInputs();
   const r = calcAll(inp);
   if (r.error) return;
+  const L = fyLabels(inp);
   const lines = [
     `【借入金 返済予定表（${methodLabel(inp.method)}・実日数日割り／年365日）】`,
-    ...(inp.houjin ? [`法人名: ${inp.houjin}`] : []),
+    ...(inp.houjin ? [`${inp.borrower === 'kojin' ? '借入者' : '法人名'}: ${inp.houjin}`] : []),
     ...(inp.lender ? [`借入先: ${inp.lender}`] : []),
     ...(inp.tekiyo ? [`摘要: ${inp.tekiyo}`] : []),
     `借入金額: ${fmtN(inp.kingaku)}円`,
@@ -886,10 +1188,12 @@ function copyResult(btn) {
     `返済日: ${inp.hensaiDay ? '毎月' + inp.hensaiDay + '日' : '毎月末日'}`,
     `返済期間: ${fmtYM(inp.firstY, inp.firstM)} 〜 ${fmtYM(r.lastY, r.lastM)}`,
     inp.method === 'ganri' ? `毎回返済額: ${fmtN(r.perPayment)}円` : `初回返済額: ${fmtN(r.perPayment)}円（以後逓減）`,
+    ...(inp.bonus.on ? [`ボーナス併用: ボーナス返済分 ${fmtN(r.Pb)}円（${bonusMonthsLabel(inp)}・全${r.kb}回）／ボーナス月加算 ${fmtN(r.perBonus)}円`] : []),
+    ...r.appliedPrepays.map(p => `繰上返済: ${fmtYM(p.y, p.m)} ${fmtN(p.amount)}円（${prepayTypeLabel(p.type)}）`),
     `総返済額: ${fmtN(r.totalPayment)}円（うち利息 ${fmtN(r.totalInterest)}円）`,
     '',
-    `【年度別集計（決算月: ${inp.kessanM}月）】`,
-    ...r.fy.map(s => `自${fmtYM(s.startY, s.startM)}〜至${fmtYM(s.endY, s.endM)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / 期末残高 ${fmtN(s.balance)}円`),
+    `【${L.title}】`,
+    ...r.fy.map(s => `${L.text(s)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / ${L.th4} ${fmtN(s.balance)}円`),
   ];
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {

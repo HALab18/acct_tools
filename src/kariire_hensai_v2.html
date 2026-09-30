@@ -16,25 +16,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:       #f5f7fa;
-  --bg2:      #eef1f6;
+  --bg:       #f6f7f9;
+  --bg2:      #eceef2;
   --card:     #ffffff;
-  --border:   #e2e8f0;
-  --border2:  #cbd5e1;
-  --accent:   #2563eb;
-  --accent2:  #3b82f6;
-  --accent-l: #eff6ff;
-  --text:     #1e293b;
-  --text2:    #475569;
-  --muted:    #94a3b8;
-  --muted2:   #64748b;
-  --green:    #059669;
-  --green-l:  #ecfdf5;
-  --red:      #dc2626;
-  --gold:     #d97706;
-  --gold-l:   #fffbeb;
-  --shadow:   0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
-  --shadow-lg:0 4px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
+  --border:   #e3e6eb;
+  --border2:  #cfd5dd;
+  --accent:   #1e3a5f;   /* 紺（主色） */
+  --accent2:  #2c5282;
+  --accent-l: #eef2f7;
+  --text:     #1f2937;
+  --text2:    #4b5563;
+  --muted:    #8a94a3;
+  --muted2:   #6b7280;
+  --green:    #1f7a4d;   /* 減少・良好（意味色のみ） */
+  --green-l:  #edf6f1;
+  --red:      #b42318;   /* 増加・警告（意味色のみ） */
+  --gold:     #a16207;   /* 注意（意味色のみ） */
+  --gold-l:   #fbf6ea;
+  --shadow:   0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  --shadow-lg:0 1px 3px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -42,126 +42,141 @@ body{
   min-height:100vh;background:var(--bg);
   font-family:'Noto Sans JP','Hiragino Sans',sans-serif;
   color:var(--text);padding:0 0 80px;line-height:1.7;font-size:14px;
+  -webkit-font-smoothing:antialiased;
 }
+button{font-family:inherit}
+.ico{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Top bar ── */
 .topbar{
-  background:#fff;border-bottom:1px solid var(--border);
-  padding:0 16px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--border);
+  padding:0 20px;display:flex;align-items:center;justify-content:space-between;
   height:52px;position:sticky;top:0;z-index:100;gap:8px;
 }
 .topbar-logo{
-  font-family:'DM Serif Display',serif;font-size:17px;color:var(--accent);
-  letter-spacing:-.02em;white-space:nowrap;flex-shrink:0;
+  font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent);
+  letter-spacing:-.01em;white-space:nowrap;flex-shrink:0;
 }
-.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .badge{
-  font-size:10px;padding:3px 8px;border-radius:20px;
-  letter-spacing:.03em;font-weight:600;border:1px solid;white-space:nowrap;
+  font-size:10px;padding:2px 8px;border-radius:4px;
+  letter-spacing:.04em;font-weight:500;border:1px solid var(--border2);white-space:nowrap;
+  color:var(--muted2);background:transparent;
 }
-.badge-year{background:#fef9c3;color:#854d0e;border-color:#fde68a}
-.badge-blue{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
 @media(max-width:480px){
   .badge-blue{ display:none }
   .badge-year{ font-size:9px; padding:2px 6px }
   .topbar{ padding:0 12px }
 }
 .btn-print{
-  display:flex;align-items:center;gap:4px;
-  background:var(--accent);color:#fff;border:none;border-radius:7px;
-  padding:6px 10px;font-size:11px;font-weight:600;font-family:inherit;
-  cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+  background:#fff;color:var(--accent);border:1px solid var(--accent);border-radius:6px;
+  padding:5px 12px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;flex-shrink:0;
 }
-.btn-print:hover{background:#1d4ed8}
+.btn-print:hover{background:var(--accent);color:#fff}
 @media(max-width:360px){
   .btn-print .btn-print-label{ display:none }
 }
 
 /* ── Layout ── */
-.page-wrap{max-width:760px;margin:0 auto;padding:20px 16px 0}
+.page-wrap{max-width:780px;margin:0 auto;padding:28px 16px 0}
 
 /* ── Page title ── */
-.page-title{margin-bottom:16px}
+.page-title{margin-bottom:20px;padding-left:14px;border-left:3px solid var(--accent)}
 .page-title h1{
-  font-family:'DM Serif Display',serif;
-  font-size:clamp(17px,4vw,26px);color:var(--text);
-  letter-spacing:-.02em;line-height:1.3;
+  font-size:clamp(18px,4vw,24px);font-weight:700;color:var(--text);
+  letter-spacing:.04em;line-height:1.4;
 }
-.page-title p{font-size:11px;color:var(--muted2);margin-top:4px}
+.page-title p{font-size:11.5px;color:var(--muted2);margin-top:6px;line-height:1.8}
 
 /* ── Card ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px 26px;box-shadow:var(--shadow);margin-bottom:16px;counter-reset:sec}
+@media(max-width:480px){.card{padding:20px 16px}}
 
-/* ── Section label ── */
-.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.section-note{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:6px}
+/* ── Section label（番号つき和文見出し。非表示のセクションは番号に数えない） ── */
+.section-label{
+  counter-increment:sec;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;
+  font-size:13.5px;font-weight:700;letter-spacing:.06em;color:var(--text);
+  margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border);
+}
+.section-label::before{
+  content:counter(sec, decimal-leading-zero);
+  font-family:'DM Serif Display',serif;font-size:15px;font-weight:400;color:var(--accent);letter-spacing:0;
+  min-width:20px;
+}
+.section-note{font-size:11px;font-weight:400;letter-spacing:0;color:var(--muted)}
 
 /* ── Divider ── */
-.divider{height:1px;background:var(--border);margin:16px 0}
+.divider{height:0;margin:22px 0 20px}
 
 /* ── Field ── */
 .field{margin-bottom:16px}
 .field:last-child{margin-bottom:0}
-.field>label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.field>label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:.02em}
 .field input[type=text],
 .field input[type=date]{
-  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;color:var(--text);
-  padding:9px 13px;font-size:15px;font-family:inherit;outline:none;
+  width:100%;background:#fff;border:1px solid var(--border2);border-radius:6px;color:var(--text);
+  padding:9px 12px;font-size:15px;font-family:inherit;outline:none;font-variant-numeric:tabular-nums;
   transition:border-color .15s,box-shadow .15s;
 }
 .field input[type=text]:focus,
-.field input[type=date]:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
-.field-note{font-size:11px;color:var(--muted);margin-top:4px}
-.auto-hint{font-size:11px;color:var(--accent);margin-top:4px;min-height:14px;font-weight:500}
-.opt-badge{font-size:10px;color:var(--muted);font-weight:400;margin-left:4px}
+.field input[type=date]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,58,95,.10)}
+.field input::placeholder{color:#b3bac4}
+.field-note{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.7}
+.auto-hint{font-size:11.5px;color:var(--accent2);margin-top:5px;min-height:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.opt-badge{font-size:10px;color:var(--muted);font-weight:400;margin-left:6px;letter-spacing:0}
 
 /* 2カラムのフィールド行 */
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
 @media(max-width:480px){.field-row{grid-template-columns:1fr}}
 /* 3カラムのフィールド行 */
-.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px}
 @media(max-width:620px){.field-row-3{grid-template-columns:1fr}}
+.field-row>.field,.field-row>.sel-field,.field-row-3>.field,.field-row-3>.sel-field{margin-bottom:0}
+.field-row:last-child,.field-row-3:last-child{margin-bottom:0}
 
 /* ── Select (dropdown) ── */
 .sel-field{margin-bottom:16px}
-.sel-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.sel-field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:.02em}
 .sel-field select,
 .prepay-row select{
-  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;
-  color:var(--text);padding:9px 13px;font-size:13px;font-family:inherit;
+  width:100%;background:#fff;border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);padding:9px 12px;font-size:13px;font-family:inherit;
   outline:none;cursor:pointer;transition:border-color .15s;
   -webkit-appearance:none;appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a94a3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
 .sel-field select:focus,
-.prepay-row select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.prepay-row select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 /* 年＋月の横並び */
 .ym-row{display:flex;gap:8px}
 .ym-row select{flex:1}
 
-/* ── 返済方法トグル ── */
-.method-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.method-btn{
-  background:#fff;border:1.5px solid var(--border2);border-radius:8px;
-  padding:10px 8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text2);
-  cursor:pointer;transition:all .15s;text-align:center;line-height:1.4;
-}
+/* ── 切替トグル（セグメントコントロール） ── */
+.method-toggle{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--bg2);border-radius:8px;padding:3px}
 .method-toggle-3{grid-template-columns:repeat(3,1fr)}
 @media(max-width:480px){.method-toggle-3{grid-template-columns:1fr}}
+.method-btn{
+  background:transparent;border:none;border-radius:6px;
+  padding:9px 8px;font-size:13px;font-weight:600;color:var(--muted2);
+  cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;text-align:center;line-height:1.4;
+}
+.method-btn:hover{color:var(--text)}
 .method-btn small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
 .method-btn.active{
-  background:var(--accent-l);border-color:var(--accent);color:var(--accent);
-  box-shadow:0 0 0 3px rgba(59,130,246,.10);
+  background:#fff;color:var(--accent);
+  box-shadow:0 1px 2px rgba(16,24,40,.08),0 0 0 1px rgba(16,24,40,.04);
 }
-.method-btn.active small{color:var(--accent2)}
+.method-btn.active small{color:var(--muted2)}
 
-/* ── 印刷オプション ── */
-.print-opt{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+/* ── チェックボックス行 ── */
+.print-opt{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--text2);cursor:pointer;user-select:none}
 .print-opt input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
 
 /* ── ボーナス併用払い ── */
-.bonus-fields{margin-top:14px}
+.bonus-fields{margin-top:16px}
 
 /* ── 繰上返済 ── */
 .prepay-row{
@@ -181,134 +196,159 @@ body{
   }
 }
 .prepay-row input{
-  width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:8px;color:var(--text);
-  padding:9px 13px;font-size:15px;font-family:inherit;outline:none;
+  width:100%;background:#fff;border:1px solid var(--border2);border-radius:6px;color:var(--text);
+  padding:9px 12px;font-size:15px;font-family:inherit;outline:none;font-variant-numeric:tabular-nums;
   transition:border-color .15s,box-shadow .15s;
 }
-.prepay-row input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.prepay-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 .pp-del{
-  height:40px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
-  color:var(--muted2);font-size:16px;font-family:inherit;cursor:pointer;transition:all .15s;
+  height:40px;background:#fff;border:1px solid var(--border2);border-radius:6px;
+  color:var(--muted2);font-size:16px;cursor:pointer;transition:all .15s;
 }
-.pp-del:hover{color:var(--red);border-color:#fecaca;background:#fef2f2}
+.pp-del:hover{color:var(--red);border-color:var(--red)}
 .add-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  background:var(--accent-l);border:1px dashed #93c5fd;color:var(--accent);
-  padding:7px 14px;border-radius:7px;cursor:pointer;
-  font-family:inherit;font-size:12px;font-weight:600;transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px;
+  background:#fff;border:1px dashed var(--border2);color:var(--accent);
+  padding:7px 14px;border-radius:6px;cursor:pointer;
+  font-size:12px;font-weight:600;transition:all .15s;
 }
-.add-btn:hover{background:#dbeafe}
+.add-btn:hover{border-color:var(--accent);background:var(--accent-l)}
 
 /* ── 住宅購入プラン（個人のみ） ── */
-.mode-toggle{display:inline-flex;border:1.5px solid var(--border2);border-radius:7px;overflow:hidden;margin-left:8px;vertical-align:middle}
-.mode-btn{background:#fff;border:none;padding:2px 10px;font-family:inherit;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;transition:all .15s}
-.mode-btn+.mode-btn{border-left:1px solid var(--border2)}
-.mode-btn.active{background:var(--accent-l);color:var(--accent)}
+.mode-toggle{display:inline-flex;gap:2px;background:var(--bg2);border-radius:6px;padding:2px;margin-left:10px;vertical-align:middle}
+.mode-btn{background:transparent;border:none;border-radius:4px;padding:1px 10px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;transition:all .15s}
+.mode-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(16,24,40,.08)}
 .input-unit{position:relative}
 .input-unit input{padding-right:36px !important}
 .input-unit .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none}
-.quick-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .quick-btn{
-  background:var(--bg);border:1px solid var(--border2);color:var(--text2);
-  padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;transition:all .15s;
+  background:#fff;border:1px solid var(--border2);color:var(--text2);
+  padding:2px 11px;border-radius:999px;cursor:pointer;font-size:11px;font-weight:500;
+  font-variant-numeric:tabular-nums;transition:all .15s;
 }
-.quick-btn:hover{background:var(--accent-l);border-color:#93c5fd;color:var(--accent)}
-.field input.auto-filled{background:var(--bg);color:var(--accent);font-weight:600;cursor:default}
-.rise-fields{margin-top:14px}
+.quick-btn:hover{border-color:var(--accent);color:var(--accent)}
+.field input.auto-filled{background:var(--accent-l);border-color:var(--border);color:var(--accent);font-weight:600;cursor:default}
+.rise-fields{margin-top:16px}
 
-/* ── 住宅購入の比較（結果） ── */
-.sim-table th{white-space:nowrap}
-.sim-table tr.current td{background:var(--accent-l);color:var(--accent);font-weight:600}
-.sim-table tr.current td:first-child{color:var(--accent)}
-.diff-plus{color:var(--red)}
-.diff-minus{color:var(--green)}
-.bar-stack{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg2);margin-top:4px;min-width:90px}
+/* ── Result ── */
+.result{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:16px;animation:pulseIn .3s ease}
+.result-hero{background:var(--accent);padding:26px 24px 22px;text-align:center}
+.result-eyebrow{font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.62);margin-bottom:10px;font-weight:500}
+.result-amount{font-family:'DM Serif Display',serif;font-size:clamp(32px,8vw,50px);color:#fff;letter-spacing:0;line-height:1;font-variant-numeric:tabular-nums}
+.result-sublabel{font-size:12px;color:rgba(255,255,255,.72);margin-top:10px;letter-spacing:.03em;line-height:1.8}
+.result-body{padding:22px 24px 20px}
+@media(max-width:480px){.result-body{padding:18px 14px 16px}}
+
+/* 主要数値：罫線で区切った一覧 */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:18px}
+@media(max-width:560px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:#fff;padding:11px 14px}
+.stat-key{color:var(--muted2);font-size:10.5px;letter-spacing:.03em;margin-bottom:4px;font-weight:500}
+.stat-val{color:var(--text);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.stat-box.em{background:var(--accent-l)}
+.stat-box.em .stat-key{color:var(--accent)}
+.stat-box.em .stat-val{color:var(--accent);font-size:15.5px;font-weight:700}
+
+/* ── 結果の小見出し・表 ── */
+.sim-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--text);
+  margin:26px 0 10px;
+}
+.sim-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:1px;flex-shrink:0}
+.table-scroll{max-height:460px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.table-x{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.sim-table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px;font-variant-numeric:tabular-nums}
+.sim-table th{
+  color:var(--muted2);font-size:10.5px;letter-spacing:.03em;font-weight:600;white-space:nowrap;
+  border-bottom:1.5px solid var(--accent);padding:8px 10px;text-align:right;background:#fafbfc;
+}
+.sim-table th:first-child{text-align:left}
+.sim-table.wrap th{white-space:normal}
+.table-scroll .sim-table th{position:sticky;top:0;z-index:1}
+.sim-table td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2);white-space:nowrap}
+.sim-table td:first-child{text-align:left;color:var(--text);font-weight:500}
+.sim-table tbody tr:hover td{background:#f8f9fb}
+.sim-table tr.grace td{color:var(--muted2)}
+.sim-table tr.fy-end td{border-bottom:1px solid var(--border2)}
+.sim-table tr.subtotal td{background:var(--bg);font-weight:600;color:var(--text)}
+.sim-table tr.grand td{background:#fff;color:var(--text);font-weight:700;border-top:3px double var(--text2)}
+.sim-table tr:last-child td{border-bottom:none}
+.sim-table tr.prepay td{color:var(--text)}
+.sim-table tr.current td{background:var(--accent-l);color:var(--text);font-weight:600}
+.sim-table tr.current td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.grace-tag,.bonus-tag,.prepay-tag,.cur-tag{
+  display:inline-block;font-size:9.5px;font-weight:500;line-height:1.5;
+  background:#fff;color:var(--muted2);border:1px solid var(--border2);border-radius:3px;
+  padding:0 5px;margin-left:6px;vertical-align:1px;
+}
+.cur-tag{color:var(--accent);border-color:var(--accent)}
+.sim-note{font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.8}
+.diff-plus,.sim-table tr td.diff-plus{color:var(--red)}
+.diff-minus,.sim-table tr td.diff-minus{color:var(--green)}
+
+/* ── 頭金別の内訳バー ── */
+.bar-stack{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--bg2);min-width:100px}
 .bar-stack span{display:block;height:100%}
-.bar-own{background:#94a3b8}
-.bar-prin{background:var(--accent2)}
-.bar-int{background:var(--gold)}
-.bar-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10px;color:var(--muted2);margin-top:6px}
-.bar-legend i{display:inline-block;width:10px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
-.burden-box{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--bg)}
-.burden-val{font-family:'DM Serif Display',serif;font-size:30px;line-height:1}
+.bar-own{background:#9aa5b4}
+.bar-prin{background:var(--accent)}
+.bar-int{background:#c49a4a}
+.bar-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:10.5px;color:var(--muted2);margin-top:8px}
+.bar-legend i{display:inline-block;width:10px;height:6px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* ── 返済負担率ゲージ ── */
+.burden-box{display:flex;align-items:center;gap:22px;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.burden-head{min-width:96px}
+.burden-label{font-size:10.5px;color:var(--muted2);font-weight:500}
+.burden-val{font-family:'DM Serif Display',serif;font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
 .burden-val.ok{color:var(--green)}
 .burden-val.warn{color:var(--gold)}
 .burden-val.ng{color:var(--red)}
-.burden-text{font-size:12px;color:var(--text2);flex:1;min-width:200px;line-height:1.8}
-.rise-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:480px){.rise-grid{grid-template-columns:1fr}}
-.rise-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg)}
-.rise-card.up{background:#fef2f2;border-color:#fecaca}
-.rise-card-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px}
-.rise-card.up .rise-card-title{color:var(--red)}
-.rise-line{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);gap:8px}
-.rise-line b{color:var(--text)}
-
-/* ── Result ── */
-.result{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:12px;animation:pulseIn .4s ease}
-.result-hero{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#3b82f6 100%);padding:24px 24px 20px;text-align:center}
-.result-eyebrow{font-size:10px;letter-spacing:.3em;color:rgba(255,255,255,.65);margin-bottom:8px;font-weight:500}
-.result-amount{font-family:'DM Serif Display',serif;font-size:clamp(30px,8vw,48px);color:#fff;letter-spacing:-.02em;line-height:1}
-.result-sublabel{font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;letter-spacing:.05em}
-.result-body{padding:18px 20px 16px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-@media(max-width:560px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
-.stat-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
-.stat-key{color:var(--muted);font-size:9.5px;letter-spacing:.06em;margin-bottom:3px;font-weight:500;text-transform:uppercase}
-.stat-val{color:var(--text);font-size:13px;font-weight:600}
-
-/* ── 明細テーブル ── */
-.sim-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border);margin-top:14px}
-.table-scroll{max-height:460px;overflow:auto;border:1px solid var(--border);border-radius:8px}
-.table-x{overflow-x:auto}
-.sim-table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
-.sim-table th{color:var(--muted2);font-size:10px;letter-spacing:.06em;font-weight:600;border-bottom:1.5px solid var(--border2);padding:6px 8px;text-align:right;text-transform:uppercase;background:var(--card)}
-.sim-table th:first-child{text-align:left}
-.table-scroll .sim-table th{position:sticky;top:0;z-index:1}
-.sim-table td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--text2);white-space:nowrap}
-.sim-table td:first-child{text-align:left;color:var(--text);font-weight:500}
-.sim-table tr.grace td{background:var(--bg);color:var(--muted2)}
-.sim-table tr.fy-end td{border-bottom:2px solid var(--border2)}
-.sim-table tr.subtotal td{background:var(--bg);font-weight:600;color:var(--text)}
-.sim-table tr.grand td{background:var(--gold-l);color:var(--gold);font-weight:700;border-top:1.5px solid #fde68a}
-.sim-table tr.grand td:first-child{color:var(--gold)}
-.sim-table tr:last-child td{border-bottom:none}
-.sim-table tr.prepay td{background:var(--green-l);color:var(--green)}
-.grace-tag{font-size:9px;font-weight:600;background:var(--bg2);color:var(--muted2);border:1px solid var(--border2);border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
-.bonus-tag{font-size:9px;font-weight:600;background:var(--gold-l);color:var(--gold);border:1px solid #fde68a;border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
-.prepay-tag{font-size:9px;font-weight:600;background:#fff;color:var(--green);border:1px solid #6ee7b7;border-radius:3px;padding:0 5px;margin-left:5px;vertical-align:middle}
-.sim-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.7}
+.burden-main{flex:1;min-width:220px}
+.gauge{position:relative;margin:6px 0 20px}
+.gauge-track{position:relative;height:6px;border-radius:3px;background:linear-gradient(to right,#e4ece7 0 62.5%,#f1ebdd 62.5% 87.5%,#f3e3e1 87.5% 100%)}
+.gauge-tick{position:absolute;top:-3px;width:1px;height:12px;background:var(--border2)}
+.gauge-mark{position:absolute;top:-5px;width:4px;height:16px;margin-left:-2px;border-radius:2px;background:var(--accent);box-shadow:0 0 0 2px #fff}
+.gauge-scale span{position:absolute;top:12px;transform:translateX(-50%);font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.gauge-scale span:first-child{transform:none}
+.gauge-scale span:last-child{transform:translateX(-100%)}
+.burden-text{font-size:12px;color:var(--text2);line-height:1.9}
+.burden-text b{color:var(--text);font-variant-numeric:tabular-nums}
 
 /* ── エラー ── */
-.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;font-size:13px;color:var(--red);font-weight:500;margin-bottom:12px}
+.error-box{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #e8c4c0;border-left:3px solid var(--red);border-radius:6px;padding:12px 16px;font-size:13px;color:var(--red);font-weight:500;margin-bottom:16px}
+.error-box .ico{margin-top:3px}
 
 /* ── Action row ── */
-.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
 .copy-btn,.pdf-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  background:var(--bg2);border:1px solid var(--border2);color:var(--text2);
-  padding:6px 13px;border-radius:7px;cursor:pointer;
-  font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px;
+  background:#fff;border:1px solid var(--border2);color:var(--text2);
+  padding:7px 14px;border-radius:6px;cursor:pointer;
+  font-size:12px;font-weight:600;transition:all .15s;
 }
-.copy-btn:hover,.pdf-btn:hover{background:var(--accent-l);border-color:#93c5fd;color:var(--accent)}
-.copy-btn.copied{color:var(--green);border-color:#6ee7b7;background:var(--green-l)}
+.copy-btn:hover,.pdf-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pdf-btn{background:var(--accent);border-color:var(--accent);color:#fff}
+.pdf-btn:hover{background:var(--accent2);color:#fff}
+.copy-btn.copied{color:var(--green);border-color:var(--green)}
 
 /* ── Placeholder ── */
-.placeholder{background:#fff;border:1.5px dashed var(--border2);border-radius:12px;padding:36px 28px;text-align:center;color:var(--muted);font-size:13px;line-height:2.2}
-.placeholder-icon{font-size:26px;margin-bottom:8px;opacity:.4}
+.placeholder{background:#fff;border:1px dashed var(--border2);border-radius:10px;padding:36px 28px;text-align:center;color:var(--muted);font-size:13px;line-height:2.1}
+.placeholder-icon{display:flex;justify-content:center;margin-bottom:8px;color:var(--border2)}
+.placeholder-icon .ico{width:30px;height:30px;stroke-width:1.2}
 
 /* ── Footer ── */
-.footer{text-align:center;font-size:10px;color:var(--muted);margin-top:18px;line-height:2}
+.footer{text-align:center;font-size:10.5px;color:var(--muted);margin-top:22px;line-height:2}
 
 /* ── Animations ── */
-@keyframes fadeUp  {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
-@keyframes pulseIn {from{opacity:0;transform:scale(.98)}       to{opacity:1;transform:scale(1)}}
+@keyframes pulseIn {from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)}}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━
    印刷・PDF用スタイル（A4縦・複数ページ対応）
 ━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media print {
-  @page { size: A4 portrait; margin: 10mm 14mm; }
+  @page { size: A4 portrait; margin: 12mm 14mm; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body { background: #fff !important; padding: 0 !important; font-size: 10px !important; color: #000 !important; line-height: 1.5 !important; }
   .topbar,
@@ -324,76 +364,78 @@ body{
 }
 .print-only { display: none; }
 
-/* ── 印刷レイアウト本体 ── */
+/* ── 印刷レイアウト本体（罫線主体の帳票） ── */
 .print-sheet {
   font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
-  font-size: 10px;
-  color: #1e293b;
+  font-size: 9.5px;
+  color: #1f2937;
   line-height: 1.6;
+  font-variant-numeric: tabular-nums;
 }
 .ps-head {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  border-bottom: 2px solid #1e293b; padding-bottom: 5px; margin-bottom: 10px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  border-bottom: 2px solid #1e3a5f; padding-bottom: 6px; margin-bottom: 12px;
 }
-.ps-head-title {
-  font-family: 'DM Serif Display', 'Noto Sans JP', serif;
-  font-size: 17px; font-weight: 700; letter-spacing: .04em; color: #1e293b;
-}
-.ps-head-sub { font-size: 11px; font-weight: 600; color: #1e293b; }
+.ps-head-title { font-size: 17px; font-weight: 700; letter-spacing: .18em; color: #1f2937; }
+.ps-head-right { text-align: right; }
+.ps-head-sub { font-size: 12px; font-weight: 600; color: #1f2937; border-bottom: 1px solid #1f2937; padding: 0 2px 1px 24px; display: inline-block; min-height: 18px; }
+.ps-head-sub:empty { border-bottom: none; }
+.ps-head-date { font-size: 8.5px; color: #6b7280; margin-top: 3px; }
 .ps-section-title {
-  font-size: 9px; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; color: #64748b;
-  border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px; margin-top: 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: #1f2937;
+  border-left: 3px solid #1e3a5f; padding: 0 0 0 7px; line-height: 1.3;
+  margin: 14px 0 6px; break-after: avoid; page-break-after: avoid;
 }
+/* 条件表（項目｜内容 を2組ずつ） */
 .ps-params {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 6px; margin-bottom: 12px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #cfd5dd; border-left: 1px solid #cfd5dd; margin-bottom: 4px;
 }
-.ps-param {
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;
-}
-.ps-param-key { font-size: 8.5px; color: #94a3b8; font-weight: 600; margin-bottom: 2px; letter-spacing: .05em; }
-.ps-param-val { font-size: 11px; font-weight: 700; color: #1e293b; }
+.ps-param { display: grid; grid-template-columns: 30% 1fr; border-right: 1px solid #cfd5dd; border-bottom: 1px solid #cfd5dd; break-inside: avoid; }
+.ps-param:last-child:nth-child(odd) { grid-column: 1 / -1; grid-template-columns: 15% 1fr; }
+.ps-param-key { background: #f3f5f8; color: #4b5563; font-size: 8.5px; font-weight: 600; padding: 4px 7px; border-right: 1px solid #e3e6eb; letter-spacing: .03em; }
+.ps-param-val { font-size: 9.5px; font-weight: 500; color: #1f2937; padding: 4px 8px; }
+/* 要約（塗りなし・枠線） */
 .ps-hero {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
-  border-radius: 6px; padding: 12px 18px;
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr;
+  border: 1px solid #1e3a5f; border-radius: 2px; margin: 12px 0 4px; break-inside: avoid;
 }
-.ps-hero-label { font-size: 9px; letter-spacing: .2em; color: rgba(255,255,255,.7); margin-bottom: 3px; }
-.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; letter-spacing: -.02em; line-height: 1; }
-.ps-hero-sub { font-size: 9px; color: rgba(255,255,255,.7); margin-top: 3px; }
-.ps-hero-right { display: flex; gap: 10px; }
-.ps-hero-stat { text-align: right; }
-.ps-hero-stat-key { font-size: 8px; color: rgba(255,255,255,.6); }
-.ps-hero-stat-val { font-size: 13px; font-weight: 700; color: #fff; }
-.ps-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.ps-hero > div { padding: 8px 12px; }
+.ps-hero > div + div { border-left: 1px solid #cfd5dd; }
+.ps-hero-label { font-size: 8.5px; color: #6b7280; font-weight: 600; letter-spacing: .05em; margin-bottom: 2px; }
+.ps-hero-amount { font-family: 'DM Serif Display', serif; font-size: 22px; color: #1e3a5f; line-height: 1.1; }
+.ps-hero-sub { font-size: 8px; color: #6b7280; margin-top: 3px; line-height: 1.5; }
+.ps-hero-stat-val { font-size: 14px; font-weight: 700; color: #1f2937; margin-top: 4px; }
+.ps-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
 .ps-table thead { display: table-header-group; }
 .ps-table tr { break-inside: avoid; page-break-inside: avoid; }
 .ps-table th {
-  font-size: 8.5px; font-weight: 600; color: #64748b; letter-spacing: .05em;
-  border-bottom: 1.5px solid #cbd5e1; padding: 4px 8px; text-align: right;
+  font-size: 8.5px; font-weight: 600; color: #4b5563; letter-spacing: .03em; background: #f3f5f8;
+  border-top: 1px solid #cfd5dd; border-bottom: 1.5px solid #1e3a5f; padding: 4px 7px; text-align: right;
 }
 .ps-table th:first-child { text-align: left; }
-.ps-table td { padding: 3px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; color: #475569; }
-.ps-table td:first-child { text-align: left; color: #1e293b; font-weight: 500; }
-.ps-table tr.ps-grace td { background: #f8fafc; color: #64748b; }
-.ps-table tr.ps-fy-end td { border-bottom: 1.5px solid #cbd5e1; }
-.ps-table tr.ps-prepay td { background: #ecfdf5; color: #059669; }
-.ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
-.ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
-.ps-table tr:last-child td { border-bottom: none; }
-.ps-table tr.ps-current td { background: #eff6ff; color: #2563eb; font-weight: 700; }
-.ps-purchase-note { font-size: 8.5px; color: #64748b; margin-top: 4px; }
+.ps-table td { padding: 2px 7px; line-height: 1.45; border-bottom: 1px solid #e3e6eb; text-align: right; color: #374151; }
+#ps-detail-wrap .ps-table th:first-child { width: 17%; }
+.ps-table tbody tr:nth-child(even) td { background: #f8f9fb; }
+.ps-table td:first-child { text-align: left; color: #1f2937; font-weight: 500; }
+.ps-table tr.ps-grace td { color: #6b7280; }
+.ps-table tr.ps-fy-end td { border-bottom: 1px solid #9aa5b4; }
+.ps-table tr.ps-prepay td { color: #1f2937; font-weight: 600; }
+.ps-table tr.ps-subtotal td { font-weight: 600; color: #1f2937; }
+.ps-table tr.ps-grand td { background: #fff !important; color: #1f2937; font-weight: 700; border-top: 3px double #4b5563; border-bottom: 1px solid #cfd5dd; }
+.ps-table tr.ps-current td { font-weight: 700; color: #1f2937; background: #eef2f7 !important; }
+.ps-table tr.ps-current td:first-child { box-shadow: inset 2.5px 0 0 #1e3a5f; }
+.ps-table.ps-keep { break-inside: avoid; page-break-inside: avoid; }
+.ps-purchase-note { font-size: 8px; color: #6b7280; margin-top: 4px; }
 .ps-notes {
-  margin-top: 10px; padding: 8px 10px;
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
-  font-size: 8.5px; color: #64748b; line-height: 1.8;
+  margin-top: 14px; padding-top: 6px;
+  border-top: 1px solid #cfd5dd;
+  font-size: 8px; color: #6b7280; line-height: 1.8;
   break-inside: avoid;
 }
+.ps-notes strong { color: #374151; }
 .ps-footer {
-  margin-top: 8px; text-align: right; font-size: 8.5px; color: #94a3b8;
-  border-top: 1px solid #e2e8f0; padding-top: 4px;
+  margin-top: 8px; text-align: right; font-size: 8px; color: #8a94a3;
 }
 </style>
 </head>
@@ -405,7 +447,7 @@ body{
   <div class="topbar-right">
     <div class="badge badge-year">実日数日割り計算</div>
     <div class="badge badge-blue">据置期間対応</div>
-    <button class="btn-print" onclick="doPrint()">🖨<span class="btn-print-label"> 印刷 / PDF</span></button>
+    <button class="btn-print" onclick="doPrint()"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg><span class="btn-print-label">印刷 / PDF</span></button>
   </div>
 </div>
 
@@ -645,27 +687,28 @@ body{
     <div class="print-sheet">
       <div class="ps-head">
         <div class="ps-head-title">借入金 返済予定表</div>
-        <div class="ps-head-sub" id="ps-company"></div>
+        <div class="ps-head-right">
+          <div class="ps-head-sub" id="ps-company"></div>
+          <div class="ps-head-date" id="ps-date"></div>
+        </div>
+      </div>
+      <div class="ps-hero">
+        <div>
+          <div class="ps-hero-label" id="ps-hero-label">毎回返済額</div>
+          <div class="ps-hero-amount" id="ps-amount">—</div>
+          <div class="ps-hero-sub" id="ps-hero-sub"></div>
+        </div>
+        <div>
+          <div class="ps-hero-label">総返済額</div>
+          <div class="ps-hero-stat-val" id="ps-total">—</div>
+        </div>
+        <div>
+          <div class="ps-hero-label">うち利息総額</div>
+          <div class="ps-hero-stat-val" id="ps-interest">—</div>
+        </div>
       </div>
       <div class="ps-section-title">借入条件</div>
       <div class="ps-params" id="ps-params"></div>
-      <div class="ps-hero">
-        <div>
-          <div class="ps-hero-label">REPAYMENT SCHEDULE</div>
-          <div class="ps-hero-amount" id="ps-amount">—</div>
-          <div class="ps-hero-sub" id="ps-hero-sub">毎回返済額</div>
-        </div>
-        <div class="ps-hero-right">
-          <div class="ps-hero-stat">
-            <div class="ps-hero-stat-key">総返済額</div>
-            <div class="ps-hero-stat-val" id="ps-total">—</div>
-          </div>
-          <div class="ps-hero-stat">
-            <div class="ps-hero-stat-key">うち利息総額</div>
-            <div class="ps-hero-stat-val" id="ps-interest">—</div>
-          </div>
-        </div>
-      </div>
       <div id="ps-purchase" style="display:none"></div>
       <div id="ps-detail-wrap">
         <div class="ps-section-title">返済明細</div>
@@ -675,7 +718,7 @@ body{
         </table>
       </div>
       <div class="ps-section-title" id="ps-fy-title">年度別集計（決算月ベース）</div>
-      <table class="ps-table">
+      <table class="ps-table" id="ps-fy-table">
         <thead><tr><th id="ps-fy-th1">事業年度</th><th>元金返済額</th><th>支払利息</th><th id="ps-fy-th4">期末借入金残高</th></tr></thead>
         <tbody id="ps-fy-tbody"></tbody>
       </table>
@@ -687,7 +730,7 @@ body{
   <!-- Result -->
   <div id="result-area">
     <div class="placeholder">
-      <div class="placeholder-icon">🏦</div>
+      <div class="placeholder-icon"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20h18"/></svg></div>
       借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別（年別）集計が表示されます
     </div>
   </div>
@@ -699,6 +742,15 @@ body{
 </div>
 
 <script>
+/* ━━━ アイコン（線画SVG・currentColor） ━━━ */
+const svgIco = d => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const ICO = {
+  print: svgIco('<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/>'),
+  copy:  svgIco('<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'),
+  check: svgIco('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  alert: svgIco('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>'),
+};
+
 /* ━━━ Utilities ━━━ */
 function addCommas(str) {
   const d = str.replace(/[^\d]/g,'');
@@ -848,14 +900,14 @@ function syncPurchase() {
     kHint.textContent = ''; sHint.textContent = ''; aHint.textContent = '';
     return;
   }
-  sHint.textContent = pmode.shohiyo === 'pct' ? '✦ ＝ ' + fmt(p.shohiyo) : '✦ ' + pctText(p.shohiyo, p.bukken);
-  aHint.textContent = pmode.atamakin === 'pct' ? '✦ ＝ ' + fmt(p.atamakin) : '✦ ' + pctText(p.atamakin, p.bukken);
+  sHint.textContent = pmode.shohiyo === 'pct' ? '＝ ' + fmt(p.shohiyo) : pctText(p.shohiyo, p.bukken);
+  aHint.textContent = pmode.atamakin === 'pct' ? '＝ ' + fmt(p.atamakin) : pctText(p.atamakin, p.bukken);
   const { loan } = purchaseLoan(p);
   kEl.readOnly = true; kEl.classList.add('auto-filled');
   kEl.value = loan > 0 ? addCommas(String(loan)) : '';
   kHint.textContent = loan > 0
-    ? '✦ 物件価格 − 頭金' + (p.inLoan ? ' ＋ 諸費用' : '') + ' で自動計算（住宅購入プランの入力を変更してください）'
-    : '✦ 頭金が物件価格以上のため借入は不要です';
+    ? '物件価格 − 頭金' + (p.inLoan ? ' ＋ 諸費用' : '') + ' で自動計算（住宅購入プランの入力を変更してください）'
+    : '頭金が物件価格以上のため借入は不要です';
 }
 
 /* ━━━ 繰上返済の入力行 ━━━ */
@@ -1376,7 +1428,7 @@ function dpTableHtml(inp, h, forPrint) {
     const w = v => (v / h.dpMax * 100).toFixed(2) + '%';
     const bar = `<div class="bar-stack"><span class="bar-own" style="width:${w(d.ownCash)}"></span><span class="bar-prin" style="width:${w(d.total - d.interest)}"></span><span class="bar-int" style="width:${w(d.interest)}"></span></div>`;
     const label = d.atamakin === 0 ? 'なし' : `${fmtN(d.atamakin)}（${Math.round(d.pct * 10) / 10}%）`;
-    return `<tr${d.current ? ` class="${cur}"` : ''}><td>${label}${d.current && !forPrint ? ' ◀' : ''}</td><td>${fmtN(d.loan)}</td><td>${fmtN(d.per)}</td><td>${fmtN(d.interest)}</td><td>${fmtN(d.outlay)}</td>`
+    return `<tr${d.current ? ` class="${cur}"` : ''}><td>${label}${d.current && !forPrint ? '<span class="cur-tag">選択中</span>' : ''}</td><td>${fmtN(d.loan)}</td><td>${fmtN(d.per)}</td><td>${fmtN(d.interest)}</td><td>${fmtN(d.outlay)}</td>`
       + `<td${forPrint ? '' : ` class="${diffCls(d.diff)}"`}>${d.diff === 0 && d === h.dp[0] ? '—' : signedYen(d.diff)}</td>`
       + (burden ? `<td>${ratioLabel(d.ratio)}</td>` : '')
       + (forPrint ? '' : `<td style="min-width:110px">${bar}</td>`) + '</tr>';
@@ -1389,7 +1441,7 @@ function rateTableHtml(inp, h, forPrint) {
   const outlay = !!h.p;
   const head = `<tr><th>年利率</th><th>${perLabel(inp)}</th><th>利息総額</th><th>総返済額</th>${outlay ? '<th>総支払額</th>' : ''}<th>入力金利との差</th></tr>`;
   const rows = h.rates.map(x =>
-    `<tr${x.current ? ` class="${cur}"` : ''}><td>${x.rate}%${x.current ? (forPrint ? '（入力金利）' : ' ◀') : ''}</td><td>${fmtN(x.per)}</td><td>${fmtN(x.interest)}</td><td>${fmtN(x.total)}</td>`
+    `<tr${x.current ? ` class="${cur}"` : ''}><td>${x.rate}%${x.current ? (forPrint ? '（入力金利）' : '<span class="cur-tag">入力金利</span>') : ''}</td><td>${fmtN(x.per)}</td><td>${fmtN(x.interest)}</td><td>${fmtN(x.total)}</td>`
     + (outlay ? `<td>${fmtN(x.outlay)}</td>` : '')
     + `<td${forPrint ? '' : ` class="${diffCls(x.diff)}"`}>${x.current ? '—' : signedYen(x.diff)}</td></tr>`
   ).join('');
@@ -1410,27 +1462,38 @@ function housingHtml(inp, r, h) {
       ['頭金', fmt(p.atamakin)],
       ['自己資金合計', fmt(h.ownCash)],
       ['ローン総返済額', fmt(r.totalPayment)],
-      ['総支払額', `<span style="color:var(--accent)">${fmt(h.outlay)}</span>`],
+      ['総支払額', fmt(h.outlay), 'em'],
       ['物件価格に対する総支払額', '× ' + (h.outlay / p.bukken).toFixed(2)],
       ['総支払額のうち利息', fmt(r.totalInterest) + `（${ratioLabel(r.totalInterest / h.outlay)}）`],
     ];
     html += `
         <div class="sim-title">住宅購入の総支払額</div>
         <div class="stats-grid">
-          ${stats.map(([k, v]) => `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
+          ${stats.map(([k, v, cls]) => `<div class="stat-box${cls ? ' ' + cls : ''}"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
         </div>
-        <div class="sim-note" style="margin-top:-10px;margin-bottom:6px">※ 総支払額 ＝ 頭金 ＋ 自己資金で払う諸費用 ＋ ローン総返済額（固定資産税・管理費・修繕積立金などの保有コストは含みません）</div>`;
+        <div class="sim-note" style="margin-top:-10px">※ 総支払額 ＝ 頭金 ＋ 自己資金で払う諸費用 ＋ ローン総返済額（固定資産税・管理費・修繕積立金などの保有コストは含みません）</div>`;
   }
   if (h.burden) {
     const b = h.burden;
     html += `
         <div class="sim-title">返済負担率</div>
         <div class="burden-box">
-          <div class="burden-val ${burdenClass(b.ratio)}">${ratioLabel(b.ratio)}</div>
-          <div class="burden-text">
-            年間返済額 ${fmt(b.annual)} ÷ 年収 ${fmt(inp.nenshu)}${inp.method === 'gankin' ? '（元金均等は初回返済額で算定）' : ''}<br>
-            目安：<b style="color:var(--green)">25%以内</b>なら無理のない水準、<b style="color:var(--gold)">30〜35%</b>は金融機関の審査上限付近<br>
-            負担率25%に収まる借入額の目安：<b>約${fmtN(b.max25 / 10000)}万円</b>（35%なら約${fmtN(b.max35 / 10000)}万円）
+          <div class="burden-head">
+            <div class="burden-label">年間返済額 ÷ 年収</div>
+            <div class="burden-val ${burdenClass(b.ratio)}">${ratioLabel(b.ratio)}</div>
+          </div>
+          <div class="burden-main">
+            <div class="gauge">
+              <div class="gauge-track">
+                <i class="gauge-tick" style="left:62.5%"></i><i class="gauge-tick" style="left:87.5%"></i>
+                <i class="gauge-mark" style="left:${(Math.min(b.ratio, 0.4) / 0.4 * 100).toFixed(2)}%"></i>
+              </div>
+              <div class="gauge-scale"><span style="left:0">0%</span><span style="left:62.5%">25%</span><span style="left:87.5%">35%</span><span style="left:100%">40%</span></div>
+            </div>
+            <div class="burden-text">
+              年間返済額 <b>${fmt(b.annual)}</b> ÷ 年収 <b>${fmt(inp.nenshu)}</b>${inp.method === 'gankin' ? '（元金均等は初回返済額で算定）' : ''}<br>
+              25%以内なら無理のない水準、30〜35%は金融機関の審査上限付近。25%に収まる借入額の目安は <b>約${fmtN(b.max25 / 10000)}万円</b>（35%なら約${fmtN(b.max35 / 10000)}万円）
+            </div>
           </div>
         </div>
         <div class="sim-note">※ 借入額の目安は現在の年利率・返済期間で元利均等・ボーナス払いなしとして逆算しています。審査では金融機関独自の審査金利（3〜4%程度）で判定されることがあります</div>`;
@@ -1452,24 +1515,17 @@ function housingHtml(inp, r, h) {
     const x = h.rise;
     html += `<div class="sim-title">変動金利の上昇シナリオ</div>`;
     if (x.error) {
-      html += `<div class="sim-note" style="color:var(--red)">⚠ ${x.error}</div>`;
+      html += `<div class="error-box">${ICO.alert}${x.error}</div>`;
     } else {
       html += `
-        <div class="rise-grid">
-          <div class="rise-card">
-            <div class="rise-card-title">現在の金利 ${inp.rate}% のまま</div>
-            <div class="rise-line"><span>${fmtYM(x.y, x.m)}の返済額</span><b>${fmt(x.before)}</b></div>
-            <div class="rise-line"><span>利息総額</span><b>${fmt(x.baseInt)}</b></div>
-            <div class="rise-line"><span>総返済額</span><b>${fmt(x.baseTotal)}</b></div>
-          </div>
-          <div class="rise-card up">
-            <div class="rise-card-title">${riseTitle(inp, x)}</div>
-            <div class="rise-line"><span>${fmtYM(x.y, x.m)}の返済額</span><b>${fmt(x.after)}（${signedYen(x.after - x.before)}）</b></div>
-            <div class="rise-line"><span>利息総額</span><b>${fmt(x.upInt)}</b></div>
-            <div class="rise-line"><span>総返済額</span><b>${fmt(x.upTotal)}</b></div>
-            <div class="rise-line"><span>総返済額の増加</span><b style="color:var(--red)">${signedYen(x.inc)}</b></div>
-          </div>
-        </div>
+        <div class="table-x"><table class="sim-table wrap">
+          <thead><tr><th></th><th>現在の金利 ${inp.rate}% のまま</th><th>${riseTitle(inp, x)}</th><th>差額</th></tr></thead>
+          <tbody>
+            <tr><td>${fmtYM(x.y, x.m)}の返済額</td><td>${fmtN(x.before)}</td><td>${fmtN(x.after)}</td><td class="${diffCls(x.after - x.before)}">${signedYen(x.after - x.before)}</td></tr>
+            <tr><td>利息総額</td><td>${fmtN(x.baseInt)}</td><td>${fmtN(x.upInt)}</td><td class="${diffCls(x.upInt - x.baseInt)}">${signedYen(x.upInt - x.baseInt)}</td></tr>
+            <tr><td>総返済額</td><td>${fmtN(x.baseTotal)}</td><td>${fmtN(x.upTotal)}</td><td class="${diffCls(x.inc)}"><b>${signedYen(x.inc)}</b></td></tr>
+          </tbody>
+        </table></div>
         <div class="sim-note">※ ${inp.method === 'ganri' ? '元利均等は上昇時点の残高・残り回数で毎月返済額を再計算しています。' : '元金均等は毎月の元金が一定のため、利息分だけ返済額が増えます。'}実際の変動金利では返済額の見直しが5年ごと・上昇幅は125%までとするルール（未払利息が生じる場合あり）を採用する金融機関が多く、本シミュレーションでは適用していません</div>`;
     }
   }
@@ -1489,7 +1545,7 @@ function housingPrintHtml(inp, r, h) {
       ['借入金額', fmt(inp.kingaku)],
       ['ローン総返済額', fmt(r.totalPayment)],
       ['総支払額', fmt(h.outlay)],
-      ['物件価格に対する総支払額', '× ' + (h.outlay / p.bukken).toFixed(2)],
+      ['総支払額／物件価格', '× ' + (h.outlay / p.bukken).toFixed(2)],
     ];
     if (h.burden) params.push(['年収', fmt(inp.nenshu)], ['返済負担率', ratioLabel(h.burden.ratio) + `（年間返済額 ${fmt(h.burden.annual)}）`]);
     html += `<div class="ps-section-title">住宅購入プラン</div>
@@ -1525,11 +1581,11 @@ function onInput() {
   const inp = getInputs();
   const kh = document.getElementById('kikan-hint');
   if (inp.totalMonths > 0) {
-    kh.textContent = '✦ ' + kikanLabel(inp) + (inp.sueoki > 0 ? '・うち据置 ' + inp.sueoki + '回 → 元金返済 ' + (inp.totalMonths - inp.sueoki) + '回' : '');
+    kh.textContent = kikanLabel(inp) + (inp.sueoki > 0 ? '・うち据置 ' + inp.sueoki + '回 → 元金返済 ' + (inp.totalMonths - inp.sueoki) + '回' : '');
   } else { kh.textContent = ''; }
   const bh = document.getElementById('bonus-hint');
   bh.textContent = inp.bonus.on && inp.kingaku > 0 && inp.bonus.amount > 0 && inp.bonus.amount < inp.kingaku
-    ? '✦ 毎月返済分 ' + fmt(inp.kingaku - inp.bonus.amount) + '／ボーナス返済分 ' + fmt(inp.bonus.amount)
+    ? '毎月返済分 ' + fmt(inp.kingaku - inp.bonus.amount) + '／ボーナス返済分 ' + fmt(inp.bonus.amount)
     : '';
   renderResult();
 }
@@ -1564,10 +1620,11 @@ function updatePrintSheet(inp, r, h) {
   ).join('');
 
   document.getElementById('ps-amount').textContent = fmt(r.perPayment);
+  document.getElementById('ps-hero-label').textContent = inp.method === 'ganri' ? '毎回返済額' : '初回返済額';
   document.getElementById('ps-hero-sub').textContent = (inp.method === 'ganri'
-    ? '毎回返済額（元利均等' + (r.g > 0 ? '・据置期間中は利息のみ' : '') + '）'
-    : '初回返済額（元金均等・以後逓減）')
-    + (inp.bonus.on ? `　ボーナス月加算 ${fmt(r.perBonus)}` : '');
+    ? '元利均等' + (r.g > 0 ? '・据置期間中は利息のみ' : '')
+    : '元金均等・以後逓減')
+    + (inp.bonus.on ? `／ボーナス月加算 ${fmt(r.perBonus)}` : '');
   document.getElementById('ps-total').textContent = fmt(r.totalPayment);
   document.getElementById('ps-interest').textContent = fmt(r.totalInterest);
 
@@ -1577,6 +1634,8 @@ function updatePrintSheet(inp, r, h) {
     document.getElementById('ps-detail-tbody').innerHTML = r.rows.map(row => detailRowHtml(row, true)).join('');
   }
 
+  // 集計表が短い場合は途中で改ページしない（合計行だけが次ページに残るのを防ぐ）
+  document.getElementById('ps-fy-table').classList.toggle('ps-keep', r.fy.length <= 25);
   document.getElementById('ps-fy-title').textContent = L.title;
   document.getElementById('ps-fy-th1').textContent = L.th1;
   document.getElementById('ps-fy-th4').textContent = L.th4;
@@ -1606,8 +1665,8 @@ function updatePrintSheet(inp, r, h) {
     '<strong>【前提・注記】</strong><br>' + notes.map(n => '・' + n).join('<br>');
 
   const now = new Date();
+  document.getElementById('ps-date').textContent = `出力日　${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
   document.getElementById('ps-footer').textContent =
-    `出力日：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日　｜　` +
     `${methodLabel(inp.method)}・年利率${inp.rate}%（実日数日割り／年365日）で計算`;
 }
 
@@ -1616,12 +1675,12 @@ function renderResult() {
   const area = document.getElementById('result-area');
   const inp = getInputs();
   if (!(inp.kingaku > 0 && inp.totalMonths > 0 && inp.dateStr)) {
-    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🏦</div>借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別（年別）集計が表示されます</div>`;
+    area.innerHTML = `<div class="placeholder"><div class="placeholder-icon"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 20h18"/></svg></div>借入日・借入金額・年利率・借入期間を入力すると<br>返済明細と年度別（年別）集計が表示されます</div>`;
     return;
   }
   const r = calcAll(inp);
   if (r.error) {
-    area.innerHTML = `<div class="error-box">⚠ ${r.error}</div>`;
+    area.innerHTML = `<div class="error-box">${ICO.alert}${r.error}</div>`;
     return;
   }
   const h = inp.jutaku ? buildHousing(inp, r) : null;
@@ -1668,7 +1727,7 @@ function renderResult() {
   area.innerHTML = `
     <div class="result">
       <div class="result-hero">
-        <div class="result-eyebrow">REPAYMENT SCHEDULE — ${methodLabel(inp.method)}</div>
+        <div class="result-eyebrow">返済予定 ・ ${methodLabel(inp.method)}</div>
         <div class="result-amount">${fmt(r.perPayment)}</div>
         <div class="result-sublabel">${heroSub}</div>
       </div>
@@ -1697,8 +1756,8 @@ function renderResult() {
         </div>
 
         <div class="action-row">
-          <button class="copy-btn" onclick="copyResult(this)">📋 結果をコピー</button>
-          <button class="pdf-btn" onclick="doPrint()">🖨 印刷 / PDF</button>
+          <button class="copy-btn" onclick="copyResult(this)">${ICO.copy}結果をコピー</button>
+          <button class="pdf-btn" onclick="doPrint()">${ICO.print}印刷 / PDF</button>
         </div>
       </div>
     </div>`;
@@ -1738,10 +1797,10 @@ function copyResult(btn) {
     if (h.burden) lines.push(`返済負担率: ${ratioLabel(h.burden.ratio)}（年間返済額 ${fmtN(h.burden.annual)}円 ÷ 年収 ${fmtN(inp.nenshu)}円）`);
     if (h.p && h.dp.length) {
       lines.push('', '【頭金別の比較】',
-        ...h.dp.map(d => `頭金 ${fmtN(d.atamakin)}円: 借入 ${fmtN(d.loan)}円 / ${perLabel(inp)} ${fmtN(d.per)}円 / 利息 ${fmtN(d.interest)}円 / 総支払 ${fmtN(d.outlay)}円${d.current ? ' ◀' : ''}`));
+        ...h.dp.map(d => `頭金 ${fmtN(d.atamakin)}円: 借入 ${fmtN(d.loan)}円 / ${perLabel(inp)} ${fmtN(d.per)}円 / 利息 ${fmtN(d.interest)}円 / 総支払 ${fmtN(d.outlay)}円${d.current ? '（現在）' : ''}`));
     }
     lines.push('', '【金利別の比較】',
-      ...h.rates.map(x => `${x.rate}%: ${perLabel(inp)} ${fmtN(x.per)}円 / 利息 ${fmtN(x.interest)}円 / 総返済 ${fmtN(x.total)}円${x.current ? ' ◀' : ''}`));
+      ...h.rates.map(x => `${x.rate}%: ${perLabel(inp)} ${fmtN(x.per)}円 / 利息 ${fmtN(x.interest)}円 / 総返済 ${fmtN(x.total)}円${x.current ? '（入力金利）' : ''}`));
     if (h.rise && !h.rise.error) {
       lines.push('', '【変動金利の上昇シナリオ】',
         `${riseTitle(inp, h.rise)}: 返済額 ${fmtN(h.rise.before)}円 → ${fmtN(h.rise.after)}円 / 総返済額 ${fmtN(h.rise.upTotal)}円（${signedYen(h.rise.inc)}）`);
@@ -1749,8 +1808,8 @@ function copyResult(btn) {
   }
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ コピーしました'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '📋 結果をコピー'; btn.classList.remove('copied'); }, 2000);
+    btn.innerHTML = ICO.check + 'コピーしました'; btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = ICO.copy + '結果をコピー'; btn.classList.remove('copied'); }, 2000);
   }).catch(() => { alert(text); });
 }
 

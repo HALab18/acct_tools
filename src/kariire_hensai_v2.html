@@ -147,6 +147,8 @@ body{
   padding:10px 8px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text2);
   cursor:pointer;transition:all .15s;text-align:center;line-height:1.4;
 }
+.method-toggle-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:480px){.method-toggle-3{grid-template-columns:1fr}}
 .method-btn small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
 .method-btn.active{
   background:var(--accent-l);border-color:var(--accent);color:var(--accent);
@@ -412,7 +414,7 @@ body{
   <!-- Page title -->
   <div class="page-title">
     <h1>借入金 返済予定表 作成ツール</h1>
-    <p>法人の事業融資・個人の住宅ローン等の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・ボーナス併用払い・繰上返済・年度別／暦年集計に対応。個人は物件価格から頭金別・金利別の総支払額比較、返済負担率、変動金利の上昇シナリオも確認できます</p>
+    <p>法人の事業融資・個人の住宅ローン等の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・ボーナス併用払い・繰上返済・年度別／暦年集計に対応。個人の住宅ローンは物件価格から頭金別・金利別の総支払額比較、返済負担率、変動金利の上昇シナリオも確認できます（カーローン等は「個人・通常ローン」でシンプルに作成）</p>
   </div>
 
   <!-- ===== 入力カード ===== -->
@@ -420,9 +422,10 @@ body{
 
     <div class="section-label">借入者区分</div>
     <div class="field">
-      <div class="method-toggle">
+      <div class="method-toggle method-toggle-3">
         <button type="button" class="method-btn active" id="btn-houjin" onclick="setBorrower('houjin')">法人<small>事業融資・決算月で年度別集計</small></button>
-        <button type="button" class="method-btn" id="btn-kojin" onclick="setBorrower('kojin')">個人<small>住宅ローン等・暦年で年末残高を集計</small></button>
+        <button type="button" class="method-btn" id="btn-jutaku" onclick="setBorrower('jutaku')">個人・住宅ローン<small>購入プラン・頭金／金利の比較つき</small></button>
+        <button type="button" class="method-btn" id="btn-ippan" onclick="setBorrower('ippan')">個人・通常ローン<small>カーローン・教育ローン等</small></button>
       </div>
     </div>
 
@@ -739,20 +742,26 @@ function setMethod(m) {
   onInput();
 }
 
-/* ━━━ 借入者区分トグル（法人／個人） ━━━ */
-let borrower = 'houjin'; // 'houjin' 法人 / 'kojin' 個人
-function setBorrower(b) {
-  borrower = b;
-  const kojin = b === 'kojin';
+/* ━━━ 借入者区分トグル（法人／個人・住宅ローン／個人・通常ローン） ━━━ */
+let borrower = 'houjin'; // 計算用: 'houjin' 法人 / 'kojin' 個人（暦年集計）
+let kojinType = 'jutaku'; // 個人の種別: 'jutaku' 住宅ローン / 'ippan' 通常ローン
+const isJutaku = () => borrower === 'kojin' && kojinType === 'jutaku';
+function setBorrower(b) { // b: 'houjin' | 'jutaku' | 'ippan'
+  borrower = b === 'houjin' ? 'houjin' : 'kojin';
+  if (b !== 'houjin') kojinType = b;
+  const kojin = borrower === 'kojin', jutaku = isJutaku();
   document.getElementById('btn-houjin').classList.toggle('active', !kojin);
-  document.getElementById('btn-kojin').classList.toggle('active', kojin);
+  document.getElementById('btn-jutaku').classList.toggle('active', jutaku);
+  document.getElementById('btn-ippan').classList.toggle('active', kojin && !jutaku);
   document.getElementById('name-label').textContent = kojin ? '借入者氏名' : '法人名（借入を行う法人）';
   document.getElementById('houjin_name').placeholder = kojin ? '例：山田 太郎' : '例：株式会社○○';
-  document.getElementById('tekiyo').placeholder = kojin ? '例：住宅取得資金（新築・○○市）' : '例：運転資金／設備資金';
+  document.getElementById('tekiyo').placeholder = !kojin ? '例：運転資金／設備資金'
+    : jutaku ? '例：住宅取得資金（新築・○○市）' : '例：自動車購入資金／教育資金';
   document.getElementById('kessan-wrap').style.display = kojin ? 'none' : '';
   document.getElementById('rekinen-wrap').style.display = kojin ? '' : 'none';
-  document.getElementById('kojin-purchase').style.display = kojin ? '' : 'none';
-  document.getElementById('kojin-compare').style.display = kojin ? '' : 'none';
+  // 住宅購入プラン・比較の設定は住宅ローンのみ
+  document.getElementById('kojin-purchase').style.display = jutaku ? '' : 'none';
+  document.getElementById('kojin-compare').style.display = jutaku ? '' : 'none';
   onInput();
 }
 
@@ -816,7 +825,7 @@ function purchaseLoan(p) {
   return { loan, ownCash };
 }
 function readPurchase() {
-  if (borrower !== 'kojin') return null;
+  if (!isJutaku()) return null;
   const bukken = numOr0('bukken');
   if (!(bukken > 0)) return null;
   return {
@@ -1004,10 +1013,11 @@ function getInputs() {
     printDetail: document.getElementById('print_detail').checked,
     // 以下は個人のみ（住宅購入プラン・比較）
     purchase: readPurchase(),
-    nenshu:   borrower === 'kojin' ? numOr0('nenshu') : 0,
+    jutaku:   isJutaku(),
+    nenshu:   isJutaku() ? numOr0('nenshu') : 0,
     cmpRates: parseCmpRates(document.getElementById('cmp_rates').value),
     rise: {
-      on:   borrower === 'kojin' && document.getElementById('rise_on').checked,
+      on:   isJutaku() && document.getElementById('rise_on').checked,
       year: parseInt(document.getElementById('rise_year').value, 10),
       pct:  parseFloat(document.getElementById('rise_pct').value) || 0,
     },
@@ -1535,7 +1545,7 @@ function updatePrintSheet(inp, r, h) {
   const L = fyLabels(inp);
 
   const params = [
-    { k: '借入者区分', v: kojin ? '個人' : '法人' },
+    { k: '借入者区分', v: !kojin ? '法人' : inp.jutaku ? '個人（住宅ローン）' : '個人（通常ローン）' },
     { k: '借入先',     v: inp.lender || '—' },
     { k: '借入日',     v: dateLabel(inp.dateStr) },
     { k: '借入金額',   v: fmt(inp.kingaku) },
@@ -1584,7 +1594,9 @@ function updatePrintSheet(inp, r, h) {
   if (inp.bonus.on) notes.push(`ボーナス併用払い：借入金額のうち ${fmt(r.Pb)} を毎年${bonusMonthsLabel(inp)}の返済日に返済（全${r.kb}回）。ボーナス分の利息は前回ボーナス返済日（初回は借入日）からの実日数で計算し、元利均等の場合は半年ごとの均等返済額で算定しています。`);
   if (r.appliedPrepays.length) notes.push('繰上返済は指定年月の約定返済後に実行し、ボーナス併用時は毎月返済分とボーナス返済分の残高比で按分して充当しています。期間短縮型は毎回の返済額を据え置き、返済額軽減型は残りの回数で返済額を再計算しています。繰上返済手数料は考慮していません。');
   if (h && h.p) notes.push('総支払額は頭金・自己資金で払う諸費用・ローン総返済額の合計です（固定資産税・管理費等の保有コストは含みません）。頭金別の比較は借入金額以外を同一条件として再計算しています。');
-  if (kojin) {
+  if (kojin && !inp.jutaku) {
+    notes.push('年別集計は暦年（1月〜12月）ごとの集計です。');
+  } else if (kojin) {
     notes.push('年別集計は暦年（1月〜12月）ごとの集計です。年末借入金残高は住宅借入金等特別控除の「年末残高等証明書」との照合の目安としてご利用ください（控除額の計算には金融機関発行の証明書の金額を使用してください）。');
   } else {
     notes.push('年度別集計は決算月を ' + inp.kessanM + '月 とした事業年度ごとの集計です。');
@@ -1612,7 +1624,7 @@ function renderResult() {
     area.innerHTML = `<div class="error-box">⚠ ${r.error}</div>`;
     return;
   }
-  const h = inp.borrower === 'kojin' ? buildHousing(inp, r) : null;
+  const h = inp.jutaku ? buildHousing(inp, r) : null;
   updatePrintSheet(inp, r, h);
   const L = fyLabels(inp);
 
@@ -1716,7 +1728,7 @@ function copyResult(btn) {
     `【${L.title}】`,
     ...r.fy.map(s => `${L.text(s)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / ${L.th4} ${fmtN(s.balance)}円`),
   ];
-  const h = inp.borrower === 'kojin' ? buildHousing(inp, r) : null;
+  const h = inp.jutaku ? buildHousing(inp, r) : null;
   if (h) {
     if (h.p) {
       lines.push('', '【住宅購入プラン】',

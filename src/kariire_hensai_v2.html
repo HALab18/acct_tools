@@ -197,6 +197,51 @@ body{
 }
 .add-btn:hover{background:#dbeafe}
 
+/* ── 住宅購入プラン（個人のみ） ── */
+.mode-toggle{display:inline-flex;border:1.5px solid var(--border2);border-radius:7px;overflow:hidden;margin-left:8px;vertical-align:middle}
+.mode-btn{background:#fff;border:none;padding:2px 10px;font-family:inherit;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;transition:all .15s}
+.mode-btn+.mode-btn{border-left:1px solid var(--border2)}
+.mode-btn.active{background:var(--accent-l);color:var(--accent)}
+.input-unit{position:relative}
+.input-unit input{padding-right:36px !important}
+.input-unit .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.quick-btn{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text2);
+  padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;transition:all .15s;
+}
+.quick-btn:hover{background:var(--accent-l);border-color:#93c5fd;color:var(--accent)}
+.field input.auto-filled{background:var(--bg);color:var(--accent);font-weight:600;cursor:default}
+.rise-fields{margin-top:14px}
+
+/* ── 住宅購入の比較（結果） ── */
+.sim-table th{white-space:nowrap}
+.sim-table tr.current td{background:var(--accent-l);color:var(--accent);font-weight:600}
+.sim-table tr.current td:first-child{color:var(--accent)}
+.diff-plus{color:var(--red)}
+.diff-minus{color:var(--green)}
+.bar-stack{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg2);margin-top:4px;min-width:90px}
+.bar-stack span{display:block;height:100%}
+.bar-own{background:#94a3b8}
+.bar-prin{background:var(--accent2)}
+.bar-int{background:var(--gold)}
+.bar-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10px;color:var(--muted2);margin-top:6px}
+.bar-legend i{display:inline-block;width:10px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.burden-box{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--bg)}
+.burden-val{font-family:'DM Serif Display',serif;font-size:30px;line-height:1}
+.burden-val.ok{color:var(--green)}
+.burden-val.warn{color:var(--gold)}
+.burden-val.ng{color:var(--red)}
+.burden-text{font-size:12px;color:var(--text2);flex:1;min-width:200px;line-height:1.8}
+.rise-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:480px){.rise-grid{grid-template-columns:1fr}}
+.rise-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg)}
+.rise-card.up{background:#fef2f2;border-color:#fecaca}
+.rise-card-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px}
+.rise-card.up .rise-card-title{color:var(--red)}
+.rise-line{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);gap:8px}
+.rise-line b{color:var(--text)}
+
 /* ── Result ── */
 .result{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:12px;animation:pulseIn .4s ease}
 .result-hero{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#3b82f6 100%);padding:24px 24px 20px;text-align:center}
@@ -336,6 +381,8 @@ body{
 .ps-table tr.ps-subtotal td { background: #f8fafc; font-weight: 600; color: #1e293b; }
 .ps-table tr.ps-grand td { background: #fffbeb; color: #d97706; font-weight: 700; border-top: 1.5px solid #fde68a; }
 .ps-table tr:last-child td { border-bottom: none; }
+.ps-table tr.ps-current td { background: #eff6ff; color: #2563eb; font-weight: 700; }
+.ps-purchase-note { font-size: 8.5px; color: #64748b; margin-top: 4px; }
 .ps-notes {
   margin-top: 10px; padding: 8px 10px;
   background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
@@ -365,7 +412,7 @@ body{
   <!-- Page title -->
   <div class="page-title">
     <h1>借入金 返済予定表 作成ツール</h1>
-    <p>法人の事業融資・個人の住宅ローン等の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・ボーナス併用払い・繰上返済・年度別／暦年集計に対応</p>
+    <p>法人の事業融資・個人の住宅ローン等の返済明細（元利均等・元金均等）を作成します。返済日を指定した実日数日割り計算・据置期間・ボーナス併用払い・繰上返済・年度別／暦年集計に対応。個人は物件価格から頭金別・金利別の総支払額比較、返済負担率、変動金利の上昇シナリオも確認できます</p>
   </div>
 
   <!-- ===== 入力カード ===== -->
@@ -399,6 +446,57 @@ body{
 
     <div class="divider"></div>
 
+    <!-- 住宅購入プラン（個人のみ） -->
+    <div id="kojin-purchase" style="display:none">
+      <div class="section-label">住宅購入プラン<span class="section-note">任意・物件価格を入れると借入金額を自動計算し、頭金別の比較を表示</span></div>
+      <div class="field-row">
+        <div class="field">
+          <label>物件価格（円）<span class="opt-badge">任意</span></label>
+          <input type="text" id="bukken" placeholder="例：40,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        </div>
+        <div class="field">
+          <label>年収（税込・世帯合算可）<span class="opt-badge">任意</span></label>
+          <input type="text" id="nenshu" placeholder="例：6,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+          <div class="field-note">入力すると返済負担率（年間返済額 ÷ 年収）を表示します</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>購入諸費用<span class="mode-toggle"><button type="button" class="mode-btn active" id="btn-shohiyo-pct" onclick="setPMode('shohiyo','pct')">％</button><button type="button" class="mode-btn" id="btn-shohiyo-yen" onclick="setPMode('shohiyo','yen')">金額</button></span></label>
+          <div class="input-unit" id="shohiyo_pct_wrap"><input type="text" id="shohiyo_pct" placeholder="例：5" inputmode="decimal" oninput="onRateInput(this)"><span class="unit">%</span></div>
+          <div class="input-unit" id="shohiyo_yen_wrap" style="display:none"><input type="text" id="shohiyo_yen" placeholder="例：2,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)"><span class="unit">円</span></div>
+          <div class="quick-row">
+            <button type="button" class="quick-btn" onclick="setQuickPct('shohiyo', 3)">3%</button>
+            <button type="button" class="quick-btn" onclick="setQuickPct('shohiyo', 5)">5%</button>
+            <button type="button" class="quick-btn" onclick="setQuickPct('shohiyo', 7)">7%</button>
+            <button type="button" class="quick-btn" onclick="setQuickPct('shohiyo', 10)">10%</button>
+          </div>
+          <div class="auto-hint" id="shohiyo-hint"></div>
+          <div class="field-note">仲介手数料・登記費用・ローン保証料・火災保険など。目安は新築 3〜5%／中古 6〜8%</div>
+        </div>
+        <div class="field">
+          <label>頭金<span class="mode-toggle"><button type="button" class="mode-btn" id="btn-atamakin-pct" onclick="setPMode('atamakin','pct')">％</button><button type="button" class="mode-btn active" id="btn-atamakin-yen" onclick="setPMode('atamakin','yen')">金額</button></span></label>
+          <div class="input-unit" id="atamakin_pct_wrap" style="display:none"><input type="text" id="atamakin_pct" placeholder="例：10" inputmode="decimal" oninput="onRateInput(this)"><span class="unit">%</span></div>
+          <div class="input-unit" id="atamakin_yen_wrap"><input type="text" id="atamakin_yen" placeholder="例：4,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)"><span class="unit">円</span></div>
+          <div class="quick-row">
+            <button type="button" class="quick-btn" onclick="setQuickPct('atamakin', 0)">なし</button>
+            <button type="button" class="quick-btn" onclick="setQuickPct('atamakin', 10)">10%</button>
+            <button type="button" class="quick-btn" onclick="setQuickPct('atamakin', 20)">20%</button>
+          </div>
+          <div class="auto-hint" id="atamakin-hint"></div>
+          <div class="field-note">物件価格に対する割合（％）または金額のどちらでも入力できます</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>諸費用の支払方法</label>
+        <div class="method-toggle">
+          <button type="button" class="method-btn active" id="btn-cost-own" onclick="setCostPay('own')">自己資金で支払う<small>借入金額 ＝ 物件価格 − 頭金</small></button>
+          <button type="button" class="method-btn" id="btn-cost-loan" onclick="setCostPay('loan')">ローンに含める<small>借入金額 ＝ 物件価格 − 頭金 ＋ 諸費用</small></button>
+        </div>
+      </div>
+      <div class="divider"></div>
+    </div>
+
     <div class="section-label">借入条件</div>
     <div class="field-row">
       <div class="field">
@@ -409,6 +507,7 @@ body{
       <div class="field">
         <label>借入金額（円）</label>
         <input type="text" id="kingaku" placeholder="例：10,000,000" inputmode="numeric" oninput="onCommaInput(this, onInput)">
+        <div class="auto-hint" id="kingaku-hint"></div>
       </div>
     </div>
     <div class="field-row">
@@ -502,6 +601,34 @@ body{
 
     <div class="divider"></div>
 
+    <!-- 比較の設定（個人のみ） -->
+    <div id="kojin-compare" style="display:none">
+      <div class="section-label">比較の設定<span class="section-note">金利別の比較・変動金利の上昇シナリオ</span></div>
+      <div class="field">
+        <label>比較する金利（%）<span class="opt-badge">任意・カンマ区切りで最大6件</span></label>
+        <input type="text" id="cmp_rates" placeholder="例：0.8, 1.5, 1.9（空欄なら入力金利の −0.5〜＋1.5% を自動比較）" inputmode="decimal" oninput="onInput()">
+        <div class="field-note">変動金利とフラット35など、候補の金利を並べて比較できます。入力金利の行は常に表示されます</div>
+      </div>
+      <label class="print-opt">
+        <input type="checkbox" id="rise_on" onchange="onRiseToggle()">
+        変動金利の上昇シナリオを表示する
+      </label>
+      <div class="rise-fields" id="rise-fields" style="display:none">
+        <div class="field-row">
+          <div class="sel-field">
+            <label>金利が上がる時期</label>
+            <select id="rise_year" onchange="onInput()"></select>
+          </div>
+          <div class="field">
+            <label>上昇幅（%）</label>
+            <div class="input-unit"><input type="text" id="rise_pct" value="1.0" inputmode="decimal" oninput="onRateInput(this)"><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div class="field-note">指定時期の返済分から金利が上がったとして再計算します（元利均等は残高・残り回数で返済額を再計算。実際の変動金利に多い「5年ルール」「125%ルール」は適用していません）</div>
+      </div>
+      <div class="divider"></div>
+    </div>
+
     <div class="section-label">印刷設定</div>
     <label class="print-opt">
       <input type="checkbox" id="print_detail" checked onchange="onInput()">
@@ -536,6 +663,7 @@ body{
           </div>
         </div>
       </div>
+      <div id="ps-purchase" style="display:none"></div>
       <div id="ps-detail-wrap">
         <div class="ps-section-title">返済明細</div>
         <table class="ps-table">
@@ -623,6 +751,8 @@ function setBorrower(b) {
   document.getElementById('tekiyo').placeholder = kojin ? '例：住宅取得資金（新築・○○市）' : '例：運転資金／設備資金';
   document.getElementById('kessan-wrap').style.display = kojin ? 'none' : '';
   document.getElementById('rekinen-wrap').style.display = kojin ? '' : 'none';
+  document.getElementById('kojin-purchase').style.display = kojin ? '' : 'none';
+  document.getElementById('kojin-compare').style.display = kojin ? '' : 'none';
   onInput();
 }
 
@@ -631,6 +761,92 @@ function onBonusToggle() {
   document.getElementById('bonus-fields').style.display =
     document.getElementById('bonus_on').checked ? '' : 'none';
   onInput();
+}
+
+/* ━━━ 住宅購入プラン（個人のみ） ━━━
+   諸費用・頭金は「物件価格に対する％」または「金額」で入力でき、内部では常に金額（円）に解決する */
+const pmode = { shohiyo: 'pct', atamakin: 'yen' }; // 'pct' ％入力 / 'yen' 金額入力
+let costPay = 'own'; // 'own' 諸費用は自己資金 / 'loan' 諸費用もローンに含める
+function pctVal(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? NaN : v; }
+function purchaseYen(key, price) {
+  if (pmode[key] === 'pct') { const p = pctVal(key + '_pct'); return isNaN(p) ? 0 : Math.round(price * p / 100); }
+  return numOr0(key + '_yen');
+}
+function showPMode(key) {
+  const pct = pmode[key] === 'pct';
+  document.getElementById('btn-' + key + '-pct').classList.toggle('active', pct);
+  document.getElementById('btn-' + key + '-yen').classList.toggle('active', !pct);
+  document.getElementById(key + '_pct_wrap').style.display = pct ? '' : 'none';
+  document.getElementById(key + '_yen_wrap').style.display = pct ? 'none' : '';
+}
+// ％⇔金額の切替時は、物件価格があれば現在値を換算して引き継ぐ
+function setPMode(key, mode) {
+  if (pmode[key] === mode) return;
+  const price = numOr0('bukken');
+  const pctEl = document.getElementById(key + '_pct'), yenEl = document.getElementById(key + '_yen');
+  if (price > 0) {
+    if (mode === 'yen' && pctEl.value !== '') yenEl.value = addCommas(String(purchaseYen(key, price)));
+    if (mode === 'pct' && yenEl.value !== '') pctEl.value = String(Math.round(numOr0(key + '_yen') / price * 100000) / 1000);
+  }
+  pmode[key] = mode;
+  showPMode(key);
+  onInput();
+}
+function setQuickPct(key, pct) {
+  pmode[key] = 'pct';
+  showPMode(key);
+  document.getElementById(key + '_pct').value = String(pct);
+  onInput();
+}
+function setCostPay(p) {
+  costPay = p;
+  document.getElementById('btn-cost-own').classList.toggle('active', p === 'own');
+  document.getElementById('btn-cost-loan').classList.toggle('active', p === 'loan');
+  onInput();
+}
+function onRiseToggle() {
+  document.getElementById('rise-fields').style.display =
+    document.getElementById('rise_on').checked ? '' : 'none';
+  onInput();
+}
+// 物件価格・頭金・諸費用から借入金額と自己資金を算出
+function purchaseLoan(p) {
+  const loan = p.bukken - p.atamakin + (p.inLoan ? p.shohiyo : 0);
+  const ownCash = p.atamakin + (p.inLoan ? 0 : p.shohiyo);
+  return { loan, ownCash };
+}
+function readPurchase() {
+  if (borrower !== 'kojin') return null;
+  const bukken = numOr0('bukken');
+  if (!(bukken > 0)) return null;
+  return {
+    bukken,
+    shohiyo:  purchaseYen('shohiyo', bukken),
+    atamakin: purchaseYen('atamakin', bukken),
+    inLoan:   costPay === 'loan',
+  };
+}
+// 物件価格の入力があれば借入金額を自動セット（読取専用）。なければ手入力に戻す
+function syncPurchase() {
+  const kEl = document.getElementById('kingaku');
+  const kHint = document.getElementById('kingaku-hint');
+  const sHint = document.getElementById('shohiyo-hint');
+  const aHint = document.getElementById('atamakin-hint');
+  const p = readPurchase();
+  const pctText = (yen, price) => '物件価格の ' + (Math.round(yen / price * 1000) / 10) + '%';
+  if (!p) {
+    if (kEl.readOnly) { kEl.readOnly = false; kEl.classList.remove('auto-filled'); }
+    kHint.textContent = ''; sHint.textContent = ''; aHint.textContent = '';
+    return;
+  }
+  sHint.textContent = pmode.shohiyo === 'pct' ? '✦ ＝ ' + fmt(p.shohiyo) : '✦ ' + pctText(p.shohiyo, p.bukken);
+  aHint.textContent = pmode.atamakin === 'pct' ? '✦ ＝ ' + fmt(p.atamakin) : '✦ ' + pctText(p.atamakin, p.bukken);
+  const { loan } = purchaseLoan(p);
+  kEl.readOnly = true; kEl.classList.add('auto-filled');
+  kEl.value = loan > 0 ? addCommas(String(loan)) : '';
+  kHint.textContent = loan > 0
+    ? '✦ 物件価格 − 頭金' + (p.inLoan ? ' ＋ 諸費用' : '') + ' で自動計算（住宅購入プランの入力を変更してください）'
+    : '✦ 頭金が物件価格以上のため借入は不要です';
 }
 
 /* ━━━ 繰上返済の入力行 ━━━ */
@@ -688,6 +904,13 @@ function buildSelects() {
     opt.value = d; opt.textContent = d + ' 日';
     dSel.appendChild(opt);
   }
+  const rSel = document.getElementById('rise_year');
+  for (let y = 1; y <= 35; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + ' 年後から';
+    rSel.appendChild(opt);
+  }
+  rSel.value = 5;
   const now = new Date();
   const fySel = document.getElementById('first_y');
   for (let y = now.getFullYear() - 10; y <= now.getFullYear() + 35; y++) {
@@ -779,7 +1002,25 @@ function getInputs() {
     firstM:  parseInt(document.getElementById('first_m').value, 10),
     kessanM: borrower === 'kojin' ? 12 : parseInt(document.getElementById('kessan_m').value, 10), // 個人は暦年
     printDetail: document.getElementById('print_detail').checked,
+    // 以下は個人のみ（住宅購入プラン・比較）
+    purchase: readPurchase(),
+    nenshu:   borrower === 'kojin' ? numOr0('nenshu') : 0,
+    cmpRates: parseCmpRates(document.getElementById('cmp_rates').value),
+    rise: {
+      on:   borrower === 'kojin' && document.getElementById('rise_on').checked,
+      year: parseInt(document.getElementById('rise_year').value, 10),
+      pct:  parseFloat(document.getElementById('rise_pct').value) || 0,
+    },
   };
+}
+// 「0.8, 1.5、1.9」→ [0.8, 1.5, 1.9]（0〜20%・重複除外・最大6件）
+function parseCmpRates(str) {
+  const out = [];
+  str.split(/[,、，\s]+/).forEach(s => {
+    const v = parseFloat(s.replace(/[^\d.]/g, ''));
+    if (!isNaN(v) && v >= 0 && v <= 20 && !out.includes(v) && out.length < 6) out.push(Math.round(v * 1000) / 1000);
+  });
+  return out;
 }
 
 /* ━━━ 日付ユーティリティ（実日数日割り計算用） ━━━ */
@@ -813,9 +1054,13 @@ function calcAll(inp) {
   }
   const isBonusMonth = mo => bonusOn && (mo === inp.bonus.m1 || mo === inp.bonus.m2);
 
-  const r1000 = Math.round(inp.rate * 1000);        // 年利率(%)×1000 の整数
-  const rm = inp.rate / 1200;                        // 月利（元利均等の返済額算定用）
-  const rb = inp.rate / 200;                         // 半年利（ボーナス分・元利均等の返済額算定用）
+  // 金利変更（変動金利の上昇シナリオ用・省略時は固定金利）: [{ fromNo: 適用開始回, rate }]
+  const rateChanges = (inp.rateChanges || []).slice().sort((a, b) => a.fromNo - b.fromNo);
+  const rateAt = i => rateChanges.reduce((r, c) => i >= c.fromNo ? c.rate : r, inp.rate);
+  let appliedRate = inp.rate;
+  let r1000 = Math.round(inp.rate * 1000);          // 年利率(%)×1000 の整数
+  let rm = inp.rate / 1200;                          // 月利（元利均等の返済額算定用）
+  let rb = inp.rate / 200;                           // 半年利（ボーナス分・元利均等の返済額算定用）
   const dailyInterest = (bal, days) => Math.floor(bal * r1000 * days / 36500000);
   const annuity = (bal, rate, cnt) => rate > 0
     ? Math.round(bal * rate / (1 - Math.pow(1 + rate, -cnt)))
@@ -854,6 +1099,17 @@ function calcAll(inp) {
     const monthlyActive = balM > 0;
     const bonusNow = isBonusMonth(mo) && balB > 0;
     let principal = 0, interest = 0, bonusPay = 0, days = 0;
+
+    // 金利変更: 当回から新金利を適用し、元利均等は残高・残り回数で返済額を再計算（5年ルール・125%ルールは適用しない）
+    const curRate = rateAt(i);
+    if (curRate !== appliedRate) {
+      appliedRate = curRate;
+      r1000 = Math.round(curRate * 1000); rm = curRate / 1200; rb = curRate / 200;
+      const remM = n - Math.max(i - 1, g);
+      if (remM > 0 && balM > 0) ganriA = annuity(balM, rm, remM);
+      const remB = kb - bonusDone;
+      if (remB > 0 && balB > 0) bonusA = annuity(balB, rb, remB);
+    }
 
     // 期間短縮型の繰上返済で毎月分が先に完済した後は、ボーナス月のみ返済
     if (monthlyActive || bonusNow) {
@@ -996,8 +1252,266 @@ function detailRowHtml(row, forPrint) {
   return `<tr${cls ? ` class="${cls}"` : ''}><td>${no}</td><td>${fmtYMD(row.y, row.m, row.day)}</td><td>${row.isPrepay ? '—' : row.days + '日'}</td><td>${fmtN(row.payment)}</td><td>${fmtN(row.principal)}</td><td>${fmtN(row.interest)}</td><td>${fmtN(row.balance)}</td></tr>`;
 }
 
+/* ━━━ 住宅購入の比較（個人のみ） ━━━ */
+// 借入金額・金利・金利変更だけを差し替えて再計算（ボーナス返済分は元の比率で按分、繰上返済はメイン条件と同じ）
+function runScenario(inp, over) {
+  const kingaku = over.kingaku !== undefined ? over.kingaku : inp.kingaku;
+  const bonus = !inp.bonus.on || kingaku === inp.kingaku ? inp.bonus
+    : { ...inp.bonus, amount: Math.floor(inp.bonus.amount * kingaku / inp.kingaku) };
+  return calcAll({
+    ...inp, kingaku, bonus,
+    rate: over.rate !== undefined ? over.rate : inp.rate,
+    rateChanges: over.rateChanges || [],
+  });
+}
+// 年間返済額（初回の毎月返済額×12 ＋ ボーナス加算×2）
+function annualPayment(r) { return r.perPayment * 12 + r.perBonus * 2; }
+function burdenClass(ratio) { return ratio <= 0.25 ? 'ok' : ratio <= 0.35 ? 'warn' : 'ng'; }
+function ratioLabel(ratio) { return (Math.round(ratio * 1000) / 10).toFixed(1) + '%'; }
+// 返済負担率 ratio に収まる借入額の目安（元利均等・ボーナス払いなし・据置後の回数で逆算、1万円未満切捨て）
+function maxLoanFor(ratio, inp) {
+  const A = inp.nenshu * ratio / 12;
+  const cnt = inp.totalMonths - inp.sueoki;
+  const rm = inp.rate / 1200;
+  const P = rm > 0 ? A * (1 - Math.pow(1 + rm, -cnt)) / rm : A * cnt;
+  return Math.floor(P / 10000) * 10000;
+}
+function signedYen(n) { return (n > 0 ? '＋' : n < 0 ? '−' : '±') + fmtN(Math.abs(n)) + ' 円'; }
+function diffCls(n) { return n > 0 ? 'diff-plus' : n < 0 ? 'diff-minus' : ''; }
+function perLabel(inp) { return inp.method === 'ganri' ? '毎月返済額' : '初回返済額'; }
+
+// 比較データの組み立て（r はメイン条件の calcAll 結果）
+function buildHousing(inp, r) {
+  const p = inp.purchase;
+  const ownCash = p ? purchaseLoan(p).ownCash : 0;
+  const h = { p, ownCash };
+  if (p) h.outlay = ownCash + r.totalPayment;
+
+  if (inp.nenshu > 0) {
+    const annual = annualPayment(r);
+    h.burden = { annual, ratio: annual / inp.nenshu, max25: maxLoanFor(0.25, inp), max35: maxLoanFor(0.35, inp) };
+  }
+
+  // 頭金別（0／10／20／30%＋入力値）
+  if (p) {
+    const cands = [0, 10, 20, 30].map(pc => Math.round(p.bukken * pc / 100));
+    if (!cands.includes(p.atamakin)) cands.push(p.atamakin);
+    cands.sort((a, b) => a - b);
+    h.dp = [];
+    cands.forEach(a => {
+      const { loan, ownCash } = purchaseLoan({ ...p, atamakin: a });
+      if (!(loan > 0)) return;
+      const current = a === p.atamakin;
+      const s = current ? r : runScenario(inp, { kingaku: loan });
+      if (s.error) return;
+      h.dp.push({
+        atamakin: a, pct: a / p.bukken * 100, loan, ownCash, current,
+        per: s.perPayment, interest: s.totalInterest, total: s.totalPayment,
+        outlay: ownCash + s.totalPayment,
+        ratio: inp.nenshu > 0 ? annualPayment(s) / inp.nenshu : null,
+      });
+    });
+    if (h.dp.length) {
+      h.dp.forEach(d => { d.diff = d.outlay - h.dp[0].outlay; });
+      h.dpMax = Math.max(...h.dp.map(d => d.outlay));
+    }
+  }
+
+  // 金利別（指定なしなら入力金利の −0.5〜＋1.5%）
+  const rates = inp.cmpRates.length ? inp.cmpRates.slice()
+    : [-0.5, 0, 0.5, 1, 1.5].map(d => Math.round((inp.rate + d) * 1000) / 1000).filter(v => v >= 0);
+  if (!rates.includes(inp.rate)) rates.push(inp.rate);
+  rates.sort((a, b) => a - b);
+  h.rates = rates.map(rt => {
+    const current = rt === inp.rate;
+    const s = current ? r : runScenario(inp, { rate: rt });
+    if (s.error) return null;
+    return {
+      rate: rt, current, per: s.perPayment, interest: s.totalInterest, total: s.totalPayment,
+      outlay: p ? ownCash + s.totalPayment : null, diff: s.totalPayment - r.totalPayment,
+    };
+  }).filter(Boolean);
+
+  // 変動金利の上昇シナリオ（○年後の返済分から＋○%）
+  if (inp.rise.on) {
+    const fromNo = inp.rise.year * 12 + 1;
+    const upRate = Math.round((inp.rate + inp.rise.pct) * 1000) / 1000;
+    const rowAt = rr => rr.rows.find(x => typeof x.no === 'number' && x.no >= fromNo && !x.isGrace);
+    const baseRow = rowAt(r);
+    if (fromNo > r.n || !baseRow) {
+      h.rise = { error: `${inp.rise.year}年後には返済が終了しているため、上昇シナリオは計算できません。` };
+    } else {
+      const up = runScenario(inp, { rateChanges: [{ fromNo, rate: upRate }] });
+      const upRow = up.error ? null : rowAt(up);
+      h.rise = up.error ? { error: up.error } : {
+        year: inp.rise.year, pct: inp.rise.pct, upRate,
+        y: baseRow.y, m: baseRow.m,
+        before: baseRow.payment - baseRow.bonusPay,
+        after: upRow ? upRow.payment - upRow.bonusPay : 0,
+        baseTotal: r.totalPayment, upTotal: up.totalPayment,
+        baseInt: r.totalInterest, upInt: up.totalInterest,
+        inc: up.totalPayment - r.totalPayment,
+      };
+    }
+  }
+  return h;
+}
+
+// 頭金別の比較表（画面・印刷共通）
+function dpTableHtml(inp, h, forPrint) {
+  const burden = inp.nenshu > 0;
+  const cur = forPrint ? 'ps-current' : 'current';
+  const head = `<tr><th>頭金</th><th>借入金額</th><th>${perLabel(inp)}</th><th>利息総額</th><th>総支払額</th><th>頭金なしとの差</th>${burden ? '<th>返済負担率</th>' : ''}${forPrint ? '' : '<th>内訳</th>'}</tr>`;
+  const rows = h.dp.map(d => {
+    const w = v => (v / h.dpMax * 100).toFixed(2) + '%';
+    const bar = `<div class="bar-stack"><span class="bar-own" style="width:${w(d.ownCash)}"></span><span class="bar-prin" style="width:${w(d.total - d.interest)}"></span><span class="bar-int" style="width:${w(d.interest)}"></span></div>`;
+    const label = d.atamakin === 0 ? 'なし' : `${fmtN(d.atamakin)}（${Math.round(d.pct * 10) / 10}%）`;
+    return `<tr${d.current ? ` class="${cur}"` : ''}><td>${label}${d.current && !forPrint ? ' ◀' : ''}</td><td>${fmtN(d.loan)}</td><td>${fmtN(d.per)}</td><td>${fmtN(d.interest)}</td><td>${fmtN(d.outlay)}</td>`
+      + `<td${forPrint ? '' : ` class="${diffCls(d.diff)}"`}>${d.diff === 0 && d === h.dp[0] ? '—' : signedYen(d.diff)}</td>`
+      + (burden ? `<td>${ratioLabel(d.ratio)}</td>` : '')
+      + (forPrint ? '' : `<td style="min-width:110px">${bar}</td>`) + '</tr>';
+  }).join('');
+  return `<thead>${head}</thead><tbody>${rows}</tbody>`;
+}
+// 金利別の比較表（画面・印刷共通）
+function rateTableHtml(inp, h, forPrint) {
+  const cur = forPrint ? 'ps-current' : 'current';
+  const outlay = !!h.p;
+  const head = `<tr><th>年利率</th><th>${perLabel(inp)}</th><th>利息総額</th><th>総返済額</th>${outlay ? '<th>総支払額</th>' : ''}<th>入力金利との差</th></tr>`;
+  const rows = h.rates.map(x =>
+    `<tr${x.current ? ` class="${cur}"` : ''}><td>${x.rate}%${x.current ? (forPrint ? '（入力金利）' : ' ◀') : ''}</td><td>${fmtN(x.per)}</td><td>${fmtN(x.interest)}</td><td>${fmtN(x.total)}</td>`
+    + (outlay ? `<td>${fmtN(x.outlay)}</td>` : '')
+    + `<td${forPrint ? '' : ` class="${diffCls(x.diff)}"`}>${x.current ? '—' : signedYen(x.diff)}</td></tr>`
+  ).join('');
+  return `<thead>${head}</thead><tbody>${rows}</tbody>`;
+}
+function riseTitle(inp, x) {
+  return `${x.year}年後（${fmtYM(x.y, x.m)}返済分）から ${x.upRate}% に上昇（＋${x.pct}%）`;
+}
+
+// 画面用：メイン結果カード内に挿入する比較セクション
+function housingHtml(inp, r, h) {
+  let html = '';
+  if (h.p) {
+    const p = h.p;
+    const stats = [
+      ['物件価格', fmt(p.bukken)],
+      ['購入諸費用' + (p.inLoan ? '（ローンに含む）' : ''), fmt(p.shohiyo)],
+      ['頭金', fmt(p.atamakin)],
+      ['自己資金合計', fmt(h.ownCash)],
+      ['ローン総返済額', fmt(r.totalPayment)],
+      ['総支払額', `<span style="color:var(--accent)">${fmt(h.outlay)}</span>`],
+      ['物件価格に対する総支払額', '× ' + (h.outlay / p.bukken).toFixed(2)],
+      ['総支払額のうち利息', fmt(r.totalInterest) + `（${ratioLabel(r.totalInterest / h.outlay)}）`],
+    ];
+    html += `
+        <div class="sim-title">住宅購入の総支払額</div>
+        <div class="stats-grid">
+          ${stats.map(([k, v]) => `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
+        </div>
+        <div class="sim-note" style="margin-top:-10px;margin-bottom:6px">※ 総支払額 ＝ 頭金 ＋ 自己資金で払う諸費用 ＋ ローン総返済額（固定資産税・管理費・修繕積立金などの保有コストは含みません）</div>`;
+  }
+  if (h.burden) {
+    const b = h.burden;
+    html += `
+        <div class="sim-title">返済負担率</div>
+        <div class="burden-box">
+          <div class="burden-val ${burdenClass(b.ratio)}">${ratioLabel(b.ratio)}</div>
+          <div class="burden-text">
+            年間返済額 ${fmt(b.annual)} ÷ 年収 ${fmt(inp.nenshu)}${inp.method === 'gankin' ? '（元金均等は初回返済額で算定）' : ''}<br>
+            目安：<b style="color:var(--green)">25%以内</b>なら無理のない水準、<b style="color:var(--gold)">30〜35%</b>は金融機関の審査上限付近<br>
+            負担率25%に収まる借入額の目安：<b>約${fmtN(b.max25 / 10000)}万円</b>（35%なら約${fmtN(b.max35 / 10000)}万円）
+          </div>
+        </div>
+        <div class="sim-note">※ 借入額の目安は現在の年利率・返済期間で元利均等・ボーナス払いなしとして逆算しています。審査では金融機関独自の審査金利（3〜4%程度）で判定されることがあります</div>`;
+  }
+  if (h.p && h.dp.length) {
+    html += `
+        <div class="sim-title">頭金別の比較（物件価格 ${fmt(h.p.bukken)}）</div>
+        <div class="table-x"><table class="sim-table">${dpTableHtml(inp, h, false)}</table></div>
+        <div class="bar-legend"><span><i class="bar-own"></i>自己資金（頭金・諸費用）</span><span><i class="bar-prin"></i>ローン元金</span><span><i class="bar-int"></i>利息</span></div>
+        <div class="sim-note">※ 頭金を増やすほど借入額と利息は減りますが、手元資金も減ります。病気・失業などに備えた生活防衛資金（生活費の半年〜1年分が目安）は残しておくと安心です${inp.bonus.on ? '。ボーナス返済分は借入金額に対する比率を保って按分' : ''}${r.appliedPrepays.length ? '。繰上返済は入力と同じ条件を含めて比較' : ''}</div>`;
+  }
+  if (h.rates.length) {
+    html += `
+        <div class="sim-title">金利別の比較（借入金額 ${fmt(inp.kingaku)}）</div>
+        <div class="table-x"><table class="sim-table">${rateTableHtml(inp, h, false)}</table></div>
+        <div class="sim-note">※ 各金利を全期間固定として計算。${inp.cmpRates.length ? '「比較する金利」の入力値' : '入力金利の −0.5〜＋1.5% を自動表示（「比較の設定」で任意の金利を指定できます）'}</div>`;
+  }
+  if (h.rise) {
+    const x = h.rise;
+    html += `<div class="sim-title">変動金利の上昇シナリオ</div>`;
+    if (x.error) {
+      html += `<div class="sim-note" style="color:var(--red)">⚠ ${x.error}</div>`;
+    } else {
+      html += `
+        <div class="rise-grid">
+          <div class="rise-card">
+            <div class="rise-card-title">現在の金利 ${inp.rate}% のまま</div>
+            <div class="rise-line"><span>${fmtYM(x.y, x.m)}の返済額</span><b>${fmt(x.before)}</b></div>
+            <div class="rise-line"><span>利息総額</span><b>${fmt(x.baseInt)}</b></div>
+            <div class="rise-line"><span>総返済額</span><b>${fmt(x.baseTotal)}</b></div>
+          </div>
+          <div class="rise-card up">
+            <div class="rise-card-title">${riseTitle(inp, x)}</div>
+            <div class="rise-line"><span>${fmtYM(x.y, x.m)}の返済額</span><b>${fmt(x.after)}（${signedYen(x.after - x.before)}）</b></div>
+            <div class="rise-line"><span>利息総額</span><b>${fmt(x.upInt)}</b></div>
+            <div class="rise-line"><span>総返済額</span><b>${fmt(x.upTotal)}</b></div>
+            <div class="rise-line"><span>総返済額の増加</span><b style="color:var(--red)">${signedYen(x.inc)}</b></div>
+          </div>
+        </div>
+        <div class="sim-note">※ ${inp.method === 'ganri' ? '元利均等は上昇時点の残高・残り回数で毎月返済額を再計算しています。' : '元金均等は毎月の元金が一定のため、利息分だけ返済額が増えます。'}実際の変動金利では返済額の見直しが5年ごと・上昇幅は125%までとするルール（未払利息が生じる場合あり）を採用する金融機関が多く、本シミュレーションでは適用していません</div>`;
+    }
+  }
+  return html;
+}
+
+// 印刷用：購入プラン・比較セクション
+function housingPrintHtml(inp, r, h) {
+  let html = '';
+  if (h.p) {
+    const p = h.p;
+    const params = [
+      ['物件価格', fmt(p.bukken)],
+      ['購入諸費用', fmt(p.shohiyo) + (p.inLoan ? '（ローンに含む）' : '（自己資金）')],
+      ['頭金', fmt(p.atamakin)],
+      ['自己資金合計', fmt(h.ownCash)],
+      ['借入金額', fmt(inp.kingaku)],
+      ['ローン総返済額', fmt(r.totalPayment)],
+      ['総支払額', fmt(h.outlay)],
+      ['物件価格に対する総支払額', '× ' + (h.outlay / p.bukken).toFixed(2)],
+    ];
+    if (h.burden) params.push(['年収', fmt(inp.nenshu)], ['返済負担率', ratioLabel(h.burden.ratio) + `（年間返済額 ${fmt(h.burden.annual)}）`]);
+    html += `<div class="ps-section-title">住宅購入プラン</div>
+      <div class="ps-params">${params.map(([k, v]) => `<div class="ps-param"><div class="ps-param-key">${k}</div><div class="ps-param-val">${v}</div></div>`).join('')}</div>`;
+  } else if (h.burden) {
+    html += `<div class="ps-section-title">返済負担率</div>
+      <div class="ps-params"><div class="ps-param"><div class="ps-param-key">年収</div><div class="ps-param-val">${fmt(inp.nenshu)}</div></div><div class="ps-param"><div class="ps-param-key">返済負担率</div><div class="ps-param-val">${ratioLabel(h.burden.ratio)}（年間返済額 ${fmt(h.burden.annual)}）</div></div></div>`;
+  }
+  if (h.p && h.dp.length) {
+    html += `<div class="ps-section-title">頭金別の比較</div><table class="ps-table">${dpTableHtml(inp, h, true)}</table>`;
+  }
+  if (h.rates.length) {
+    html += `<div class="ps-section-title">金利別の比較（全期間固定として計算）</div><table class="ps-table">${rateTableHtml(inp, h, true)}</table>`;
+  }
+  if (h.rise && !h.rise.error) {
+    const x = h.rise;
+    html += `<div class="ps-section-title">変動金利の上昇シナリオ</div>
+      <table class="ps-table">
+        <thead><tr><th>ケース</th><th>${fmtYM(x.y, x.m)}の返済額</th><th>利息総額</th><th>総返済額</th><th>総返済額の増加</th></tr></thead>
+        <tbody>
+          <tr><td>現在の金利 ${inp.rate}% のまま</td><td>${fmtN(x.before)}</td><td>${fmtN(x.baseInt)}</td><td>${fmtN(x.baseTotal)}</td><td>—</td></tr>
+          <tr><td>${riseTitle(inp, x)}</td><td>${fmtN(x.after)}</td><td>${fmtN(x.upInt)}</td><td>${fmtN(x.upTotal)}</td><td>${signedYen(x.inc)}</td></tr>
+        </tbody>
+      </table>
+      <div class="ps-purchase-note">※ 5年ルール・125%ルールは適用していません。</div>`;
+  }
+  return html;
+}
+
 /* ━━━ 入力ハンドラ ━━━ */
 function onInput() {
+  syncPurchase();
   const inp = getInputs();
   const kh = document.getElementById('kikan-hint');
   if (inp.totalMonths > 0) {
@@ -1011,8 +1525,12 @@ function onInput() {
 }
 
 /* ━━━ 印刷シート更新 ━━━ */
-function updatePrintSheet(inp, r) {
+function updatePrintSheet(inp, r, h) {
   const kojin = inp.borrower === 'kojin';
+  const psPurchase = document.getElementById('ps-purchase');
+  const purchaseHtml = h ? housingPrintHtml(inp, r, h) : '';
+  psPurchase.innerHTML = purchaseHtml;
+  psPurchase.style.display = purchaseHtml ? 'block' : 'none';
   document.getElementById('ps-company').textContent = inp.houjin ? inp.houjin + (kojin ? '　様' : '　御中') : '';
   const L = fyLabels(inp);
 
@@ -1065,6 +1583,7 @@ function updatePrintSheet(inp, r) {
   if (r.g > 0) notes.push('据置期間中（' + r.g + 'か月）は元金返済なし・利息のみのお支払いとして計算しています。');
   if (inp.bonus.on) notes.push(`ボーナス併用払い：借入金額のうち ${fmt(r.Pb)} を毎年${bonusMonthsLabel(inp)}の返済日に返済（全${r.kb}回）。ボーナス分の利息は前回ボーナス返済日（初回は借入日）からの実日数で計算し、元利均等の場合は半年ごとの均等返済額で算定しています。`);
   if (r.appliedPrepays.length) notes.push('繰上返済は指定年月の約定返済後に実行し、ボーナス併用時は毎月返済分とボーナス返済分の残高比で按分して充当しています。期間短縮型は毎回の返済額を据え置き、返済額軽減型は残りの回数で返済額を再計算しています。繰上返済手数料は考慮していません。');
+  if (h && h.p) notes.push('総支払額は頭金・自己資金で払う諸費用・ローン総返済額の合計です（固定資産税・管理費等の保有コストは含みません）。頭金別の比較は借入金額以外を同一条件として再計算しています。');
   if (kojin) {
     notes.push('年別集計は暦年（1月〜12月）ごとの集計です。年末借入金残高は住宅借入金等特別控除の「年末残高等証明書」との照合の目安としてご利用ください（控除額の計算には金融機関発行の証明書の金額を使用してください）。');
   } else {
@@ -1093,7 +1612,8 @@ function renderResult() {
     area.innerHTML = `<div class="error-box">⚠ ${r.error}</div>`;
     return;
   }
-  updatePrintSheet(inp, r);
+  const h = inp.borrower === 'kojin' ? buildHousing(inp, r) : null;
+  updatePrintSheet(inp, r, h);
   const L = fyLabels(inp);
 
   const detailRows = r.rows.map(row => detailRowHtml(row, false)).join('');
@@ -1145,6 +1665,7 @@ function renderResult() {
           ${stats.map(([k, v]) => `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
         </div>
         ${prepayWarn}
+        ${h ? housingHtml(inp, r, h) : ''}
 
         <div class="sim-title">返済明細（全${r.count}回${r.appliedPrepays.length ? '・繰上返済' + r.appliedPrepays.length + '件' : ''}）</div>
         <div class="table-scroll">
@@ -1195,6 +1716,25 @@ function copyResult(btn) {
     `【${L.title}】`,
     ...r.fy.map(s => `${L.text(s)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / ${L.th4} ${fmtN(s.balance)}円`),
   ];
+  const h = inp.borrower === 'kojin' ? buildHousing(inp, r) : null;
+  if (h) {
+    if (h.p) {
+      lines.push('', '【住宅購入プラン】',
+        `物件価格: ${fmtN(h.p.bukken)}円 / 購入諸費用: ${fmtN(h.p.shohiyo)}円（${h.p.inLoan ? 'ローンに含む' : '自己資金'}） / 頭金: ${fmtN(h.p.atamakin)}円`,
+        `自己資金合計: ${fmtN(h.ownCash)}円 / 総支払額: ${fmtN(h.outlay)}円（物件価格の ${(h.outlay / h.p.bukken).toFixed(2)} 倍）`);
+    }
+    if (h.burden) lines.push(`返済負担率: ${ratioLabel(h.burden.ratio)}（年間返済額 ${fmtN(h.burden.annual)}円 ÷ 年収 ${fmtN(inp.nenshu)}円）`);
+    if (h.p && h.dp.length) {
+      lines.push('', '【頭金別の比較】',
+        ...h.dp.map(d => `頭金 ${fmtN(d.atamakin)}円: 借入 ${fmtN(d.loan)}円 / ${perLabel(inp)} ${fmtN(d.per)}円 / 利息 ${fmtN(d.interest)}円 / 総支払 ${fmtN(d.outlay)}円${d.current ? ' ◀' : ''}`));
+    }
+    lines.push('', '【金利別の比較】',
+      ...h.rates.map(x => `${x.rate}%: ${perLabel(inp)} ${fmtN(x.per)}円 / 利息 ${fmtN(x.interest)}円 / 総返済 ${fmtN(x.total)}円${x.current ? ' ◀' : ''}`));
+    if (h.rise && !h.rise.error) {
+      lines.push('', '【変動金利の上昇シナリオ】',
+        `${riseTitle(inp, h.rise)}: 返済額 ${fmtN(h.rise.before)}円 → ${fmtN(h.rise.after)}円 / 総返済額 ${fmtN(h.rise.upTotal)}円（${signedYen(h.rise.inc)}）`);
+    }
+  }
   const text = lines.join('\n');
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = '✓ コピーしました'; btn.classList.add('copied');

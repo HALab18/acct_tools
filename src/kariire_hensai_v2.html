@@ -709,6 +709,7 @@ button{font-family:inherit}
       </div>
       <div class="ps-section-title">借入条件</div>
       <div class="ps-params" id="ps-params"></div>
+      <div id="ps-method" style="display:none"></div>
       <div id="ps-purchase" style="display:none"></div>
       <div id="ps-detail-wrap">
         <div class="ps-section-title">返済明細</div>
@@ -1575,6 +1576,48 @@ function housingPrintHtml(inp, r, h) {
   return html;
 }
 
+/* ━━━ 返済方法の比較（個人のみ） ━━━
+   返済方法だけを差し替えて元利均等・元金均等の両方を計算（据置・ボーナス・繰上はメイン条件と同じ） */
+function buildMethodCmp(inp, r, h) {
+  const ownCash = h && h.p ? h.ownCash : null;
+  const rows = ['ganri', 'gankin'].map(m => {
+    const current = m === inp.method;
+    const s = current ? r : calcAll({ ...inp, method: m });
+    if (s.error) return null;
+    const lastRow = s.rows.filter(x => !x.isPrepay).pop();
+    return {
+      method: m, current,
+      first: s.perPayment,
+      last: lastRow ? lastRow.payment - lastRow.bonusPay : 0,
+      interest: s.totalInterest, total: s.totalPayment,
+      outlay: ownCash !== null ? ownCash + s.totalPayment : null,
+      ratio: inp.nenshu > 0 ? annualPayment(s) / inp.nenshu : null,
+    };
+  });
+  if (rows.includes(null)) return null;
+  rows.forEach(x => { x.diff = x.total - r.totalPayment; });
+  return rows;
+}
+// 返済方法の比較表（画面・印刷共通）
+function methodCmpTableHtml(inp, rows, forPrint) {
+  const cur = forPrint ? 'ps-current' : 'current';
+  const outlay = rows[0].outlay !== null, burden = rows[0].ratio !== null;
+  const head = `<tr><th>返済方法</th><th>初回返済額</th><th>最終回返済額</th><th>利息総額</th><th>総返済額</th>${outlay ? '<th>総支払額</th>' : ''}<th>選択中との差</th>${burden ? '<th>返済負担率（初回）</th>' : ''}</tr>`;
+  const body = rows.map(x =>
+    `<tr${x.current ? ` class="${cur}"` : ''}><td>${methodLabel(x.method)}${x.current ? (forPrint ? '（選択中）' : '<span class="cur-tag">選択中</span>') : ''}</td>`
+    + `<td>${fmtN(x.first)}</td><td>${fmtN(x.last)}</td><td>${fmtN(x.interest)}</td><td>${fmtN(x.total)}</td>`
+    + (outlay ? `<td>${fmtN(x.outlay)}</td>` : '')
+    + `<td${forPrint ? '' : ` class="${diffCls(x.diff)}"`}>${x.current ? '—' : signedYen(x.diff)}</td>`
+    + (burden ? `<td>${ratioLabel(x.ratio)}</td>` : '') + '</tr>'
+  ).join('');
+  return `<thead>${head}</thead><tbody>${body}</tbody>`;
+}
+function methodCmpNote(inp) {
+  return '元金均等は返済当初の負担が大きい一方、元本の減りが早く利息総額は少なくなります。元利均等は毎回の返済額が一定で家計管理がしやすい方式です（最終回は実日数日割りによる端数調整を含みます）'
+    + (inp.bonus.on ? '。返済額はボーナス加算を除く毎月分' : '')
+    + (inp.sueoki > 0 ? '。初回返済額は据置期間後の初回' : '');
+}
+
 /* ━━━ 入力ハンドラ ━━━ */
 function onInput() {
   syncPurchase();
@@ -1591,8 +1634,13 @@ function onInput() {
 }
 
 /* ━━━ 印刷シート更新 ━━━ */
-function updatePrintSheet(inp, r, h) {
+function updatePrintSheet(inp, r, h, mc) {
   const kojin = inp.borrower === 'kojin';
+  const psMethod = document.getElementById('ps-method');
+  psMethod.innerHTML = mc
+    ? `<div class="ps-section-title">返済方法の比較（元利均等・元金均等）</div><table class="ps-table">${methodCmpTableHtml(inp, mc, true)}</table><div class="ps-purchase-note">※ ${methodCmpNote(inp)}</div>`
+    : '';
+  psMethod.style.display = mc ? 'block' : 'none';
   const psPurchase = document.getElementById('ps-purchase');
   const purchaseHtml = h ? housingPrintHtml(inp, r, h) : '';
   psPurchase.innerHTML = purchaseHtml;
@@ -1684,7 +1732,8 @@ function renderResult() {
     return;
   }
   const h = inp.jutaku ? buildHousing(inp, r) : null;
-  updatePrintSheet(inp, r, h);
+  const mc = inp.borrower === 'kojin' ? buildMethodCmp(inp, r, h) : null;
+  updatePrintSheet(inp, r, h, mc);
   const L = fyLabels(inp);
 
   const detailRows = r.rows.map(row => detailRowHtml(row, false)).join('');
@@ -1736,6 +1785,10 @@ function renderResult() {
           ${stats.map(([k, v]) => `<div class="stat-box"><div class="stat-key">${k}</div><div class="stat-val">${v}</div></div>`).join('')}
         </div>
         ${prepayWarn}
+        ${mc ? `
+        <div class="sim-title">返済方法の比較（元利均等・元金均等）</div>
+        <div class="table-x"><table class="sim-table">${methodCmpTableHtml(inp, mc, false)}</table></div>
+        <div class="sim-note">※ ${methodCmpNote(inp)}</div>` : ''}
         ${h ? housingHtml(inp, r, h) : ''}
 
         <div class="sim-title">返済明細（全${r.count}回${r.appliedPrepays.length ? '・繰上返済' + r.appliedPrepays.length + '件' : ''}）</div>
@@ -1788,6 +1841,11 @@ function copyResult(btn) {
     ...r.fy.map(s => `${L.text(s)}: 元金 ${fmtN(s.principal)}円 / 利息 ${fmtN(s.interest)}円 / ${L.th4} ${fmtN(s.balance)}円`),
   ];
   const h = inp.jutaku ? buildHousing(inp, r) : null;
+  const mc = inp.borrower === 'kojin' ? buildMethodCmp(inp, r, h) : null;
+  if (mc) {
+    lines.push('', '【返済方法の比較】',
+      ...mc.map(x => `${methodLabel(x.method)}: 初回 ${fmtN(x.first)}円 / 最終回 ${fmtN(x.last)}円 / 利息 ${fmtN(x.interest)}円 / 総返済 ${fmtN(x.total)}円${x.current ? '（選択中）' : `（${signedYen(x.diff)}）`}`));
+  }
   if (h) {
     if (h.p) {
       lines.push('', '【住宅購入プラン】',

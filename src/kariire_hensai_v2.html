@@ -341,6 +341,21 @@ button{font-family:inherit}
 /* ── Footer ── */
 .footer{text-align:center;font-size:10.5px;color:var(--muted);margin-top:22px;line-height:2}
 
+/* ── 版数・更新履歴 ── */
+.ver-tag{font-family:'Noto Sans JP',sans-serif;font-size:10px;font-weight:600;color:var(--muted2);border:1px solid var(--border2);border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:3px;letter-spacing:.02em}
+.changelog{margin:14px auto 0;max-width:560px;text-align:left}
+.changelog summary{cursor:pointer;text-align:center;color:var(--muted2);font-weight:500;list-style:none}
+.changelog summary::-webkit-details-marker{display:none}
+.changelog summary::after{content:' ▾';font-size:9px}
+.changelog[open] summary::after{content:' ▴'}
+.changelog summary:hover{color:var(--accent)}
+.changelog-list{list-style:none;margin-top:8px;border-top:1px solid var(--border)}
+.changelog-list li{display:grid;grid-template-columns:40px 76px 1fr;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);line-height:1.6;color:var(--text2)}
+.changelog-list li:first-child .cl-ver{color:var(--accent)}
+.cl-ver{font-weight:700;color:var(--muted2)}
+.cl-date{color:var(--muted);font-variant-numeric:tabular-nums}
+@media(max-width:480px){.changelog-list li{grid-template-columns:40px 1fr}.cl-note{grid-column:1/-1}}
+
 /* ── Animations ── */
 @keyframes pulseIn {from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)}}
 
@@ -443,7 +458,7 @@ button{font-family:inherit}
 
 <!-- Top bar -->
 <div class="topbar">
-  <div class="topbar-logo">hensai<span style="color:var(--text2);font-size:13px;font-family:inherit;font-weight:400"> schedule</span></div>
+  <div class="topbar-logo">hensai<span style="color:var(--text2);font-size:13px;font-family:inherit;font-weight:400"> schedule</span><span class="ver-tag" id="ver-tag"></span></div>
   <div class="topbar-right">
     <div class="badge badge-year">実日数日割り計算</div>
     <div class="badge badge-blue">据置期間対応</div>
@@ -739,10 +754,34 @@ button{font-family:inherit}
   <div class="footer" id="screen-footer">
     ※ 利息は実日数日割り（前回返済日からの経過日数 × 元金残高 × 年利率 ÷ 365日、円未満切捨て）で計算しています。<br>
     元金の端数は最終回で調整しています。実際の金融機関の返済予定表とは端数が異なる場合があります。
+    <details class="changelog">
+      <summary id="ver-summary"></summary>
+      <ol class="changelog-list" id="changelog-list"></ol>
+    </details>
   </div>
 </div>
 
 <script>
+/* ━━━ 版数・更新履歴 ━━━
+   ツールを更新したら先頭に1件追加する（先頭が現在の版）。ファイル名の _v2 は破壊的変更時のみ変える */
+const CHANGELOG = [
+  { v: 'v2.5', date: '2026-09-30', note: '個人ローンに元利均等・元金均等の比較表を追加。版数と更新履歴を表示' },
+  { v: 'v2.4', date: '2026-09-30', note: '画面と印刷帳票を落ち着いた専門家向けデザインに刷新' },
+  { v: 'v2.3', date: '2026-09-30', note: '個人を「住宅ローン」と「通常ローン」に分割' },
+  { v: 'v2.2', date: '2026-09-30', note: '住宅購入シミュレーション（諸費用・頭金別／金利別の比較・返済負担率・金利上昇シナリオ）を追加' },
+  { v: 'v2.1', date: '2026-09-28', note: '個人の住宅ローンに対応（法人／個人切替・ボーナス併用払い・繰上返済・暦年集計）' },
+  { v: 'v2.0', date: '2026-07-30', note: '初版（返済日指定・実日数日割り計算、元利均等／元金均等、据置期間、年度別集計）' },
+];
+const APP_VERSION = CHANGELOG[0].v;
+function renderVersion() {
+  const cur = CHANGELOG[0];
+  document.getElementById('ver-tag').textContent = cur.v;
+  document.getElementById('ver-summary').textContent = `${cur.v}（${cur.date.replace(/-/g, '/')} 更新）・更新履歴`;
+  document.getElementById('changelog-list').innerHTML = CHANGELOG.map(c =>
+    `<li><span class="cl-ver">${c.v}</span><span class="cl-date">${c.date.replace(/-/g, '/')}</span><span class="cl-note">${c.note}</span></li>`
+  ).join('');
+}
+
 /* ━━━ アイコン（線画SVG・currentColor） ━━━ */
 const svgIco = d => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ICO = {
@@ -1715,7 +1754,7 @@ function updatePrintSheet(inp, r, h, mc) {
   const now = new Date();
   document.getElementById('ps-date').textContent = `出力日　${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
   document.getElementById('ps-footer').textContent =
-    `${methodLabel(inp.method)}・年利率${inp.rate}%（実日数日割り／年365日）で計算`;
+    `${methodLabel(inp.method)}・年利率${inp.rate}%（実日数日割り／年365日）で計算　｜　返済予定表作成ツール ${APP_VERSION}`;
 }
 
 /* ━━━ Main render ━━━ */
@@ -1878,6 +1917,7 @@ function doPrint() {
 
 /* ━━━ 初期化 ━━━ */
 buildSelects();
+renderVersion();
 onInput();
 </script>
 </body>

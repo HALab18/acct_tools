@@ -312,6 +312,8 @@ body{
 
   /* ── 印刷専用エリアを表示 ── */
   .print-only { display: block !important; }
+  /* 計算結果がないときは古い内容を印刷しない */
+  .print-only.ps-empty { display: none !important; }
 }
 
 /* 印刷専用エリア（通常時は非表示） */
@@ -580,7 +582,7 @@ body{
   </div>
 
   <!-- ===== 印刷専用エリア（画面上は非表示） ===== -->
-  <div class="print-only" id="print-sheet">
+  <div class="print-only ps-empty" id="print-sheet">
     <div class="print-sheet">
       <div class="ps-section-title">入力条件</div>
       <div class="ps-params" id="ps-params"></div>
@@ -1022,12 +1024,14 @@ function renderResult() {
   else { juminzei = numVal('juminzei'); rate = selectedRate.d; }
   if (!juminzei || !rate || isNaN(juminzei) || juminzei <= 0) {
     area.innerHTML = `<div class="placeholder"><div class="placeholder-icon">🗾</div>金額と所得税率を入力すると<br>上限額とシミュレーション表が表示されます</div>`;
+    setPrintReady(false);
     return;
   }
   const result = calcLimit(juminzei, rate);
-  if (!result) { area.innerHTML = `<div class="placeholder">計算できない組み合わせです</div>`; return; }
+  if (!result) { area.innerHTML = `<div class="placeholder">計算できない組み合わせです</div>`; setPrintReady(false); return; }
   const { limit, koujorate, incomeAfterTax } = result;
   updatePrintSummary(juminzei, rate, limit);
+  setPrintReady(true);
   area.innerHTML = `
     <div class="result">
       <div class="result-hero">
@@ -1077,7 +1081,16 @@ function copyResult(btn, limit, juminzei, ratePct) {
 }
 
 // ━━━ 印刷 / PDF ━━━
+let printReady = false;
+function setPrintReady(ready) {
+  printReady = ready;
+  document.getElementById('print-sheet').classList.toggle('ps-empty', !ready);
+}
 function doPrint() {
+  if (!printReady) {
+    alert('金額と所得税率を入力して、上限額が表示されてから印刷してください。');
+    return;
+  }
   window.print();
 }
 </script>

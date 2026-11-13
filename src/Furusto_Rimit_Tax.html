@@ -1091,6 +1091,22 @@ function doPrint() {
     alert('金額と所得税率を入力して、上限額が表示されてから印刷してください。');
     return;
   }
+  // iPhone/iPad のホーム画面アイコンから起動した全画面表示や、LINE 等のアプリ内ブラウザでは
+  // window.print() が無反応になるため、Safari での印刷手順を案内する
+  const ua = navigator.userAgent;
+  const isStandalone = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  const isInApp = /Line\/|Instagram|FBAN|FBAV/i.test(ua);
+  if (isStandalone || isInApp) {
+    alert(
+      'この画面からは印刷できません。\n\n' +
+      '【印刷・PDF保存の手順】\n' +
+      '1. Safari でこのページを開く\n' +
+      '2. 共有ボタン（□↑）をタップ\n' +
+      '3.「プリント」を選ぶ（PDF保存は、プレビューを2本指で広げて共有）'
+    );
+    return;
+  }
   window.print();
 }
 </script>
